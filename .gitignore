@@ -1,0 +1,77 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+.next/
+out/
+dist/
+build/
+.turbo/
+*.tsbuildinfo
+
+# Generated Prisma client
+packages/db/generated/
+packages/db/node_modules/.prisma/
+
+# Assets copied into the apps at build time (source of truth: packages/certificate-assets)
+apps/*/public/certificate-assets/
+
+# Environment variables — never commit real values
+.env
+.env.*
+!.env.example
+
+# Secrets and certificates
+*.pem
+*.key
+*.p12
+*.pfx
+ca-certificate.crt
+ca.pem
+
+# Runtime data (temporary ZIP exports, Docker volumes)
+/data/
+tmp-exports/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
+
+# Test and coverage output
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+blob-report/
+.playwright/
+
+# Editors and IDEs
+.idea/
+.vscode/
+!.vscode/extensions.json
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# Vercel / deployment
+.vercel/
+
+# Local scratch
+*.local
+scratch/
+tmp/
