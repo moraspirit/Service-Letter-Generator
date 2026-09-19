@@ -211,6 +211,9 @@ model ImportBatch {
   /// Rows the admin chose to skip as duplicates.
   skippedCount Int @default(0) @map("skipped_count")
 
+  /// Invalid rows (bad data or not fitting on one page) the admin chose to leave out.
+  rejectedCount Int @default(0) @map("rejected_count")
+
   zipStatus        ZipStatus @default(none) @map("zip_status")
   zipRenderedCount Int       @default(0) @map("zip_rendered_count")
 

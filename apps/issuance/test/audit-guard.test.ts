@@ -7,7 +7,11 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 const ROOT = path.resolve(__dirname, "..");
-const ALLOWED = new Set(["lib/issue-certificate.ts", "lib/certificate-changes.ts"]);
+const ALLOWED = new Set([
+  "lib/issue-certificate.ts",
+  "lib/certificate-changes.ts",
+  "lib/import/commit-import.ts",
+]);
 const SKIP = new Set(["node_modules", ".next", "test", "public"]);
 const WRITE =
   /\b(?:prisma|tx|db)\.certificate\.(?:create|createMany|update|updateMany|upsert|delete|deleteMany)\b/;

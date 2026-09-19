@@ -12,6 +12,8 @@ const nextConfig: NextConfig = {
   ],
   // Node-only browser driver: keep it out of the bundle.
   serverExternalPackages: ["puppeteer-core"],
+  // Spreadsheet uploads arrive as Server Action bodies; the importer itself caps files at 5 MB.
+  experimental: { serverActions: { bodySizeLimit: "6mb" } },
   async headers() {
     return [
       {

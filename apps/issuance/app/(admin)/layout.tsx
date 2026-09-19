@@ -24,6 +24,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <Link href="/certificates/new" className="text-zinc-700 hover:underline">
               Issue certificate
             </Link>
+            <Link href="/imports" className="text-zinc-700 hover:underline">
+              Bulk import
+            </Link>
             <Link href="/templates" className="text-zinc-700 hover:underline">
               Templates
             </Link>

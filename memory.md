@@ -1,88 +1,54 @@
-# Memory — MoraSpirit Certificate System: planning through Phase 0
+# Memory — MoraSpirit Certificate System: Phases 1–4 built
 
 Last updated: 2026-09-19
 
 ## What was built
 
-**Documentation (`docs/`)** — all written this session, from scratch:
+Phases 0–4 are built. Docs (`docs/architecture.md` = source of truth, `docs/TASKS.md` = tracker, `AGENTS.md` = rules) were kept in step with the code and hold the detail; this lists the shape.
 
-- `architecture.md` — reviewed and rewritten via ~18 decision questions. Source of truth.
-- `IMPLEMENTATION_PLAN.md` — 9 phases, each with build list and exit criteria.
-- `TASKS.md` — ~110 numbered tasks (P0-01 … P9-07), milestones, open decisions D1–D7.
-- `README.md` (docs index), root `README.md`, `AGENTS.md` (canonical rules), `CLAUDE.md`.
-- `docs/samples/` — the four real MoraSpirit files (2 .docx, 1 .xlsx, 1 .pdf), moved here.
-
-**Phase 0, complete (P0-01 → P0-12):**
-
-- pnpm workspace + Turborepo: root `package.json`, `pnpm-workspace.yaml`, `turbo.json`, `.npmrc`, `.nvmrc`.
-- `apps/issuance` and `apps/verify` — Next.js 16.3.5, React 19, TypeScript, Tailwind v4, App Router, no `src/`, `@/*` alias, no ESLint from the scaffolder. Verify app runs on port 3001.
-- Shared config: `tsconfig.base.json`, flat `eslint.config.mjs`, `.prettierrc.json`, `.prettierignore`, `.editorconfig`.
-- `packages/db` — Prisma 7.10.0 schema for all 7 tables, migration `20260919131700_init` applied to Aiven, `prisma7.config.ts`, `prisma/seed.ts`.
-- `scripts/create-db-users.js` — idempotent provisioning of `app_rw` / `verify_ro`, with a built-in privilege test (`--verify-only`, `--print`).
-- `.env.example` and `.env.local` for both apps and `packages/db`.
-
-Empty folders still held by `.gitkeep`: `packages/{certificate-render,certificate-templates,certificate-assets,shared}`, `docker/`.
+- **Phase 1 – render core.** `packages/shared` (FieldSchema types, zod generator, `parseListCell`, `applyDefaults`, `parseTemplateSchemaFile`, `dataFromRawValues`/`validateCertificateData`, `plainTextToRichText`/`richTextToPlainText`, `sampleDataFromSchema`). `packages/certificate-render` (one Handlebars instance, pronouns from honorific, `verb`/`formatDate` helpers, `renderCertificateHtml`, asset resolver; `/node` export builds data-URI resolver). `packages/certificate-assets` (`mora-letterhead-v1.jpg` from the current PDF, Liberation Serif 2.1.5 WOFF2 ×4 unsubset + OFL licence, `sync.mjs` copying into both apps' `public/certificate-assets` on predev/prebuild). `packages/certificate-templates` (`moraspirit-service-letter` = standard wording, `moraspirit-service-letter-outstanding` = long wording; each has `template.hbs`, `schema.json`, `sample.json`; `checkTemplateSafety`, content hash).
+- **Phase 2 – auth + templates.** `apps/issuance`: Auth.js v5 (beta.32) credentials, JWT session 8 h; `proxy.ts` + `requireAdmin()`/`requireAdminApi()` two-layer guard; login throttling in `login_attempts` (5 per email+IP / 15 min); `pnpm admin:create` (hidden prompt); `pnpm templates:publish`; read-only template list/history/preview. `packages/db/src` runtime client factory. Migration `20260919160000_add_template_slug` applied to Aiven dev.
+- **Phase 3 – issue + PDF.** Schema-driven form with live preview (`certificates/_components/certificate-form.tsx`), `lib/issue-certificate.ts` (validate → sanitize → duplicate warning → real render as fit check → one transaction: certificate + `created` audit), `lib/pdf/` (puppeteer-core on installed Edge/Chrome, JS off, only `data:` allowed, one-page rule via `#letter-body`/`#letter-end` markers + pdf-lib page check), QR via `qrcode`, `/certificates/[id]/pdf` download, `/certificates/[id]` detail.
+- **Phase 4 – management.** `lib/certificate-changes.ts` (edit with reason + optimistic lock on `updatedAt`, revoke, restore), `lib/certificate-list.ts` (raw-SQL case-insensitive search, filters, 25/page), `lib/audit-diff.ts`, `/certificates` list, `/certificates/[id]/edit`, revoke/restore forms and history on the detail page. `test/audit-guard.test.ts` fails if any file besides `issue-certificate.ts`/`certificate-changes.ts` writes to `certificates`.
 
 ## Decisions made
 
-Full list is AGENTS.md §6; the ones that shape the code:
-
-- **Two apps, one repo.** `apps/issuance` (VPS/Docker, admin + Puppeteer) and `apps/verify` (Vercel, public, read-only). They never call each other — only the shared database.
-- **Templates are developer-authored files** in the repo, published to `template_versions` by a `templates:publish` script. No editor, no image upload in the admin panel.
-- **Immutable template versions + append-only audit.** Certificates pin `template_version_id`; every create/edit/revoke/restore writes an audit row in the same transaction.
-- **Verify page is never cached** (`force-dynamic`, `no-store`); rate limiting via Upstash fails open.
-- **Public page shows a summary first** (`public_summary` fields), full certificate behind a button, in a sandboxed iframe. Revoked pages show status + date only.
-- **US spelling, US Letter pages, ordinal dates** ("28th of April 2025", `Asia/Colombo`).
-- **One-page rule:** a render that would spill to page 2 fails; no PDF is produced.
-- **Bulk upload accepts `.xlsx` (preferred) and UTF-8 `.csv`**; duplicates warn rather than block.
-- **Admin auth:** password + DB-backed rate limiting, no 2FA (accepted risk, mitigated by audit log).
-- **Naming:** `@moraspirit/*` for packages, plain `issuance` / `verify` for apps, `workspace:*` internally.
-- **Toolchain hard-pinned:** pnpm 11.20.0, Node >=22 <23, `engine-strict=true`.
+- D2: **Liberation Serif** (fonts shipped unsubset because the OFL reserves the name "Liberation"). D3: **two templates** (MoraSpirit confirmed the long wording is still used). D5: keep Next's generated `AGENTS.md`/`CLAUDE.md`.
+- Page setup comes from each template's `@page` CSS (`preferCSSPageSize`), not `schema.json`; page checked to be exactly 612×792 pt after rendering.
+- One-page check runs **before** the issue/edit transaction commits, and again on every download. Field named in the error = the list/richtext field with the most text.
+- Chromium from an installed browser (`CHROMIUM_PATH` or auto-detect), no download; `CHROMIUM_NO_SANDBOX=1` only for a root container (Phase 8).
+- QR = `VERIFY_BASE_URL/verify/{uuid}`; in production `VERIFY_BASE_URL` must be explicit https on a public host, else rendering/issuing refuses.
+- Rich text is entered as plain text (blank line = paragraph), escaped, converted, then sanitized (`p br strong em ul ol li`, no attributes).
+- Edit uses the certificate's **pinned** template version; revoked certificates can't be edited; no-op edits refused; PDF of a revoked certificate still downloads.
+- Login IP = first `X-Forwarded-For` entry (only safe behind our own reverse proxy: Phase 8).
+- Letterhead was taken from the **current PDF** (the .docx copies carry outdated contact names). The old header/footer slices were deleted.
+- Templates are Prettier-ignored (`*.hbs` in `.prettierignore`); they must start with `<!doctype html>`.
 
 ## Problems solved
 
-- **Prisma 7 removed `url` from `datasource`** — connection string now lives in `prisma7.config.ts`, which we made load `.env.local` before `.env`.
-- **TLS to Aiven failed with `NODE_EXTRA_CA_CERTS`** because the migration engine is a Rust binary using the OS trust store. Fix: `?sslaccept=strict&sslcert=../../.cert/ca.pem` in the CLI connection string. Runtime (driver adapter) takes the CA a different way — hence `DB_CA_CERT_B64` / `DB_CA_CERT_PATH` in the app env files.
-- **Prisma's `prisma-client` generator emits TypeScript, not JS.** Node 22 runs it natively via type stripping; `packages/db` is therefore `"type": "module"` and the seed is `seed.ts`.
-- **`create-next-app` writes a nested `pnpm-workspace.yaml`** which would make an app its own workspace root. Removed; its `allowBuilds` entries moved to the root file (Prisma's postinstall must be allowed there).
-- **`apps/*/.env.example` were git-ignored** — the apps' own `.gitignore` has a blanket `.env*` that beats the root negation. Fixed with `!.env.example` in each.
-- **`typecheck` failed on a clean checkout** — Next 16 generates global types (`LayoutProps`) into `.next/types`, so Turbo's `typecheck` now depends on the package's own `build`.
-- **`turbo.json` rejects unknown keys** (a `"comment"` field broke it) but accepts `//` comments.
-- **Next 16 writes its own `AGENTS.md`/`CLAUDE.md` into each app** and re-adds them on `next dev`. Kept, with a pointer to the root rules appended (open decision D5).
-- **ESLint had no Node environment** for plain scripts — added a `globals.node` block for `scripts/**/*.js`, config files and `packages/*/prisma/*.ts`.
+- Prettier reflowed `.hbs` files and dropped `<!doctype html>` → ignore `*.hbs`; **never run `npx prettier --write packages` from a subfolder** (`.prettierignore` is read from cwd).
+- Tool/heredoc quirks: backslashes in Bash/Python heredocs get mangled (a `\b` regex became a backspace byte) and odd-looking quotes can make a whole heredoc fail. Use the Write/Edit tools or `String.raw` for anything with backslashes.
+- `tsx` scripts in `apps/issuance` (CommonJS) can't use top-level await → wrap in `main()`.
+- Auth.js session cookie is HttpOnly, so curl's cookie jar prefixes it `#HttpOnly_`; strip that prefix before reusing the jar in Python. Port 3000 is often taken by an unrelated process; use 3010 for test servers.
+- Chromium `--proxy-server=127.0.0.1:1` (via `CHROMIUM_EXTRA_ARGS`) is how the "network cut" test proves nothing is fetched at render time.
+- Never `git mv` (it stages). It happened once and was undone with `git restore --staged`.
+- A live check of server actions is possible without a browser: POST multipart with the form's hidden `$ACTION_*` inputs (see how Phase 3/4 checks were done).
 
 ## Current state
 
-**Working and verified:**
-
-- `pnpm install`, `pnpm build` (FULL TURBO on repeat), `pnpm lint`, `pnpm typecheck`, `pnpm format:check` — all pass.
-- Both apps serve their starter pages (issuance :3000, verify :3001).
-- Migration applied to Aiven over verified TLS; all 7 tables confirmed present.
-- `app_rw` and `verify_ro` exist with the §3 grants; privilege test passes 11/11 — `verify_ro` cannot write, cannot DROP, cannot read `admin_users`, `certificate_audit`, `import_batches` or `login_attempts`.
-- `pnpm db:seed` rebuilds the dataset repeatably: 1 admin, 1 template with 2 versions, 1 import batch, 4 fabricated certificates (1 pinned to v1, 1 revoked), 5 audit rows. Dev login is `admin@moraspirit.test` (password is in the seed script; development-only).
-
-**Environment:** Aiven MySQL 8.4.8 free plan, DigitalOcean `blr`, database `mora-spirit`. Free plan powers off when idle — a morning connection error is usually that. CA certificate at `.cert/ca.pem` (note: singular `.cert`, git-ignored).
-
-**Not started:** everything from Phase 1 onward. `packages/{shared,certificate-render,certificate-templates,certificate-assets}` are empty.
-
-**Nothing has ever been committed** — the owner does all git operations manually (AGENTS.md §8). The working tree holds all of the above as uncommitted changes.
+- `pnpm test` (all packages incl. ~48 issuance tests against Aiven), `lint`, `typecheck`, `format:check`, `build` all pass. The 19 live HTTP checks for Phase 4 and the Phase 3 exit checks passed against a production build.
+- Dev DB (Aiven MySQL, db `mora-spirit`, users `app_rw`/`verify_ro`) holds seed data plus both templates published at v2; test certificates were cleaned up. Dev admin: `admin@moraspirit.test` (password lives in the seed script, dev only). Aiven free plan powers off when idle.
+- **Awaiting owner:** P2-05 (run `pnpm admin:create` once), P3-14 and P4-09 (click through the UI once: issue, live preview, download PDF, edit, revoke, restore). Everything is uncommitted — the owner does all git operations. Suggested commit messages were given per phase.
+- Phases 5–9 not started. `apps/verify` is still the untouched scaffold.
 
 ## Next session starts with
 
-**Phase 1 — shared rendering core.** First tasks, in order:
-
-1. **P1-01/P1-02** — `packages/shared`: `FieldSchema` types (`text|date|select|richtext|list`) and the zod generator built from it.
-2. **P1-03/P1-04** — the `list` parser (split lines; strip `•`, `-`, `*`, `U+F0B7`; drop blanks; keep order), unit-tested against the real cell strings in `docs/samples/Special Projects Pillar'25 service letters.xlsx`.
-3. **P1-05 → P1-10** — `packages/certificate-render`: one Handlebars instance, pronoun mapping, `verb` helper, ordinal `formatDate`, `renderCertificateHtml`, asset resolution (data URIs for Puppeteer, paths for the browser).
-
-Blocked until D2 and D3 are answered (see below). Testing framework (Vitest) is not installed yet — P1-04 needs it.
+Run `/architect` on **Phase 5 — bulk import (.xlsx/.csv)**. Read `docs/samples/Special Projects Pillar'25 service letters.xlsx` first (columns: Member ID, Name, Gender, Letter type, General Points, Special Points; 39 rows; SPL2510 must be rejected with a reason; `Gender` Male/Female → Mr./Ms.; list cells use a U+2022 bullet + blank-line separators). Signatory fields come from schema `default`s; the importer must omit blank cells (not send `""`) for date/select fields. Import must also choose a template (standard vs outstanding wording) per batch, use `import_batches`, duplicate file hash and per-row dedupe warnings (Skip / Issue anyway), and one transaction for batch + certificates + audit rows. Also decide whether each imported row needs the one-page fit check (bulk render cost).
 
 ## Open questions
 
-- **D1 — production database.** Deferred until the system runs against Aiven. PeekHosting shared hosting is the owner's intent but must pass the 7-point gate in architecture §3 (TLS, remote access, MySQL 8, `max_connections`, backups, privilege scoping, region). Decided in Phase 8.
-- **D2 — font substitute for Times New Roman** (cannot be bundled): Liberation Serif or Tinos. **Needed for Phase 1.**
-- **D3 — one template or two.** The two sample .docx files differ: Bimsara's longer "outstanding contributions" wording vs Imasha's standard one (which also refers to the recipient by surname). Confirm with MoraSpirit which wordings stay in use. **Needed for Phase 1.**
-- **D4 — VPS provider and region** (should be near the database). Phase 8.
-- **D5 — Next.js-generated `AGENTS.md`/`CLAUDE.md`** inside each app: keep as-is or suppress. Phase 2.
-- **D6 — Prisma pinned to 7.10.0**; 8.0.0 exists only as a release candidate. Revisit when stable (changes client instantiation). Phase 8.
-- **D7 — resolved.** The `avnadmin` password was printed to a transcript and has been rotated. `app_rw` / `verify_ro` passwords were generated locally and never displayed — they exist only in the `.env.local` files, so those should be backed up somewhere private.
+- D1 production database (PeekHosting must pass the architecture §3 gate) and D4 VPS region — Phase 8. D6 Prisma pinned at 7.10.0 (8 is RC) — Phase 8.
+- Final public verify domain: printed QR codes can't change, so it must be decided before real issuance (dev uses `http://localhost:3001`).
+- MoraSpirit should confirm two wordings I invented: the lead-in sentence before `special_points` in the standard template ("made the following notable contributions") and "MoraSpirit's {{pillar_name}} operations" in the long template. The sample PDF says "Special Project Pillar" while the spreadsheet says "Special Projects Pillar" (data, not template).
+- The long-wording letter with 3 general + 2 special bullets ends only ~0.15 in above the page limit; recheck fit in Docker/Chromium in Phase 8.
+- Phase 8 items noted along the way: reverse proxy must overwrite `X-Forwarded-For`; set `AUTH_URL`/HTTPS so the session cookie is `Secure`; Dockerfile needs Chromium + `CHROMIUM_PATH`.

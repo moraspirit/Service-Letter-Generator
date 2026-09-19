@@ -14,6 +14,9 @@ export default async function DashboardPage() {
         <Link href="/certificates/new" className="w-fit text-red-700 hover:underline">
           Issue a certificate →
         </Link>
+        <Link href="/imports" className="w-fit text-red-700 hover:underline">
+          Bulk import →
+        </Link>
         <Link href="/templates" className="w-fit text-red-700 hover:underline">
           View templates →
         </Link>

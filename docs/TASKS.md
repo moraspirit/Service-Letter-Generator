@@ -17,7 +17,7 @@ Progress tracker for [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Architect
 | 2 | App shell, auth, templates | 🔄 Built, awaiting owner | Everything works; the owner still has to run `pnpm admin:create` once (P2-05) |
 | 3 | Single issuance + PDF | 🔄 Built, awaiting owner | M1 reached in automated checks; owner to click through the form once (P3-14) |
 | 4 | Certificate management | 🔄 Built, awaiting owner | Owner to click through edit / revoke / restore once (P4-09) |
-| 5 | Bulk import | ⬜ Not started | |
+| 5 | Bulk import | 🔄 Built, awaiting owner | Automated checks pass, incl. the real sheet (analysis only); owner to click through the import UI once (P5-16) |
 | 6 | Bulk ZIP export | ⬜ Not started | |
 | 7 | Verification app | ⬜ Not started | |
 | 8 | Hardening & deploy | ⬜ Not started | Gated on the production DB decision |
@@ -133,20 +133,22 @@ Progress tracker for [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Architect
 
 ## Phase 5 — Bulk import (.xlsx / .csv)
 
-- [ ] **P5-01** Upload UI accepting `.xlsx` and `.csv`
-- [ ] **P5-02** `.xlsx` parsing with SheetJS incl. a worksheet picker
-- [ ] **P5-03** `.csv` parsing with UTF-8 enforcement and BOM tolerance
-- [ ] **P5-04** Header matching (case/whitespace-insensitive), unknown columns reported, missing required columns fail
-- [ ] **P5-05** Cell trimming and `list` cell parsing
-- [ ] **P5-06** `Gender` → honorific mapping, with anything unrecognised failing the row
-- [ ] **P5-07** Date handling: real Excel date cells, plus `YYYY-MM-DD` and `DD/MM/YYYY` text
-- [ ] **P5-08** Row-by-row validation report; nothing committed until all rows pass
-- [ ] **P5-09** Duplicate file detection by `file_hash`
-- [ ] **P5-10** Per-row duplicate detection by `dedupe_key`, with Skip / Issue anyway
-- [ ] **P5-11** Transactional commit: `import_batches` + certificates + `created` audit rows
-- [ ] **P5-12** Batch list and batch detail pages
-- [ ] **P5-13** Import the real 39-row sheet end to end; confirm SPL2510 is rejected with a reason
-- [ ] **P5-14** ✅ Exit criteria verified (bullets become list items; re-upload warns; quotes intact)
+- [x] **P5-01** Upload UI accepting `.xlsx` and `.csv` (`/imports/new`, template chosen per batch)
+- [x] **P5-02** `.xlsx` parsing with SheetJS incl. a worksheet picker
+- [x] **P5-03** `.csv` parsing with UTF-8 enforcement and BOM tolerance
+- [x] **P5-04** Header matching (case/whitespace-insensitive), unknown columns reported, missing required columns fail
+- [x] **P5-05** Cell trimming and `list` cell parsing
+- [x] **P5-06** `Gender` → honorific mapping, with anything unrecognised failing the row
+- [x] **P5-07** Date handling: real Excel date cells, plus `YYYY-MM-DD` and `DD/MM/YYYY` text
+- [x] **P5-08** Row-by-row validation report; invalid rows block the import unless the admin ticks "Skip invalid rows" (decision changed from "all or nothing", see architecture §6 C step 14)
+- [x] **P5-09** Duplicate file detection by `file_hash`
+- [x] **P5-10** Per-row duplicate detection by `dedupe_key` (and repeats within the file), with Skip / Issue anyway
+- [x] **P5-11** Transactional commit: `import_batches` + certificates + `created` audit rows
+- [x] **P5-12** Batch list and batch detail pages
+- [x] **P5-13** Real 39-row sheet analyzed end to end on a working copy with Pillar/Start date/End date columns added: 38 valid (22 General, 16 Special), SPL2510 rejected (gender and general points missing), no duplicates. Analysis only: the real people were not written to the dev database
+- [x] **P5-14** Exit criteria verified by tests (`import.test.ts`): General/Special rows, re-upload warns before writing, bullets become list items with curly quotes intact
+- [x] **P5-15** Migration `20260919180000_add_import_rejected_count`; every valid row is rendered as a one-page fit check
+- [~] **P5-16** Owner to click through `/imports/new` once with a fake spreadsheet (check, skip invalid, import, batch page), then tick this
 
 ## Phase 6 — Bulk ZIP export
 
