@@ -19,7 +19,7 @@ Progress tracker for [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Architect
 | 4 | Certificate management | 🔄 Built, awaiting owner | Owner to click through edit / revoke / restore once (P4-09) |
 | 5 | Bulk import | 🔄 Built, awaiting owner | Automated checks pass, incl. the real sheet (analysis only); owner to click through the import UI once (P5-16) |
 | 6 | Bulk ZIP export | 🔄 Built, awaiting owner | Verified with the real Inngest Dev Server and Chromium; owner to click through once (P6-11) |
-| 7 | Verification app | ⬜ Not started | |
+| 7 | Verification app | 🔄 Built, awaiting deployment | Works against the Aiven dev database; a phone scan of a real PDF needs the deployed domain (Phase 8) |
 | 8 | Hardening & deploy | ⬜ Not started | Gated on the production DB decision |
 | 9 | Post-launch | ⬜ Optional | Only if real use asks |
 
@@ -166,19 +166,19 @@ Progress tracker for [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Architect
 
 ## Phase 7 — Public verification app
 
-- [ ] **P7-01** Minimal Next.js app serving `/verify/[uuid]` only
-- [ ] **P7-02** Prisma singleton on `verify_ro` with `connection_limit=1` and a low pool timeout
-- [ ] **P7-03** Node.js runtime, `force-dynamic`, `Cache-Control: no-store`
-- [ ] **P7-04** UUID format check returning 404 before any query
-- [ ] **P7-05** Not-found state
-- [ ] **P7-06** Revoked state showing status and date only
-- [ ] **P7-07** Active state: verified badge + `public_summary` fields only
-- [ ] **P7-08** "View full certificate" rendering into a sandboxed `<iframe srcdoc>` without `allow-scripts`
-- [ ] **P7-09** Upstash Redis rate limiting in middleware (60/min/IP), failing open
-- [ ] **P7-10** Mobile layout check — most visitors arrive from a phone camera
-- [ ] **P7-11** Test with the VPS stopped, proving independence
-- [ ] **P7-12** Test that a revoked certificate's content is absent from the HTML source
-- [ ] **P7-13** ✅ Exit criteria verified — **Milestone M2**
+- [x] **P7-01** Minimal Next.js app serving `/verify/[uuid]` only; the scaffold home page is gone and every other path is a plain 404
+- [x] **P7-02** Prisma singleton on `verify_ro` with one connection per instance (`connectionLimit: 1`), created on first use
+- [x] **P7-03** Node.js runtime, `force-dynamic`, `Cache-Control: no-store`; also `noindex` and `no-referrer`
+- [x] **P7-04** UUID format check returning 404 before any query (proved by a test that the database client is never asked for)
+- [x] **P7-05** Not-found state
+- [x] **P7-06** Revoked state showing status and date only; the query never loads the data, template or reason
+- [x] **P7-07** Active state: verified badge + `public_summary` fields only (rich text and lists never appear in the summary)
+- [x] **P7-08** "View full certificate" as a `?full=1` link rendering into an `<iframe sandbox="" srcdoc>`; verified in real Chromium (Edge) at 390 px: letterhead, fonts and the real QR code load
+- [x] **P7-09** Upstash rate limiting in `proxy.ts` (60/min/IP), failing open: unit-tested for allow, limit, error and timeout, and checked live against an unreachable Upstash URL (page still 200). The real Upstash call is only exercised after deployment (P8-16)
+- [x] **P7-10** Mobile layout checked at 390 px in the browser pane (summary, revoked, not-valid) and in Edge (full letter, no horizontal scroll); a `zoom` breakpoint ladder covers 370 to 860 px
+- [~] **P7-11** Independence: the verify process talks only to MySQL and has no URL or credential for the issuance app, and ran as its own process. The literal "issuance stopped" check was not done here (the owner's issuance dev server was running); repeat it once deployed
+- [x] **P7-12** Test that a revoked certificate's content, member id and reason are absent from the HTML (`verify-page.test.ts`), also when `?full=1` is requested
+- [~] **P7-13** Exit criteria verified except the phone scan of a real PDF's QR code, which needs the deployed public domain (dev QR codes point at `http://localhost:3001`) — **Milestone M2** is reached at Phase 8
 
 ## Phase 8 — Hardening, deployment and handover
 
@@ -196,6 +196,7 @@ Progress tracker for [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Architect
 - [ ] **P8-12** Operations runbook written (deploy, publish template, add asset, rotate credentials, restore, failed ZIP job)
 - [ ] **P8-13** Fresh-checkout deployment test using only the runbook
 - [ ] **P8-15** Create the Inngest Cloud account (free tier), copy its event key and signing key into the VPS environment (`INNGEST_EVENT_KEY`, `INNGEST_SIGNING_KEY`; never in the repo), remove `INNGEST_DEV`, point Inngest at `https://<admin-domain>/api/inngest`, and write the runbook entry
+- [ ] **P8-16** Create the Upstash Redis database (free tier, region near the Vercel function region), set `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` and `VERIFY_BASE_URL` in the Vercel project (never in the repo), then confirm a real 429 after 60 requests in a minute and that the page still works with Upstash blocked
 - [ ] **P8-14** ✅ Exit criteria verified — **Milestone M4**, real issuance may begin
 
 ## Phase 9 — Post-launch (optional)

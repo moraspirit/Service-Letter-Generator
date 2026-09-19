@@ -9,21 +9,30 @@
     "build": "next build",
     "start": "next start -p 3001",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "node ../../packages/certificate-assets/sync.mjs public/certificate-assets && vitest run"
   },
   "dependencies": {
     "@moraspirit/certificate-assets": "workspace:*",
+    "@moraspirit/certificate-render": "workspace:*",
+    "@moraspirit/db": "workspace:*",
+    "@moraspirit/shared": "workspace:*",
+    "@upstash/ratelimit": "^2.1.0",
+    "@upstash/redis": "^1.38.4",
     "next": "16.3.5",
+    "qrcode": "^1.5.4",
     "react": "19.2.8",
     "react-dom": "19.2.8"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "babel-plugin-react-compiler": "1.0.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^5.0.1"
   }
 }
