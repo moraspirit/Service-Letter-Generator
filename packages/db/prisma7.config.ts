@@ -18,6 +18,8 @@ export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
     path: "prisma/migrations",
+    // Run by `prisma migrate reset`, so a rebuilt database is never left empty.
+    seed: "node prisma/seed.ts",
   },
   datasource: {
     url: process.env["DATABASE_URL"],

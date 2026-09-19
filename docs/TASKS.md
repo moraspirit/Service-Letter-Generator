@@ -12,8 +12,8 @@ Progress tracker for [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Architect
 
 | Phase | Scope | Status | Notes |
 |---|---|---|---|
-| 0 | Foundations | 🟡 In progress | P0-01→P0-10 done. Only P0-11 (seed script) and P0-12 (exit criteria) remain |
-| 1 | Shared rendering core | ⬜ Not started | |
+| 0 | Foundations | ✅ Complete | All of P0-01→P0-12 done |
+| 1 | Shared rendering core | 🔄 In progress | P1-01→P1-04 done. Needs decisions D2 (font) and D3 (one template or two) |
 | 2 | App shell, auth, templates | ⬜ Not started | |
 | 3 | Single issuance + PDF | ⬜ Not started | The core loop |
 | 4 | Certificate management | ⬜ Not started | |
@@ -60,15 +60,15 @@ Progress tracker for [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Architect
 - [x] **P0-08** Created the `app_rw` user via `scripts/create-db-users.js` — SELECT/INSERT/UPDATE/DELETE plus CREATE/ALTER/DROP/INDEX/REFERENCES on `mora-spirit`.*; password written to `apps/issuance/.env.local`
 - [x] **P0-09** Created the `verify_ro` user (`SELECT` on those three tables only) via the same script; proved by its `--verify-only` checks that it cannot write, cannot DROP, and cannot read `admin_users`, `certificate_audit`, `import_batches` or `login_attempts`
 - [x] **P0-10** `.env.example` for both apps and `packages/db`; confirmed real `.env` files are git-ignored and the examples are not
-- [ ] **P0-11** Seed script: one admin user plus fake sample certificates, rebuilt in one command
-- [ ] **P0-12** ✅ Exit criteria verified (build passes, migration from empty DB, `verify_ro` restricted, seed works)
+- [x] **P0-11** Seed script (`pnpm db:seed`, also run by `prisma migrate reset`): one admin user, a template with two versions, an import batch, and four fabricated certificates (one pinned to the older version, one revoked) with their audit rows
+- [x] **P0-12** ✅ Exit criteria verified — `pnpm build`/`lint`/`typecheck`/`format:check` pass, migration applies to Aiven over verified TLS, `verify_ro` restricted (11/11 privilege checks), `pnpm db:seed` rebuilds the dataset repeatably
 
 ## Phase 1 — Shared rendering core
 
-- [ ] **P1-01** `packages/shared`: `FieldSchema` types for `text|date|select|richtext|list` incl. `required`, `options`, `public_summary`, `dedupe`
-- [ ] **P1-02** zod schema generator built from a field schema (used later by form, import and API)
-- [ ] **P1-03** `list` parser — split lines, strip `•` `-` `*` `U+F0B7`, drop blanks, keep order
-- [ ] **P1-04** Unit tests for the `list` parser using the real cell strings from the pillar spreadsheet
+- [x] **P1-01** `packages/shared`: `FieldSchema` types for `text|date|select|richtext|list` incl. `required`, `options`, `public_summary`, `dedupe`
+- [x] **P1-02** zod schema generator built from a field schema (used later by form, import and API)
+- [x] **P1-03** `list` parser — split lines, strip `•` `-` `*` `U+F0B7`, drop blanks, keep order
+- [x] **P1-04** Unit tests for the `list` parser using the real cell strings from the pillar spreadsheet (fixtures use synthetic wording in the real cells' exact format, so no sample content is committed)
 - [ ] **P1-05** `packages/certificate-render`: the single configured Handlebars instance
 - [ ] **P1-06** Honorific → pronoun mapping (Mr./Ms./Mx.) with capitalized variants
 - [ ] **P1-07** `verb` helper for singular/plural agreement

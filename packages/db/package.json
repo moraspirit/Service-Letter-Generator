@@ -2,7 +2,7 @@
   "name": "@moraspirit/db",
   "version": "0.0.0",
   "private": true,
-  "description": "Prisma schema, migrations and generated client — the only place database access is defined",
+  "description": "Prisma schema, migrations and generated client \u2014 the only place database access is defined",
   "scripts": {
     "generate": "prisma generate",
     "migrate:dev": "prisma migrate dev",
@@ -10,15 +10,18 @@
     "migrate:status": "prisma migrate status",
     "studio": "prisma studio",
     "validate": "prisma validate",
-    "format:schema": "prisma format"
+    "format:schema": "prisma format",
+    "seed": "node prisma/seed.ts"
   },
   "devDependencies": {
     "dotenv": "^18.0.0",
     "prisma": "7.10.0"
   },
   "dependencies": {
+    "@node-rs/argon2": "^2.2.1",
     "@prisma/adapter-mariadb": "^7.10.0",
     "@prisma/client": "^7.10.0",
     "mariadb": "^3.5.4"
-  }
+  },
+  "type": "module"
 }

@@ -66,6 +66,12 @@ export default tseslint.config(
     },
   },
 
+  // Node-run scripts inside packages (the database seed).
+  {
+    files: ["packages/*/prisma/*.ts"],
+    languageOptions: { globals: { ...globals.node } },
+  },
+
   // `any` is an error, not a warning, inside shared packages.
   {
     files: ["packages/**/*.{ts,tsx}"],

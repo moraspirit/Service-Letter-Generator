@@ -14,7 +14,9 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "db:seed": "pnpm --filter @moraspirit/db seed",
+    "db:reset": "pnpm --filter @moraspirit/db exec prisma migrate reset"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

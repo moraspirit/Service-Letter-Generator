@@ -1,0 +1,21 @@
+{
+  "name": "@moraspirit/shared",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Field schema types, zod generation and the list-cell parser shared by both apps and the render package",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "vitest": "^5.0.1"
+  }
+}
