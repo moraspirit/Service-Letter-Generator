@@ -8,21 +8,19 @@ overwrite or delete one. A changed design gets a new file (`...-v2.jpg`).
 
 | File | Size | Use |
 |---|---|---|
-| `mora-header-v1.jpg` | 1822 x 540 | Top 21% of the MoraSpirit letterhead: wave, logo |
-| `mora-footer-v1.jpg` | 1822 x 773 | Bottom 31%: globe watermark, contact block, red bar |
+| `mora-letterhead-v1.jpg` | 1865 x 2415 | Full-page MoraSpirit letterhead: wave and logo at the top, globe watermark, contact block and red bar at the bottom |
 
-Both are slices of one letterhead image (extracted from the two sample service
-letters, which embed identical artwork; the larger copy was used). Slicing lets
-the template place the header at the top and the footer at the bottom of a **US
-Letter** page at full width without stretching. The source artwork is A4-shaped
-(1:1.414), Letter is 1:1.294, so a single full-page image would either distort or
-crop. The slices are cut on pure-white rows, so the middle stays plain white.
+Extracted from the current service-letter PDF (the one with the 2026 contact
+block). Its aspect ratio is exactly US Letter (8.5 x 11 in), so a template can use
+it as a full-bleed background with `background-size: 100% 100%` and no distortion.
 
-Templates position them absolutely behind the body text. The globe watermark is
-faint enough to sit under text; the contact block starts about 1.1 in above the
-bottom edge, so keep body content clear of it.
+The contact block prints office-bearers' names and phone numbers. When they change,
+add `mora-letterhead-v2.jpg` and publish a new template version; certificates already
+issued keep the old artwork.
 
-Licence: MoraSpirit brand artwork, used with the owner's permission. Not for reuse elsewhere.
+Layout notes for templates: the header wave ends about 1.9 in from the top on the
+right and the logo sits at the top left; the contact block starts about 1.2 in above
+the bottom edge. The globe watermark is faint and can sit under body text.
 
 ## Fonts
 

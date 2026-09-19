@@ -1,0 +1,80 @@
+{
+  "name": "Service letter (standard wording)",
+  "fields": [
+    {
+      "name": "member_id",
+      "label": "Member ID",
+      "type": "text",
+      "required": true,
+      "dedupe": true
+    },
+    {
+      "name": "recipient_name",
+      "label": "Name",
+      "type": "text",
+      "required": true,
+      "public_summary": true
+    },
+    {
+      "name": "honorific",
+      "label": "Honorific",
+      "type": "select",
+      "required": true,
+      "options": ["Mr.", "Ms.", "Mx."]
+    },
+    {
+      "name": "pillar_name",
+      "label": "Pillar",
+      "type": "text",
+      "required": true,
+      "public_summary": true
+    },
+    {
+      "name": "start_date",
+      "label": "Start date",
+      "type": "date",
+      "required": true,
+      "public_summary": true
+    },
+    {
+      "name": "end_date",
+      "label": "End date",
+      "type": "date",
+      "required": true,
+      "public_summary": true
+    },
+    {
+      "name": "general_points",
+      "label": "General Points",
+      "type": "list",
+      "required": true
+    },
+    {
+      "name": "special_points",
+      "label": "Special Points",
+      "type": "list",
+      "required": false
+    },
+    {
+      "name": "signatory_name",
+      "label": "Signatory name",
+      "type": "text",
+      "required": true,
+      "default": "Heminda Jayaweera"
+    },
+    {
+      "name": "signatory_title",
+      "label": "Signatory title",
+      "type": "text",
+      "required": true,
+      "default": "Co-Founder, MoraSpirit"
+    },
+    {
+      "name": "signatory_email",
+      "label": "Signatory email",
+      "type": "text",
+      "required": true,
+      "default": "heminda@moraspirit.com"
+    }
+  ]
+}

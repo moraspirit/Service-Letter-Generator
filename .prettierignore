@@ -10,3 +10,7 @@ docs/samples
 # Hand-authored documentation: Prettier reflows tables and long prose lines,
 # which makes diffs unreadable. Formatted by hand instead.
 *.md
+
+# Handlebars templates: whitespace is part of the published, hashed content and
+# Prettier reflows inline {{placeholders}} onto separate lines.
+*.hbs

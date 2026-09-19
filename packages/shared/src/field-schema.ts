@@ -11,6 +11,8 @@ interface FieldBase {
   public_summary?: boolean;
   /** Part of the duplicate-detection key. Defaults to false. */
   dedupe?: boolean;
+  /** Pre-fills the form and fills blank import cells (text, date and select fields only). */
+  default?: string;
 }
 
 export interface TextField extends FieldBase {
@@ -43,3 +45,9 @@ export type FieldSchema = readonly FieldDefinition[];
 
 export type FieldValue = string | string[];
 export type CertificateData = Record<string, FieldValue>;
+
+/** The shape of a template's `schema.json` / `template_versions.field_schema` wrapper. */
+export interface TemplateSchemaFile {
+  name: string;
+  fields: FieldSchema;
+}

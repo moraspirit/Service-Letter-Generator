@@ -13,7 +13,7 @@ Progress tracker for [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Architect
 | Phase | Scope | Status | Notes |
 |---|---|---|---|
 | 0 | Foundations | ✅ Complete | All of P0-01→P0-12 done |
-| 1 | Shared rendering core | 🔄 In progress | P1-01→P1-10 done (render core). P1-11→P1-13 done. Next: the two templates (P1-14→P1-18). |
+| 1 | Shared rendering core | ✅ Complete | Both templates render to one US Letter page; see the notes under P1-17 |
 | 2 | App shell, auth, templates | ⬜ Not started | |
 | 3 | Single issuance + PDF | ⬜ Not started | The core loop |
 | 4 | Certificate management | ⬜ Not started | |
@@ -75,14 +75,16 @@ Progress tracker for [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Architect
 - [x] **P1-08** `formatDate` helper producing "28th of April 2025" in `Asia/Colombo`
 - [x] **P1-09** `renderCertificateHtml(templateVersion, data)` as the only entry point
 - [x] **P1-10** Asset resolution: data URIs for Puppeteer, plain paths for the browser
-- [x] **P1-11** Extract the letterhead image from the samples into `packages/certificate-assets` (cut into `mora-header-v1.jpg` + `mora-footer-v1.jpg`; see the package README for why)
+- [x] **P1-11** Extract the letterhead image from the samples into `packages/certificate-assets` (`mora-letterhead-v1.jpg`, taken from the current PDF because the .docx copies carry outdated contact names)
 - [x] **P1-12** Choose and add the font files (D2), with licences recorded in the package README (Liberation Serif 2.1.5, 4 styles, lossless WOFF2, not subset — see README)
 - [x] **P1-13** Build step copying assets into both apps' `public/certificate-assets/` (`sync.mjs`, run by each app's `predev`/`prebuild`; the apps depend on the package so Turborepo rebuilds when an asset changes)
-- [ ] **P1-14** Author `moraspirit-service-letter/template.hbs` — US Letter, full-bleed letterhead, US spelling, QR placeholder
-- [ ] **P1-15** Author its `schema.json` with the field set from architecture §5
-- [ ] **P1-16** Pronoun tests for all three honorifics, including the "Ms. … he pursues" case
-- [ ] **P1-18** Author the second template (long "outstanding contributions" wording) with its own `schema.json` — decision D3
-- [ ] **P1-17** ✅ Exit criteria verified (sample letter reproduced; General letter omits the special section)
+- [x] **P1-14** Author `moraspirit-service-letter/template.hbs` — US Letter, full-bleed letterhead, US spelling, QR placeholder
+- [x] **P1-15** Author its `schema.json` with the field set from architecture §5
+- [x] **P1-16** Pronoun tests for all three honorifics, including the "Ms. … he pursues" case
+- [x] **P1-18** Author the second template (long "outstanding contributions" wording) with its own `schema.json` — decision D3
+- [x] **P1-17** ✅ Exit criteria verified (sample letter reproduced; General letter omits the special section). Rendered both templates to PDF with headless Edge: one Letter page each, Liberation Serif embedded, the long-wording letter with 3 + 2 bullets ends 0.15 in above the limit. Puppeteer itself is not built yet (Phase 3), so re-check the fit there. Owner to confirm: the new lead-in sentence for `special_points` in the standard template, and "MoraSpirit's {{pillar_name}} operations" in the long one
+
+- [x] **P1-19** Schema `default` values (`applyDefaults`), a validator for `schema.json` (`parseTemplateSchemaFile`), and QR variables in the render context (`qr` option) — needed by the templates and by Phase 5's import
 
 ## Phase 2 — Issuance app shell, auth and templates
 

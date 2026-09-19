@@ -1,0 +1,20 @@
+{
+  "name": "@moraspirit/certificate-templates",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Developer-authored certificate templates (template.hbs + schema.json), published to the database by templates:publish",
+  "type": "module",
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@moraspirit/certificate-render": "workspace:*",
+    "@moraspirit/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.1",
+    "vitest": "^5.0.1"
+  }
+}

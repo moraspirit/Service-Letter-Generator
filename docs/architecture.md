@@ -241,13 +241,13 @@ Each template version stores its own `field_schema` (list of fields with name/la
 |---|---|---|
 | `member_id` | text, required | e.g. `SPL2501`. Flagged `dedupe: true`; the natural key for duplicate detection and admin search. Not shown publicly. |
 | `recipient_name` | text, required | Full name, trimmed. `public_summary: true`. |
-| `recipient_surname` | text, optional | Some wordings refer to "Ms. Gallage" rather than the full name. It is **not** derived from `recipient_name` — surnames can't be split reliably — so templates that use it require it. |
+| `recipient_surname` | text, optional | **Not in either current template.** The older .docx wording said "Ms. Gallage", but the current PDF wording uses the full name throughout. If a future wording needs a surname it must be its own field — surnames can't be split reliably from `recipient_name`. |
 | `honorific` | select, required | `Mr.` / `Ms.` / `Mx.` — drives all pronouns (above). |
 | `pillar_name` | text, required | e.g. "Special Projects Pillar", "Creative Design Pillar". `public_summary: true`. |
 | `start_date`, `end_date` | date, required | `public_summary: true`. |
 | `general_points` | list, required | The shared bullet list every member receives. |
 | `special_points` | list, optional | Present only for "Special" letters; the whole paragraph plus list is wrapped in `{{#if special_points}}`. |
-| `signatory_name`, `signatory_title`, `signatory_email` | text, required | Currently "Heminda Jayaweera / Co-Founder, MoraSpirit / heminda@moraspirit.com". Kept as fields, not hardcoded text, so a change of signatory doesn't require a new template version. |
+| `signatory_name`, `signatory_title`, `signatory_email` | text, required | Currently "Heminda Jayaweera / Co-Founder, MoraSpirit / heminda@moraspirit.com". Kept as fields, not hardcoded text, so a change of signatory doesn't require a new template version. Each carries a schema `default` (see below), which the form pre-fills and the importer uses for blank cells. |
 
 The `Letter type` column in the source sheet (General / Special) needs no field of its own: a letter is "Special" exactly when `special_points` is non-empty, and the template's `{{#if}}` already handles that. Genuinely different wordings — such as the longer "outstanding contributions" letter versus the standard one — are **separate templates**, not conditionals inside one template.
 
@@ -417,3 +417,12 @@ All editing happens on the **issuance app (VPS)** only — the verification app 
 **Managed MySQL-compatible provider (to be chosen against the requirements in §3):**
 - The database itself — backups, patching, and TLS certificates are the provider's responsibility, not yours.
 - Two separate connection strings/users issued: full read/write for the issuance app, read-only for the verification app.
+
+### Schema extras and render-context variables (as built)
+
+- A field may carry `default` (text, date and select fields). `applyDefaults()` in `packages/shared` fills missing or blank values from it; the sample spreadsheet has no signatory columns, so the importer relies on this.
+- `schema.json` is `{ "name": ..., "fields": [...] }` and is validated by `parseTemplateSchemaFile()` (unknown keys, duplicate names, bad types and list defaults are rejected).
+- Besides the schema fields, `renderCertificateHtml` provides the derived pronouns (`pronoun_subject`, `Pronoun_subject`, `pronoun_object`, `pronoun_possessive` and capitalized forms, plus the `verb` helper) and, when the caller passes `qr`, `verify_qr` (a data URI) and `verify_url`. Without `qr` (previews) the templates draw a dashed placeholder box. Derived and reserved names always win over data with the same key.
+- Templates in `packages/certificate-templates/`: `moraspirit-service-letter` (standard wording) and `moraspirit-service-letter-outstanding` (the longer wording, decision D3). Both use the single full-page `mora-letterhead-v1.jpg` as a background, US Letter, 12 pt Liberation Serif, and mark the printable text area `#letter-body` (the one-page rule measures it, Phase 3).
+- The lead-in sentence for `special_points` in the standard template ("made the following notable contributions") is new wording, not from the samples, which have no such sentence. MoraSpirit should confirm it.
+

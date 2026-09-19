@@ -13,6 +13,11 @@ export interface RenderableTemplateVersion {
 export interface RenderOptions {
   /** Rewrites `/certificate-assets/...` references, e.g. to data URIs for Puppeteer. */
   resolveAsset?: AssetResolver;
+  /**
+   * The verification QR code, exposed to templates as `{{verify_qr}}` (a data URI)
+   * and `{{verify_url}}`. Omitted in previews, where the template shows a placeholder.
+   */
+  qr?: { dataUri: string; url: string };
 }
 
 // The one Handlebars instance. Helpers are registered here and nowhere else.
@@ -48,7 +53,11 @@ function compile(source: string): HandlebarsTemplateDelegate {
 }
 
 /** Fills omitted optional fields so `{{#if}}` blocks and `{{#each}}` behave predictably. */
-function buildContext(schema: FieldSchema, data: CertificateData): Record<string, unknown> {
+function buildContext(
+  schema: FieldSchema,
+  data: CertificateData,
+  qr: RenderOptions["qr"],
+): Record<string, unknown> {
   const context: Record<string, unknown> = {};
   for (const field of schema) {
     context[field.name] = data[field.name] ?? (field.type === "list" ? [] : "");
@@ -56,6 +65,10 @@ function buildContext(schema: FieldSchema, data: CertificateData): Record<string
   const honorific = context.honorific;
   if (typeof honorific === "string" && honorific !== "") {
     Object.assign(context, derivePronouns(honorific));
+  }
+  if (qr) {
+    context.verify_qr = qr.dataUri;
+    context.verify_url = qr.url;
   }
   return context;
 }
@@ -70,7 +83,7 @@ export function renderCertificateHtml(
   options: RenderOptions = {},
 ): string {
   const html = compile(templateVersion.html_content)(
-    buildContext(templateVersion.field_schema, data),
+    buildContext(templateVersion.field_schema, data, options.qr),
   );
   return resolveAssets(html, options.resolveAsset);
 }
