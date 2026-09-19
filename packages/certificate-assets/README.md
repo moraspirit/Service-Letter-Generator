@@ -26,5 +26,16 @@ Licence: MoraSpirit brand artwork, used with the owner's permission. Not for reu
 
 ## Fonts
 
-`fonts/` will hold Liberation Serif (SIL OFL 1.1), the Times New Roman substitute
-chosen in decision D2. Added in P1-12.
+**Liberation Serif 2.1.5** (Regular, Bold, Italic, Bold Italic) in `fonts/`, the
+Times New Roman substitute chosen in decision D2. Times New Roman is
+Microsoft-licensed and must never be added here.
+
+- Source: the official release tarball `liberation-fonts-ttf-2.1.5` from
+  <https://github.com/liberationfonts/liberation-fonts> (release 2.1.5).
+- Licence: SIL Open Font License 1.1 (`fonts/LICENSE-Liberation.txt`, authors in
+  `fonts/AUTHORS-Liberation.txt`). Copyright Google Corporation and Red Hat, Inc.
+- The files are a **lossless WOFF2 conversion** of the original TTFs (same glyphs,
+  same metrics, same internal font name). They are deliberately **not subset**: the
+  OFL reserves the name "Liberation", so a subsetted (modified) font would have to
+  be renamed. Do not subset or edit these files; if you must, rename the font first.
+- Versioned file names (`-v2.1.5`) keep them immutable like every other asset here.
