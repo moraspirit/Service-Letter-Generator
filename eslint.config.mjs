@@ -6,6 +6,7 @@ import js from "@eslint/js";
 import tseslint from "typescript-eslint";
 import nextPlugin from "@next/eslint-plugin-next";
 import prettierConfig from "eslint-config-prettier";
+import globals from "globals";
 
 export default tseslint.config(
   {
@@ -48,6 +49,20 @@ export default tseslint.config(
       // AGENTS.md: no `any` in shared packages. Warn everywhere, so it is
       // visible in apps too without blocking day-to-day work.
       "@typescript-eslint/no-explicit-any": "warn",
+    },
+  },
+
+  // Node scripts and tooling config: CommonJS with Node globals available.
+  {
+    files: ["scripts/**/*.js", "*.config.{js,mjs,ts}", "packages/*/*.config.ts"],
+    languageOptions: {
+      sourceType: "commonjs",
+      globals: { ...globals.node },
+    },
+    rules: {
+      // Provisioning scripts run directly under Node as CommonJS, so require()
+      // is the correct form here.
+      "@typescript-eslint/no-require-imports": "off",
     },
   },
 

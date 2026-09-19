@@ -12,7 +12,7 @@ Progress tracker for [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Architect
 
 | Phase | Scope | Status | Notes |
 |---|---|---|---|
-| 0 | Foundations | 🟡 In progress | P0-01→P0-07, P0-10 done. Next: P0-08/P0-09 (the `app_rw` and `verify_ro` users), then P0-11 (seed) |
+| 0 | Foundations | 🟡 In progress | P0-01→P0-10 done. Only P0-11 (seed script) and P0-12 (exit criteria) remain |
 | 1 | Shared rendering core | ⬜ Not started | |
 | 2 | App shell, auth, templates | ⬜ Not started | |
 | 3 | Single issuance + PDF | ⬜ Not started | The core loop |
@@ -42,7 +42,7 @@ Progress tracker for [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Architect
 | D2 | Font substitute for Times New Roman | ⏳ Liberation Serif vs Tinos — pick one and keep it, since changing it later moves every line break | Phase 1 |
 | D3 | Whether a second template is needed for the longer "outstanding contributions" wording | ⏳ The two sample DOCX files differ; confirm with MoraSpirit which wordings stay in use | Phase 1 |
 | D4 | VPS provider and region | ⏳ Must sit near the database region | Phase 8 |
-| D7 | Dev database password was printed into a session transcript on 2026-09-19 and should be rotated in the Aiven console | ⏳ Open | Before P0-11 |
+| D7 | Dev `avnadmin` password was printed into a session transcript on 2026-09-19 | ✅ Rotated by the owner. `app_rw` / `verify_ro` passwords were generated locally and never printed | — |
 | D6 | Prisma is pinned to **7.10.0**; 8.0.0 exists only as a release candidate and the CLI nags about it. Revisit once 8 is stable — the upgrade changes client instantiation | ⏳ Open | Phase 8 |
 | D5 | Next.js 16 writes its own `AGENTS.md` / `CLAUDE.md` into each app on `next dev` and re-adds them if deleted. Currently kept, with a pointer appended to the root rules. Confirm this is acceptable or decide on a suppression approach | ⏳ Open | Phase 2 |
 
@@ -57,8 +57,8 @@ Progress tracker for [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Architect
 - [x] **P0-05** Aiven for MySQL free instance running (MySQL 8.4.8, DigitalOcean `blr`), database `mora-spirit` created, CA certificate saved to `.cert/ca.pem`
 - [x] **P0-06** `packages/db`: Prisma schema for all 7 tables from architecture §4, with indexes, uniques and enums
 - [x] **P0-07** First migration `20260919131700_init` applied to Aiven over verified TLS (`sslaccept=strict&sslcert=../../.cert/ca.pem`); all 7 tables confirmed present
-- [ ] **P0-08** Create the `app_rw` user (full read/write)
-- [ ] **P0-09** Create the `verify_ro` user (`SELECT` on `templates`, `template_versions`, `certificates` only) and prove it cannot write or read `admin_users` / `certificate_audit`
+- [x] **P0-08** Created the `app_rw` user via `scripts/create-db-users.js` — SELECT/INSERT/UPDATE/DELETE plus CREATE/ALTER/DROP/INDEX/REFERENCES on `mora-spirit`.*; password written to `apps/issuance/.env.local`
+- [x] **P0-09** Created the `verify_ro` user (`SELECT` on those three tables only) via the same script; proved by its `--verify-only` checks that it cannot write, cannot DROP, and cannot read `admin_users`, `certificate_audit`, `import_batches` or `login_attempts`
 - [x] **P0-10** `.env.example` for both apps and `packages/db`; confirmed real `.env` files are git-ignored and the examples are not
 - [ ] **P0-11** Seed script: one admin user plus fake sample certificates, rebuilt in one command
 - [ ] **P0-12** ✅ Exit criteria verified (build passes, migration from empty DB, `verify_ro` restricted, seed works)
@@ -179,7 +179,7 @@ Progress tracker for [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Architect
 - [ ] **P8-04** Vercel project, environment variables, function region, `verify.<domain>` domain
 - [ ] **P8-05** Run the architecture §3 gate on PeekHosting (TLS, remote access, MySQL 8, `max_connections`, backups, privilege scoping, region)
 - [ ] **P8-06** Decide the production database (D1) and record it in architecture §3
-- [ ] **P8-07** Migrate to production; re-create `app_rw` and `verify_ro` there
+- [ ] **P8-07** Migrate to production; re-create `app_rw` and `verify_ro` there with `node scripts/create-db-users.js --print` (grants are environment-specific and are not part of the Prisma migrations)
 - [ ] **P8-08** Automated off-site backups configured
 - [ ] **P8-09** **Restore rehearsal completed** — restore an actual backup into a scratch database
 - [ ] **P8-10** Security pass against architecture §9
