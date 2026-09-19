@@ -16,7 +16,7 @@ Progress tracker for [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Architect
 | 1 | Shared rendering core | ✅ Complete | Both templates render to one US Letter page; see the notes under P1-17 |
 | 2 | App shell, auth, templates | 🔄 Built, awaiting owner | Everything works; the owner still has to run `pnpm admin:create` once (P2-05) |
 | 3 | Single issuance + PDF | 🔄 Built, awaiting owner | M1 reached in automated checks; owner to click through the form once (P3-14) |
-| 4 | Certificate management | ⬜ Not started | |
+| 4 | Certificate management | 🔄 Built, awaiting owner | Owner to click through edit / revoke / restore once (P4-09) |
 | 5 | Bulk import | ⬜ Not started | |
 | 6 | Bulk ZIP export | ⬜ Not started | |
 | 7 | Verification app | ⬜ Not started | |
@@ -121,15 +121,15 @@ Progress tracker for [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Architect
 
 ## Phase 4 — Certificate management
 
-- [ ] **P4-01** Certificate list with search by `member_id` and name, filters and pagination
-- [ ] **P4-02** Certificate detail page incl. template version and status
-- [ ] **P4-03** Edit flow with a required reason
-- [ ] **P4-04** Transactional edit writing old and new `data` to `certificate_audit`
-- [ ] **P4-05** Revoke with a required reason (`revoked_at`, `revocation_reason`, audit row)
-- [ ] **P4-06** Restore with an audit row
-- [ ] **P4-07** Audit history view on the detail page
-- [ ] **P4-08** Test proving no change path skips the audit log
-- [ ] **P4-09** ✅ Exit criteria verified (audit always written; template version unchanged by edits)
+- [x] **P4-01** Certificate list with search by `member_id` and name, filters and pagination
+- [x] **P4-02** Certificate detail page incl. template version and status
+- [x] **P4-03** Edit flow with a required reason
+- [x] **P4-04** Transactional edit writing old and new `data` to `certificate_audit`
+- [x] **P4-05** Revoke with a required reason (`revoked_at`, `revocation_reason`, audit row)
+- [x] **P4-06** Restore with an audit row
+- [x] **P4-07** Audit history view on the detail page
+- [x] **P4-08** Test proving no change path skips the audit log (`certificate-changes.test.ts` asserts the exact trail; `audit-guard.test.ts` fails if any file outside the two audited modules writes to `certificates`)
+- [~] **P4-09** — verified: 48 issuance tests, plus 19 live HTTP checks against a production build (issue, list search and filters, prefilled edit, missing reason refused, stale form refused, history shows old → new with the reason, revoke, edit blocked while revoked, PDF still downloads, restore, trail is exactly created/edited/revoked/restored). Not yet clicked through by a person; owner to try the edit, revoke and restore screens once, then tick this
 
 ## Phase 5 — Bulk import (.xlsx / .csv)
 

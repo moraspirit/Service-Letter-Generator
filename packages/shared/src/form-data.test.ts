@@ -71,3 +71,22 @@ describe("validateCertificateData", () => {
     }
   });
 });
+
+describe("richTextToPlainText", () => {
+  it("round-trips whatever plainTextToRichText produced", async () => {
+    const { richTextToPlainText } = await import("./form-data");
+    for (const text of [
+      "one paragraph",
+      "first\n\nsecond",
+      "line one\nline two\n\nnew paragraph",
+      "a <b>tag</b> & \"quotes\" and 'apostrophes'",
+    ]) {
+      expect(richTextToPlainText(plainTextToRichText(text))).toBe(text);
+    }
+  });
+
+  it("drops other tags but keeps their text", async () => {
+    const { richTextToPlainText } = await import("./form-data");
+    expect(richTextToPlainText("<p>Hi <strong>you</strong></p>")).toBe("Hi you");
+  });
+});

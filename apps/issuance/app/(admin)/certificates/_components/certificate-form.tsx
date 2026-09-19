@@ -4,10 +4,10 @@ import Link from "next/link";
 import { useActionState, useMemo, useState } from "react";
 import { renderCertificateHtml } from "@moraspirit/certificate-render";
 import { dataFromRawValues, type FieldDefinition, type FieldSchema } from "@moraspirit/shared";
-import { issueCertificateAction, type IssueActionState } from "./actions";
+import { stateMessage, type FormState } from "./form-state";
 
 const PREVIEW_SCALE = 0.6;
-const initial: IssueActionState = { status: "idle" };
+const initial: FormState = { status: "idle" };
 const inputClass =
   "rounded border border-zinc-300 bg-white px-3 py-2 text-base font-normal text-zinc-900";
 
@@ -68,22 +68,32 @@ function Field({
   );
 }
 
+/**
+ * The form generated from a template version's field schema. Used to issue a new
+ * certificate and to edit an existing one (which additionally requires a reason).
+ */
 export function CertificateForm({
-  templateId,
+  mode,
+  action,
+  hidden,
   htmlContent,
   fieldSchema,
   defaults,
 }: {
-  templateId: number;
+  mode: "issue" | "edit";
+  action: (previous: FormState, formData: FormData) => Promise<FormState>;
+  /** Extra hidden inputs the action needs (template id, or certificate id + loaded timestamp). */
+  hidden: Record<string, string>;
   htmlContent: string;
   fieldSchema: FieldSchema;
   defaults: Record<string, string>;
 }) {
   const [values, setValues] = useState<Record<string, string>>(defaults);
-  const [state, action, pending] = useActionState(issueCertificateAction, initial);
+  const [reason, setReason] = useState("");
+  const [state, formAction, pending] = useActionState(action, initial);
 
   // Live preview: the same render function as the PDF, running in the browser. The QR
-  // code is a placeholder until the certificate exists and has its UUID.
+  // code is a placeholder in the preview.
   const preview = useMemo(() => {
     try {
       return renderCertificateHtml(
@@ -96,11 +106,15 @@ export function CertificateForm({
   }, [htmlContent, fieldSchema, values]);
 
   const errors = state.status === "invalid" ? state.errors : {};
+  const message = stateMessage(state);
+  const anyway = mode === "issue" ? "Issue anyway" : "Save anyway";
 
   return (
     <div className="grid gap-8 lg:grid-cols-[minmax(0,26rem)_1fr]">
-      <form action={action} className="flex flex-col gap-4">
-        <input type="hidden" name="templateId" value={templateId} />
+      <form action={formAction} className="flex flex-col gap-4">
+        {Object.entries(hidden).map(([name, value]) => (
+          <input key={name} type="hidden" name={name} value={value} />
+        ))}
         {fieldSchema.map((field) => (
           <Field
             key={field.name}
@@ -111,12 +125,36 @@ export function CertificateForm({
           />
         ))}
 
-        {state.status === "overflow" || state.status === "render_failed" ? (
+        {mode === "edit" ? (
+          <div className="flex flex-col gap-1 border-t border-zinc-200 pt-4">
+            <label htmlFor="reason" className="text-sm font-medium">
+              Reason for this change
+            </label>
+            <textarea
+              id="reason"
+              name="reason"
+              rows={2}
+              maxLength={500}
+              required
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              className={inputClass}
+            />
+            <p className="text-xs text-zinc-500">Recorded in the audit history.</p>
+            {errors.reason ? (
+              <p role="alert" className="text-sm text-red-700">
+                {errors.reason}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+
+        {message ? (
           <p
             role="alert"
             className="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800"
           >
-            {state.message}
+            {message}
           </p>
         ) : null}
 
@@ -143,7 +181,7 @@ export function CertificateForm({
               disabled={pending}
               className="mt-3 rounded bg-amber-700 px-3 py-1.5 font-medium text-white disabled:opacity-60"
             >
-              Issue anyway
+              {anyway}
             </button>
           </div>
         ) : null}
@@ -153,12 +191,18 @@ export function CertificateForm({
           disabled={pending}
           className="w-fit rounded bg-red-700 px-4 py-2 font-medium text-white disabled:opacity-60"
         >
-          {pending ? "Issuing…" : "Issue certificate"}
+          {pending
+            ? mode === "issue"
+              ? "Issuing…"
+              : "Saving…"
+            : mode === "issue"
+              ? "Issue certificate"
+              : "Save changes"}
         </button>
       </form>
 
       <div>
-        <p className="mb-2 text-sm text-zinc-600">Live preview (QR code appears once issued)</p>
+        <p className="mb-2 text-sm text-zinc-600">Live preview (the QR code is a placeholder)</p>
         {preview ? (
           <div
             className="overflow-hidden rounded border border-zinc-300 bg-zinc-100"

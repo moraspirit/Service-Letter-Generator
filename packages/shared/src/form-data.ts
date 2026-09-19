@@ -83,3 +83,27 @@ export function validateCertificateData(
   if (Object.keys(errors).length > 0) return { ok: false, errors };
   return { ok: true, data: parsed.data as CertificateData };
 }
+
+const ENTITIES: Record<string, string> = {
+  "&amp;": "&",
+  "&lt;": "<",
+  "&gt;": ">",
+  "&quot;": '"',
+  "&#39;": "'",
+  "&#x27;": "'",
+};
+
+/**
+ * The reverse of `plainTextToRichText`, for pre-filling the edit form: paragraphs
+ * become blank-line-separated text, `<br>` a line break, entities are unescaped and
+ * any other tag is dropped (keeping its text).
+ */
+export function richTextToPlainText(html: string): string {
+  return html
+    .replace(/<\/p>\s*<p>/gi, "\n\n")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/(li|ul|ol)>/gi, "\n")
+    .replace(/<[^>]*>/g, "")
+    .replace(/&(?:amp|lt|gt|quot|#39|#x27);/g, (e) => ENTITIES[e] ?? e)
+    .trim();
+}

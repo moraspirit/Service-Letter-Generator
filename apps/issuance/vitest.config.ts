@@ -5,7 +5,8 @@ export default defineConfig({
     include: ["test/**/*.test.ts"],
     // Integration tests share one Aiven database, so run files one at a time.
     fileParallelism: false,
-    testTimeout: 30_000,
+    testTimeout: 60_000,
+    hookTimeout: 60_000,
     env: {},
   },
 });

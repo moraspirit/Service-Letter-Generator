@@ -18,6 +18,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             MoraSpirit Certificates
           </Link>
           <nav className="flex flex-1 gap-4 text-sm">
+            <Link href="/certificates" className="text-zinc-700 hover:underline">
+              Certificates
+            </Link>
             <Link href="/certificates/new" className="text-zinc-700 hover:underline">
               Issue certificate
             </Link>

@@ -2,8 +2,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { CertificateData, FieldSchema } from "@moraspirit/shared";
 import { prisma } from "@/lib/db";
+import { describeChanges } from "@/lib/audit-diff";
 import { requireAdmin } from "@/lib/require-admin";
 import { sanitizeRichText } from "@/lib/sanitize";
+import { StatusActions } from "./status-actions";
 import { buildVerifyUrl, UUID_PATTERN, VerifyUrlError } from "@/lib/verify-url";
 
 export const dynamic = "force-dynamic";
@@ -41,8 +43,8 @@ export default async function CertificatePage({ params }: { params: Promise<{ id
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <Link href="/certificates/new" className="text-sm text-red-700 hover:underline">
-          ← Issue another
+        <Link href="/certificates" className="text-sm text-red-700 hover:underline">
+          ← All certificates
         </Link>
         <h1 className="mt-2 text-2xl font-semibold">Certificate</h1>
         <p className="font-mono text-xs text-zinc-600">{certificate.id}</p>
@@ -55,6 +57,14 @@ export default async function CertificatePage({ params }: { params: Promise<{ id
         >
           Download PDF
         </a>
+        {certificate.status === "active" ? (
+          <Link
+            href={`/certificates/${certificate.id}/edit`}
+            className="rounded border border-zinc-300 px-4 py-2 font-medium"
+          >
+            Edit
+          </Link>
+        ) : null}
         <span
           className={`rounded px-2 py-0.5 text-xs ${
             certificate.status === "active"
@@ -65,6 +75,16 @@ export default async function CertificatePage({ params }: { params: Promise<{ id
           {certificate.status}
         </span>
       </div>
+
+      {certificate.status === "revoked" ? (
+        <p className="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">
+          Revoked {certificate.revokedAt ? certificate.revokedAt.toISOString().slice(0, 10) : ""}
+          {certificate.revocationReason ? `: ${certificate.revocationReason}` : ""}. Visitors who
+          scan its QR code see that it is revoked. Its details are not shown to them.
+        </p>
+      ) : null}
+
+      <StatusActions certificateId={certificate.id} status={certificate.status} />
 
       <dl className="grid grid-cols-[max-content_1fr] gap-x-6 gap-y-2 text-sm">
         <dt className="text-zinc-600">Template</dt>
@@ -109,14 +129,40 @@ export default async function CertificatePage({ params }: { params: Promise<{ id
 
       <section>
         <h2 className="mb-2 text-lg font-semibold">History</h2>
-        <ul className="text-sm text-zinc-700">
-          {certificate.auditEntries.map((entry) => (
-            <li key={String(entry.id)}>
-              {entry.createdAt.toISOString().slice(0, 16).replace("T", " ")} UTC · {entry.action} by{" "}
-              {entry.adminUser.email}
-            </li>
-          ))}
-        </ul>
+        <ol className="flex flex-col gap-3 text-sm">
+          {certificate.auditEntries.map((entry) => {
+            const changes =
+              entry.action === "edited"
+                ? describeChanges(
+                    schema,
+                    entry.oldData as unknown as CertificateData | null,
+                    entry.newData as unknown as CertificateData | null,
+                  )
+                : [];
+            return (
+              <li key={String(entry.id)} className="border-l-2 border-zinc-300 pl-3">
+                <p>
+                  <span className="font-medium">{entry.action}</span> by {entry.adminUser.email} ·{" "}
+                  {entry.createdAt.toISOString().slice(0, 16).replace("T", " ")} UTC
+                </p>
+                {entry.reason ? <p className="text-zinc-700">Reason: {entry.reason}</p> : null}
+                {changes.length > 0 ? (
+                  <ul className="mt-1 flex flex-col gap-1">
+                    {changes.map((c) => (
+                      <li key={c.label}>
+                        <span className="text-zinc-600">{c.label}:</span>{" "}
+                        <span className="whitespace-pre-wrap text-red-800 line-through">
+                          {c.before}
+                        </span>{" "}
+                        → <span className="whitespace-pre-wrap text-green-800">{c.after}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </li>
+            );
+          })}
+        </ol>
       </section>
     </div>
   );

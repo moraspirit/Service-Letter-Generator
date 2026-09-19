@@ -5,21 +5,12 @@ import type { RawValues } from "@moraspirit/shared";
 import { prisma } from "@/lib/db";
 import { issueCertificate } from "@/lib/issue-certificate";
 import { requireAdmin } from "@/lib/require-admin";
-
-export type IssueActionState =
-  | { status: "idle" }
-  | { status: "invalid"; errors: Record<string, string> }
-  | {
-      status: "duplicate";
-      existing: { id: string; state: "active" | "revoked"; issuedAt: string }[];
-    }
-  | { status: "overflow"; message: string; field: string | null }
-  | { status: "render_failed"; message: string };
+import type { FormState } from "../_components/form-state";
 
 export async function issueCertificateAction(
-  _previous: IssueActionState,
+  _previous: FormState,
   formData: FormData,
-): Promise<IssueActionState> {
+): Promise<FormState> {
   const admin = await requireAdmin();
 
   const templateId = Number(formData.get("templateId"));

@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import type { FieldSchema } from "@moraspirit/shared";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/require-admin";
-import { CertificateForm } from "./certificate-form";
+import { CertificateForm } from "../_components/certificate-form";
+import { issueCertificateAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -69,7 +70,9 @@ export default async function NewCertificatePage({
       </Link>
       <h1 className="text-2xl font-semibold">{template.name}</h1>
       <CertificateForm
-        templateId={template.id}
+        mode="issue"
+        action={issueCertificateAction}
+        hidden={{ templateId: String(template.id) }}
         htmlContent={template.currentVersion.htmlContent}
         fieldSchema={fieldSchema}
         defaults={defaults}
