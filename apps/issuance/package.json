@@ -11,7 +11,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "templates:publish": "tsx --env-file=.env.local scripts/publish-templates.ts",
-    "test": "vitest run",
+    "test": "node ../../packages/certificate-assets/sync.mjs public/certificate-assets && vitest run",
     "admin:create": "tsx --env-file=.env.local scripts/create-admin.ts"
   },
   "dependencies": {
@@ -23,15 +23,24 @@
     "@node-rs/argon2": "^2.2.1",
     "next": "16.3.5",
     "next-auth": "5.0.0-beta.32",
+    "pdf-lib": "^1.17.1",
+    "puppeteer-core": "^25.11.0",
+    "qrcode": "^1.5.4",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "sanitize-html": "^2.17.7"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/pngjs": "^6.0.5",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/sanitize-html": "^2.16.1",
     "babel-plugin-react-compiler": "1.0.0",
+    "jsqr": "^1.4.0",
+    "pngjs": "^7.0.0",
     "tailwindcss": "^4",
     "tsx": "^4.23.13",
     "typescript": "^5",

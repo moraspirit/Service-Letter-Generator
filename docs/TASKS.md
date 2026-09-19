@@ -15,7 +15,7 @@ Progress tracker for [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Architect
 | 0 | Foundations | ✅ Complete | All of P0-01→P0-12 done |
 | 1 | Shared rendering core | ✅ Complete | Both templates render to one US Letter page; see the notes under P1-17 |
 | 2 | App shell, auth, templates | 🔄 Built, awaiting owner | Everything works; the owner still has to run `pnpm admin:create` once (P2-05) |
-| 3 | Single issuance + PDF | ⬜ Not started | The core loop |
+| 3 | Single issuance + PDF | 🔄 Built, awaiting owner | M1 reached in automated checks; owner to click through the form once (P3-14) |
 | 4 | Certificate management | ⬜ Not started | |
 | 5 | Bulk import | ⬜ Not started | |
 | 6 | Bulk ZIP export | ⬜ Not started | |
@@ -102,20 +102,22 @@ Progress tracker for [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Architect
 
 ## Phase 3 — Single certificate issuance and PDF
 
-- [ ] **P3-01** Auto-generated issuance form from the field schema (incl. a textarea for `list` fields)
-- [ ] **P3-02** Live client-side preview using the shared render package
-- [ ] **P3-03** Server-side validation via the generated zod schema
-- [ ] **P3-04** Rich-text sanitization at save time (strict allowlist, no attributes)
-- [ ] **P3-05** `dedupe_key` computation and the duplicate warning with "Issue anyway"
-- [ ] **P3-06** Transactional insert: `certificates` row + `created` audit row
-- [ ] **P3-07** Puppeteer service: reused browser, capped concurrency, per-render timeout
-- [ ] **P3-08** Puppeteer lockdown: JavaScript disabled, all non-`data:` requests aborted
-- [ ] **P3-09** QR generation for the verify URL, inlined as base64
-- [ ] **P3-10** Page options from the template (Letter, zero margin, `printBackground`)
-- [ ] **P3-11** One-page rule: measure height, verify page count with `pdf-lib`, fail with a clear message
-- [ ] **P3-12** PDF download route streaming the file; re-download re-renders from stored data
-- [ ] **P3-13** Tests: page count, page size, embedded font, QR target, audit row present
-- [ ] **P3-14** ✅ Exit criteria verified — **Milestone M1**
+- [x] **P3-01** Auto-generated issuance form from the field schema (incl. a textarea for `list` fields)
+- [x] **P3-02** Live client-side preview using the shared render package
+- [x] **P3-03** Server-side validation via the generated zod schema
+- [x] **P3-04** Rich-text sanitization at save time (strict allowlist, no attributes)
+- [x] **P3-05** `dedupe_key` computation and the duplicate warning with "Issue anyway"
+- [x] **P3-06** Transactional insert: `certificates` row + `created` audit row
+- [x] **P3-07** Puppeteer service: reused browser, capped concurrency, per-render timeout
+- [x] **P3-08** Puppeteer lockdown: JavaScript disabled, all non-`data:` requests aborted
+- [x] **P3-09** QR generation for the verify URL, inlined as base64
+- [x] **P3-10** Page options from the template (Letter, zero margin, `printBackground`) — via the template's `@page` CSS + `preferCSSPageSize`, size verified after rendering
+- [x] **P3-11** One-page rule: measure height, verify page count with `pdf-lib`, fail with a clear message
+- [x] **P3-12** PDF download route streaming the file; re-download re-renders from stored data
+- [x] **P3-13** Tests: page count, page size, embedded font, QR target, audit row present
+- [~] **P3-14** — all exit criteria verified against a production build with real HTTP requests: issue → 303 to the certificate; the PDF is one 612×792 pt page with selectable text and Liberation Serif embedded; the QR decodes to `VERIFY_BASE_URL/verify/{uuid}`; 40 long bullets fail with "Shorten 'Special Points'" and write nothing; identical output with the network blocked; exactly one `created` audit row per certificate. **Not yet checked by a person:** typing into the form and watching the live preview move, and the on-screen duplicate/overflow panels — owner to click through once (issue a fake certificate, download the PDF, look at it), then tick this
+
+- [x] **P3-15** `/certificates/[id]` detail page (values, template version, status, history, download button) and dashboard/nav links — minimal; Phase 4 builds the list, edit and revoke on it
 
 ## Phase 4 — Certificate management
 

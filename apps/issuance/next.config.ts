@@ -10,6 +10,18 @@ const nextConfig: NextConfig = {
     "@moraspirit/certificate-render",
     "@moraspirit/certificate-templates",
   ],
+  // Node-only browser driver: keep it out of the bundle.
+  serverExternalPackages: ["puppeteer-core"],
+  async headers() {
+    return [
+      {
+        // The live preview renders inside a sandboxed iframe (opaque origin), which can only
+        // load these fonts and images with CORS. They are public letterhead artwork.
+        source: "/certificate-assets/:path*",
+        headers: [{ key: "Access-Control-Allow-Origin", value: "*" }],
+      },
+    ];
+  },
 };
 
 export default nextConfig;

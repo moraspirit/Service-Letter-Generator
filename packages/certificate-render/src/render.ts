@@ -24,7 +24,8 @@ export interface RenderOptions {
 const hbs = Handlebars.create();
 
 hbs.registerHelper("formatDate", (value: unknown) => {
-  if (typeof value !== "string" && !(value instanceof Date)) return "";
+  // Empty values render as nothing so a live preview of a half-filled form does not throw.
+  if ((typeof value !== "string" && !(value instanceof Date)) || value === "") return "";
   return formatDate(value);
 });
 

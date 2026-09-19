@@ -8,12 +8,16 @@ export default async function DashboardPage() {
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-semibold">Dashboard</h1>
       <p className="text-zinc-600">
-        Certificate issuance arrives in the next phases. For now you can review the published
-        templates.
+        Issue a certificate from a published template, or review the templates.
       </p>
-      <Link href="/templates" className="w-fit text-red-700 hover:underline">
-        View templates →
-      </Link>
+      <div className="flex gap-6">
+        <Link href="/certificates/new" className="w-fit text-red-700 hover:underline">
+          Issue a certificate →
+        </Link>
+        <Link href="/templates" className="w-fit text-red-700 hover:underline">
+          View templates →
+        </Link>
+      </div>
     </div>
   );
 }
