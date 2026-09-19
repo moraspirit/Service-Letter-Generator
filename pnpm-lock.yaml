@@ -41,6 +41,9 @@ importers:
 
   apps/issuance:
     dependencies:
+      '@moraspirit/certificate-assets':
+        specifier: workspace:*
+        version: link:../../packages/certificate-assets
       next:
         specifier: 16.3.5
         version: 16.3.5(@types/node@20.19.43)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -75,6 +78,9 @@ importers:
 
   apps/verify:
     dependencies:
+      '@moraspirit/certificate-assets':
+        specifier: workspace:*
+        version: link:../../packages/certificate-assets
       next:
         specifier: 16.3.5
         version: 16.3.5(@types/node@20.19.43)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -106,6 +112,8 @@ importers:
       typescript:
         specifier: ^5
         version: 5.9.3
+
+  packages/certificate-assets: {}
 
   packages/certificate-render:
     dependencies:

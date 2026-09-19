@@ -3,13 +3,16 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
+    "predev": "node ../../packages/certificate-assets/sync.mjs public/certificate-assets",
     "dev": "next dev",
+    "prebuild": "node ../../packages/certificate-assets/sync.mjs public/certificate-assets",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@moraspirit/certificate-assets": "workspace:*",
     "next": "16.3.5",
     "react": "19.2.8",
     "react-dom": "19.2.8"

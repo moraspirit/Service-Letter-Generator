@@ -13,7 +13,7 @@ Progress tracker for [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Architect
 | Phase | Scope | Status | Notes |
 |---|---|---|---|
 | 0 | Foundations | ✅ Complete | All of P0-01→P0-12 done |
-| 1 | Shared rendering core | 🔄 In progress | P1-01→P1-10 done (render core). P1-11, P1-12 done. Next: asset copy step, two templates (P1-13→P1-18). |
+| 1 | Shared rendering core | 🔄 In progress | P1-01→P1-10 done (render core). P1-11→P1-13 done. Next: the two templates (P1-14→P1-18). |
 | 2 | App shell, auth, templates | ⬜ Not started | |
 | 3 | Single issuance + PDF | ⬜ Not started | The core loop |
 | 4 | Certificate management | ⬜ Not started | |
@@ -77,7 +77,7 @@ Progress tracker for [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Architect
 - [x] **P1-10** Asset resolution: data URIs for Puppeteer, plain paths for the browser
 - [x] **P1-11** Extract the letterhead image from the samples into `packages/certificate-assets` (cut into `mora-header-v1.jpg` + `mora-footer-v1.jpg`; see the package README for why)
 - [x] **P1-12** Choose and add the font files (D2), with licences recorded in the package README (Liberation Serif 2.1.5, 4 styles, lossless WOFF2, not subset — see README)
-- [ ] **P1-13** Build step copying assets into both apps' `public/certificate-assets/`
+- [x] **P1-13** Build step copying assets into both apps' `public/certificate-assets/` (`sync.mjs`, run by each app's `predev`/`prebuild`; the apps depend on the package so Turborepo rebuilds when an asset changes)
 - [ ] **P1-14** Author `moraspirit-service-letter/template.hbs` — US Letter, full-bleed letterhead, US spelling, QR placeholder
 - [ ] **P1-15** Author its `schema.json` with the field set from architecture §5
 - [ ] **P1-16** Pronoun tests for all three honorifics, including the "Ms. … he pursues" case
