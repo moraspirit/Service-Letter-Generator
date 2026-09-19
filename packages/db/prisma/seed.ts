@@ -171,7 +171,9 @@ async function seed(prisma) {
     },
   });
 
-  const template = await prisma.template.create({ data: { name: "Service letter (fixture)" } });
+  const template = await prisma.template.create({
+    data: { name: "Service letter (fixture)", slug: "fixture-service-letter" },
+  });
 
   const v1 = await prisma.templateVersion.create({
     data: {

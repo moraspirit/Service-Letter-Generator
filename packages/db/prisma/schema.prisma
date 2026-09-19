@@ -37,6 +37,10 @@ model Template {
   id   Int    @id @default(autoincrement())
   name String @db.VarChar(255)
 
+  /// Stable key: the folder name under packages/certificate-templates. How
+  /// templates:publish matches a folder to its row.
+  slug String @unique @db.VarChar(100)
+
   /// Version used for NEW certificates. Null until the first version is
   /// published by the templates:publish script (architecture §6 A).
   currentVersionId Int? @map("current_version_id")

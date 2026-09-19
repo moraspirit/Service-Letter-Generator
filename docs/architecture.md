@@ -124,6 +124,7 @@ If a shared host is chosen despite a weak connection limit, the escape hatch is 
 templates
   id                   INT PK AUTO_INCREMENT
   name                 VARCHAR(255)
+  slug                 VARCHAR(100) UNIQUE  -- folder name under packages/certificate-templates; how templates:publish matches a folder to its row
   current_version_id   INT FK -> template_versions.id NULL  -- version used for NEW certificates
   created_at           DATETIME
   updated_at           DATETIME
@@ -425,4 +426,13 @@ All editing happens on the **issuance app (VPS)** only — the verification app 
 - Besides the schema fields, `renderCertificateHtml` provides the derived pronouns (`pronoun_subject`, `Pronoun_subject`, `pronoun_object`, `pronoun_possessive` and capitalized forms, plus the `verb` helper) and, when the caller passes `qr`, `verify_qr` (a data URI) and `verify_url`. Without `qr` (previews) the templates draw a dashed placeholder box. Derived and reserved names always win over data with the same key.
 - Templates in `packages/certificate-templates/`: `moraspirit-service-letter` (standard wording) and `moraspirit-service-letter-outstanding` (the longer wording, decision D3). Both use the single full-page `mora-letterhead-v1.jpg` as a background, US Letter, 12 pt Liberation Serif, and mark the printable text area `#letter-body` (the one-page rule measures it, Phase 3).
 - The lead-in sentence for `special_points` in the standard template ("made the following notable contributions") is new wording, not from the samples, which have no such sentence. MoraSpirit should confirm it.
+
+### Admin authentication as built (Phase 2)
+
+- Auth.js v5 credentials provider with a **JWT session** (Auth.js cannot keep credentials-login sessions in the database): `authjs.session-token`, `HttpOnly`, `SameSite=Lax`, `Secure` over HTTPS, 8-hour absolute expiry. Sign-in and sign-out go through Auth.js, which requires its CSRF token; a login POST without it is refused (`MissingCSRF`).
+- **Two-layer session guard.** `proxy.ts` (Next 16's renamed middleware, Node runtime) redirects signed-out pages to `/login` and returns 401 for signed-out `/api/*`; it only validates the signed cookie. `requireAdmin()` / `requireAdminApi()` run inside every admin layout, page, Server Action and route handler and additionally confirm the `admin_users` row still exists, so deleting a row ends that admin's access immediately. Excluded from the proxy: `/api/auth/*`, framework internals and `/certificate-assets/*` (public letterhead artwork).
+- **Login throttling** lives in `login_attempts`: 5 failures per (lower-cased email, IP) in a sliding 15-minute window; a blocked attempt is refused with the same generic error as a wrong password and is not recorded, so the block ends 15 minutes after the oldest of the failures. A successful login does not reset the count. Rows older than 24 hours are purged on each login. An unknown email or a throttled attempt still runs a full argon2id verification, so timing does not reveal which emails exist.
+- The client IP is the first `X-Forwarded-For` entry, which is only trustworthy behind our own reverse proxy that overwrites the header (Phase 8: configure the proxy and set `AUTH_URL`/HTTPS).
+- Passwords: argon2id via `@node-rs/argon2`, minimum 12 characters, accepted only at the hidden prompt of `pnpm admin:create` (never as an argument).
+- `templates:publish` hashes `template.hbs` plus the key-sorted `field_schema` (SHA-256), runs the safety check (no `<script>`/`iframe`/`form`/`link`/`base`, inline handlers, `javascript:`, `@import`, `meta http-equiv`, or any URL that is not `/certificate-assets/...`, `data:`, `#`, or a `{{variable}}`) on **every** template before writing anything, and inserts a new version only when the hash changed. The admin template screens are read-only; previews render the stored version with the folder's `sample.json` (or generated sample data if the schema no longer fits) inside a `sandbox=""` iframe with assets inlined as data URIs.
 

@@ -1,0 +1,20 @@
+{
+  "member_id": "SAMPLE001",
+  "recipient_name": "Alex Example",
+  "honorific": "Ms.",
+  "pillar_name": "Sample Projects Pillar",
+  "start_date": "2025-04-28",
+  "end_date": "2026-04-29",
+  "general_points": [
+    "Demonstrated strong commitment and responsibility in carrying out assigned tasks.",
+    "Actively collaborated with fellow members to ensure smooth coordination of pillar initiatives.",
+    "Showed enthusiasm and professionalism in participating in pillar operations."
+  ],
+  "special_points": [
+    "Served as the Co-Chairperson of a sample project, demonstrating strong leadership.",
+    "Actively contributed to the successful execution of other initiatives."
+  ],
+  "signatory_name": "Heminda Jayaweera",
+  "signatory_title": "Co-Founder, MoraSpirit",
+  "signatory_email": "heminda@moraspirit.com"
+}

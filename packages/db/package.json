@@ -11,11 +11,13 @@
     "studio": "prisma studio",
     "validate": "prisma validate",
     "format:schema": "prisma format",
-    "seed": "node prisma/seed.ts"
+    "seed": "node prisma/seed.ts",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "dotenv": "^18.0.0",
-    "prisma": "7.10.0"
+    "prisma": "7.10.0",
+    "@types/node": "^20.19.43"
   },
   "dependencies": {
     "@node-rs/argon2": "^2.2.1",
@@ -23,5 +25,8 @@
     "@prisma/client": "^7.10.0",
     "mariadb": "^3.5.4"
   },
-  "type": "module"
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  }
 }

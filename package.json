@@ -16,7 +16,9 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "db:seed": "pnpm --filter @moraspirit/db seed",
-    "db:reset": "pnpm --filter @moraspirit/db exec prisma migrate reset"
+    "db:reset": "pnpm --filter @moraspirit/db exec prisma migrate reset",
+    "templates:publish": "pnpm --filter issuance templates:publish",
+    "admin:create": "pnpm --filter issuance admin:create"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8" />
+    <meta charset="utf-8">
     <title>Certificate of Employment</title>
     <style>
       @font-face {
@@ -106,21 +106,26 @@
     </style>
   </head>
   <body>
-    <div class="page">
-      <div id="letter-body">
+    
+<div class="page">
+<div id="letter-body">
 <p>To whom it may concern,</p>
 <p class="title">Certificate of Employment</p>
 <p>This letter confirms that {{honorific}} {{recipient_name}} served with MoraSpirit Organization as a member of the {{pillar_name}} from {{formatDate start_date}} to {{formatDate end_date}}.</p>
 <p>During this period, {{honorific}} {{recipient_name}} proved to be a valuable asset to our organization. {{Pronoun_subject}} demonstrated qualities of diligence, honesty, and commitment, along with excellent interpersonal skills.</p>
 <p>{{honorific}} {{recipient_name}} effectively completed the following tasks:</p>
 <ul>{{#each general_points}}<li>{{this}}</li>{{/each}}</ul>
-{{#if special_points}}<p>In addition, {{honorific}} {{recipient_name}} made the following notable contributions:</p>
+{{#if special_points}}
+<p>In addition, {{honorific}} {{recipient_name}} made the following notable contributions:</p>
 <ul>{{#each special_points}}<li>{{this}}</li>{{/each}}</ul>
-{{/if}}<p>Additionally, {{honorific}} {{recipient_name}} actively participated in pillar activities, contributing significantly to our organizational objectives. We are confident that {{pronoun_subject}} will bring the same level of dedication and professionalism to any opportunity {{pronoun_subject}} {{verb "pursues" "pursue"}}.</p>
+{{/if}}
+<p>Additionally, {{honorific}} {{recipient_name}} actively participated in pillar activities, contributing significantly to our organizational objectives. We are confident that {{pronoun_subject}} will bring the same level of dedication and professionalism to any opportunity {{pronoun_subject}} {{verb "pursues" "pursue"}}.</p>
 <p>We extend our best wishes to {{honorific}} {{recipient_name}} in {{pronoun_possessive}} future endeavors and professional career.</p>
 <div class="sign-row">
-<div><p>Thank you.<br>Sincerely,</p>
-<p class="signature"><br>{{signatory_name}}<br>{{signatory_title}}<br>Email: {{signatory_email}}</p></div>
+<div>
+<p>Thank you.<br>Sincerely,</p>
+<p class="signature"><br>{{signatory_name}}<br>{{signatory_title}}<br>Email: {{signatory_email}}</p>
+</div>
 <div class="qr">{{#if verify_qr}}<img src="{{verify_qr}}" alt="Verification QR code">{{else}}<div class="qr-placeholder"></div>{{/if}}Scan to verify</div>
 </div>
 </div>

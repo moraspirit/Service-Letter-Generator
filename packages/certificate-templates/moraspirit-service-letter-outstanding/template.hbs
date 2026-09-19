@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8" />
+    <meta charset="utf-8">
     <title>Certificate of Employment</title>
     <style>
       @font-face {
@@ -106,20 +106,25 @@
     </style>
   </head>
   <body>
-    <div class="page">
-      <div id="letter-body">
+    
+<div class="page">
+<div id="letter-body">
 <p>To whom it may concern,</p>
 <p class="title">Certificate of Employment</p>
 <p>This letter certifies that {{honorific}} {{recipient_name}} served as a member of the {{pillar_name}} at MoraSpirit Organization from {{formatDate start_date}} to {{formatDate end_date}}. During this period, {{pronoun_subject}} made outstanding contributions to the organization, consistently demonstrating professionalism, dedication, and a strong commitment to excellence.</p>
 <p>{{honorific}} {{recipient_name}} played a key role in MoraSpirit's {{pillar_name}} operations, effectively managing and executing a range of responsibilities, including:</p>
 <ul>{{#each general_points}}<li>{{this}}</li>{{/each}}</ul>
-{{#if special_points}}<p>Beyond {{pronoun_possessive}} core responsibilities, {{honorific}} {{recipient_name}} actively participated in pillar initiatives, displaying exceptional leadership and problem-solving skills. {{Pronoun_possessive}} dedication and ability to navigate challenges were instrumental in advancing MoraSpirit's objectives. Some of {{pronoun_possessive}} notable contributions include:</p>
+{{#if special_points}}
+<p>Beyond {{pronoun_possessive}} core responsibilities, {{honorific}} {{recipient_name}} actively participated in pillar initiatives, displaying exceptional leadership and problem-solving skills. {{Pronoun_possessive}} dedication and ability to navigate challenges were instrumental in advancing MoraSpirit's objectives. Some of {{pronoun_possessive}} notable contributions include:</p>
 <ul>{{#each special_points}}<li>{{this}}</li>{{/each}}</ul>
-{{/if}}<p>{{Pronoun_possessive}} work consistently exceeded expectations, setting a high standard within the organization. We sincerely appreciate {{pronoun_possessive}} efforts and commend {{pronoun_object}} for the impact {{pronoun_subject}} {{verb "has" "have"}} made.</p>
+{{/if}}
+<p>{{Pronoun_possessive}} work consistently exceeded expectations, setting a high standard within the organization. We sincerely appreciate {{pronoun_possessive}} efforts and commend {{pronoun_object}} for the impact {{pronoun_subject}} {{verb "has" "have"}} made.</p>
 <p>We extend our best wishes to {{honorific}} {{recipient_name}} in {{pronoun_possessive}} future endeavors and have full confidence in {{pronoun_possessive}} ability to excel in any professional pursuit.</p>
 <div class="sign-row">
-<div><p>Thank you.<br>Sincerely,</p>
-<p class="signature"><br>{{signatory_name}}<br>{{signatory_title}}<br>Email: {{signatory_email}}</p></div>
+<div>
+<p>Thank you.<br>Sincerely,</p>
+<p class="signature"><br>{{signatory_name}}<br>{{signatory_title}}<br>Email: {{signatory_email}}</p>
+</div>
 <div class="qr">{{#if verify_qr}}<img src="{{verify_qr}}" alt="Verification QR code">{{else}}<div class="qr-placeholder"></div>{{/if}}Scan to verify</div>
 </div>
 </div>

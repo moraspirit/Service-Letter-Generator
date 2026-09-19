@@ -45,3 +45,21 @@ describe("applyDefaults", () => {
     expect(applyDefaults(fields, { a: "y" }).a).toBe("y");
   });
 });
+
+describe("sampleDataFromSchema", () => {
+  it("produces data that passes the schema's own validation", async () => {
+    const { sampleDataFromSchema } = await import("./schema-file");
+    const { buildZodSchema } = await import("./zod-schema");
+    const { fields } = parseTemplateSchemaFile({
+      name: "T",
+      fields: [
+        { name: "a", label: "A", type: "text", required: true },
+        { name: "d", label: "D", type: "date", required: true },
+        { name: "s", label: "S", type: "select", required: true, options: ["x", "y"] },
+        { name: "l", label: "L", type: "list", required: true },
+        { name: "r", label: "R", type: "richtext", required: false },
+      ],
+    });
+    expect(buildZodSchema(fields).safeParse(sampleDataFromSchema(fields)).success).toBe(true);
+  });
+});

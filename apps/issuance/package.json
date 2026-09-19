@@ -9,11 +9,20 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "templates:publish": "tsx --env-file=.env.local scripts/publish-templates.ts",
+    "test": "vitest run",
+    "admin:create": "tsx --env-file=.env.local scripts/create-admin.ts"
   },
   "dependencies": {
     "@moraspirit/certificate-assets": "workspace:*",
+    "@moraspirit/certificate-render": "workspace:*",
+    "@moraspirit/certificate-templates": "workspace:*",
+    "@moraspirit/db": "workspace:*",
+    "@moraspirit/shared": "workspace:*",
+    "@node-rs/argon2": "^2.2.1",
     "next": "16.3.5",
+    "next-auth": "5.0.0-beta.32",
     "react": "19.2.8",
     "react-dom": "19.2.8"
   },
@@ -24,6 +33,8 @@
     "@types/react-dom": "^19",
     "babel-plugin-react-compiler": "1.0.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "tsx": "^4.23.13",
+    "typescript": "^5",
+    "vitest": "^5.0.1"
   }
 }

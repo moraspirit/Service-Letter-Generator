@@ -14,7 +14,7 @@ Progress tracker for [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Architect
 |---|---|---|---|
 | 0 | Foundations | ✅ Complete | All of P0-01→P0-12 done |
 | 1 | Shared rendering core | ✅ Complete | Both templates render to one US Letter page; see the notes under P1-17 |
-| 2 | App shell, auth, templates | ⬜ Not started | |
+| 2 | App shell, auth, templates | 🔄 Built, awaiting owner | Everything works; the owner still has to run `pnpm admin:create` once (P2-05) |
 | 3 | Single issuance + PDF | ⬜ Not started | The core loop |
 | 4 | Certificate management | ⬜ Not started | |
 | 5 | Bulk import | ⬜ Not started | |
@@ -44,7 +44,7 @@ Progress tracker for [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Architect
 | D4 | VPS provider and region | ⏳ Must sit near the database region | Phase 8 |
 | D7 | Dev `avnadmin` password was printed into a session transcript on 2026-09-19 | ✅ Rotated by the owner. `app_rw` / `verify_ro` passwords were generated locally and never printed | — |
 | D6 | Prisma is pinned to **7.10.0**; 8.0.0 exists only as a release candidate and the CLI nags about it. Revisit once 8 is stable — the upgrade changes client instantiation | ⏳ Open | Phase 8 |
-| D5 | Next.js 16 writes its own `AGENTS.md` / `CLAUDE.md` into each app on `next dev` and re-adds them if deleted. Currently kept, with a pointer appended to the root rules. Confirm this is acceptable or decide on a suppression approach | ⏳ Open | Phase 2 |
+| ✅ Kept as-is (owner approved 2026-09-19) | — |
 
 ---
 
@@ -88,17 +88,17 @@ Progress tracker for [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Architect
 
 ## Phase 2 — Issuance app shell, auth and templates
 
-- [ ] **P2-01** Auth.js credentials provider with argon2id hashing
-- [ ] **P2-02** Session cookie settings (`HttpOnly`, `SameSite=Lax`, 8-hour expiry) and CSRF protection
-- [ ] **P2-03** Login rate limiting via `login_attempts` (5 per email+IP per 15 min) plus row purging
-- [ ] **P2-04** Generic login error messages (no account enumeration)
-- [ ] **P2-05** CLI script to create an admin account
-- [ ] **P2-06** Admin layout, navigation and a session guard on every route and API handler
-- [ ] **P2-07** `templates:publish` script with content hashing and version insertion
-- [ ] **P2-08** Template safety check in the publish script (no `<script>`, no inline handlers, no external URLs) wired into CI
-- [ ] **P2-09** Template list and version history screens (read-only)
-- [ ] **P2-10** Template preview rendered with sample data
-- [ ] **P2-11** ✅ Exit criteria verified (auth guards, lockout, idempotent publish, unsafe template rejected)
+- [x] **P2-01** Auth.js credentials provider with argon2id hashing
+- [x] **P2-02** Session cookie settings (`HttpOnly`, `SameSite=Lax`, 8-hour expiry) and CSRF protection
+- [x] **P2-03** Login rate limiting via `login_attempts` (5 per email+IP per 15 min) plus row purging
+- [x] **P2-04** Generic login error messages (no account enumeration)
+- [~] **P2-05** CLI script to create an admin account (`pnpm admin:create`, hidden password prompt) — written and type-checked but needs an interactive terminal, so it is **not yet run**: owner to run it once and tick this
+- [x] **P2-06** Admin layout, navigation and a session guard on every route and API handler
+- [x] **P2-07** `templates:publish` script with content hashing and version insertion
+- [x] **P2-08** Template safety check in the publish script (no `<script>`, no inline handlers, no external URLs) wired into CI
+- [x] **P2-09** Template list and version history screens (read-only)
+- [x] **P2-10** Template preview rendered with sample data
+- [~] **P2-11** — verified against a production build: every page redirects to /login and `/api/*` returns 401 when signed out; 5 failed logins then a correct password is refused (rows cleaned up afterwards); the block expiry is proven by the time-travel test; `templates:publish` twice = one version, one changed character = a second; a `<script>` template is rejected and nothing is written. Left open only until P2-05 is confirmed
 
 ## Phase 3 — Single certificate issuance and PDF
 

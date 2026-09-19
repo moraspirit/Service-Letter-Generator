@@ -56,3 +56,26 @@ export function applyDefaults(schema: FieldSchema, data: CertificateData): Certi
   }
   return out;
 }
+
+/** Placeholder values for every field, used to preview a version whose folder sample no longer fits. */
+export function sampleDataFromSchema(schema: FieldSchema): CertificateData {
+  const data: CertificateData = {};
+  for (const field of schema) {
+    switch (field.type) {
+      case "text":
+      case "richtext":
+        data[field.name] = field.default ?? `Sample ${field.label.toLowerCase()}`;
+        break;
+      case "date":
+        data[field.name] = field.default ?? "2025-01-15";
+        break;
+      case "select":
+        data[field.name] = field.default ?? field.options[0];
+        break;
+      case "list":
+        data[field.name] = ["Sample item one.", "Sample item two."];
+        break;
+    }
+  }
+  return data;
+}
