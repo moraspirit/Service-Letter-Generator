@@ -2,9 +2,16 @@ packages:
   - "apps/*"
   - "packages/*"
 
-# Dependency build scripts that are explicitly not run (moved here from the
-# app-level file create-next-app generates; a nested pnpm-workspace.yaml would
-# make apps/issuance a separate workspace root and break the monorepo).
+# Which dependency install scripts are allowed to run.
+# (Kept here rather than in an app-level pnpm-workspace.yaml, which would make
+# that app a separate workspace root and break the monorepo.)
 allowBuilds:
+  # Prisma downloads its query engine binaries in a postinstall script.
+  prisma: true
+  "@prisma/engines": true
+  # Native/optional build steps we do not need; the JS fallbacks are fine.
   sharp: false
   unrs-resolver: false
+  esbuild: false
+  msgpackr-extract: false
+  workerd: false

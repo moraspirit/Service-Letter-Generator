@@ -1,0 +1,22 @@
+{
+  "name": "@moraspirit/db",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Prisma schema, migrations and generated client — the only place database access is defined",
+  "scripts": {
+    "generate": "prisma generate",
+    "migrate:dev": "prisma migrate dev",
+    "migrate:deploy": "prisma migrate deploy",
+    "migrate:status": "prisma migrate status",
+    "studio": "prisma studio",
+    "validate": "prisma validate",
+    "format:schema": "prisma format"
+  },
+  "devDependencies": {
+    "dotenv": "^18.0.0",
+    "prisma": "7.10.0"
+  },
+  "dependencies": {
+    "@prisma/client": "^7.10.0"
+  }
+}
