@@ -1,0 +1,12 @@
+node_modules
+.next
+dist
+.turbo
+coverage
+pnpm-lock.yaml
+next-env.d.ts
+docs/samples
+
+# Hand-authored documentation: Prettier reflows tables and long prose lines,
+# which makes diffs unreadable. Formatted by hand instead.
+*.md

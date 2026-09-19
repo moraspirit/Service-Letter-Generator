@@ -1,0 +1,10 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+# Dependency build scripts that are explicitly not run (moved here from the
+# app-level file create-next-app generates; a nested pnpm-workspace.yaml would
+# make apps/issuance a separate workspace root and break the monorepo).
+allowBuilds:
+  sharp: false
+  unrs-resolver: false

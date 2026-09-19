@@ -12,7 +12,7 @@ Progress tracker for [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Architect
 
 | Phase | Scope | Status | Notes |
 |---|---|---|---|
-| 0 | Foundations | ⬜ Not started | Needs the Aiven instance first |
+| 0 | Foundations | 🟡 In progress | P0-01→P0-04 done. Next: P0-05 (Aiven instance — needs the owner's account) |
 | 1 | Shared rendering core | ⬜ Not started | |
 | 2 | App shell, auth, templates | ⬜ Not started | |
 | 3 | Single issuance + PDF | ⬜ Not started | The core loop |
@@ -42,15 +42,16 @@ Progress tracker for [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Architect
 | D2 | Font substitute for Times New Roman | ⏳ Liberation Serif vs Tinos — pick one and keep it, since changing it later moves every line break | Phase 1 |
 | D3 | Whether a second template is needed for the longer "outstanding contributions" wording | ⏳ The two sample DOCX files differ; confirm with MoraSpirit which wordings stay in use | Phase 1 |
 | D4 | VPS provider and region | ⏳ Must sit near the database region | Phase 8 |
+| D5 | Next.js 16 writes its own `AGENTS.md` / `CLAUDE.md` into each app on `next dev` and re-adds them if deleted. Currently kept, with a pointer appended to the root rules. Confirm this is acceptable or decide on a suppression approach | ⏳ Open | Phase 2 |
 
 ---
 
 ## Phase 0 — Foundations
 
-- [ ] **P0-01** Create the pnpm workspace + Turborepo skeleton with the layout from the plan
-- [ ] **P0-02** Scaffold `apps/issuance` (Next.js + TypeScript + Tailwind)
-- [ ] **P0-03** Scaffold `apps/verify` (Next.js + TypeScript, minimal)
-- [ ] **P0-04** Shared ESLint / Prettier / tsconfig and the `pnpm build` pipeline
+- [x] **P0-01** Create the pnpm workspace + Turborepo skeleton with the layout from the plan
+- [x] **P0-02** Scaffold `apps/issuance` (Next.js + TypeScript + Tailwind)
+- [x] **P0-03** Scaffold `apps/verify` (Next.js + TypeScript + Tailwind, no other features)
+- [x] **P0-04** Shared ESLint / Prettier / tsconfig and the `pnpm build` pipeline
 - [ ] **P0-05** Create the Aiven for MySQL free instance; download the TLS CA certificate
 - [ ] **P0-06** `packages/db`: Prisma schema for all 7 tables from architecture §4, with indexes, uniques and enums
 - [ ] **P0-07** First migration applied to Aiven over TLS (`?sslaccept=strict`)
