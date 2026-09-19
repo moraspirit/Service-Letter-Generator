@@ -343,7 +343,7 @@ The certificate header (the diagonal wave graphic) is treated as a **static imag
 - Templates declare them with `@font-face` pointing at `/certificate-assets/fonts/...`. The **verify page** loads them from its own `public/` folder; **Puppeteer** inlines them as base64 data URIs before rendering, exactly like images — so the Docker image doesn't need any system fonts installed and the network stays blocked.
 - Every `font-family` stack ends in a generic fallback (`serif` / `sans-serif`), but templates must not rely on it: the PDF and verify page are only guaranteed to match when the bundled fonts load.
 - Font licences must allow embedding in PDFs and web use (e.g. fonts under the SIL Open Font License).
-- **The existing letters use Times New Roman, which cannot be bundled** — it is Microsoft-licensed. Use a metric-compatible, freely licensable substitute so line breaks and page fit stay virtually identical: **Liberation Serif** (OFL) or **Tinos** (Apache 2.0). The substitute is chosen once and then fixed, because changing it later changes where every letter's text wraps.
+- **The existing letters use Times New Roman, which cannot be bundled** — it is Microsoft-licensed. Use a metric-compatible, freely licensable substitute so line breaks and page fit stay virtually identical: **Liberation Serif** (OFL) — chosen (decision D2, 2026-09-19); Tinos was the alternative. The substitute is chosen once and then fixed, because changing it later changes where every letter's text wraps.
 
 ### Page setup & the one-page rule
 

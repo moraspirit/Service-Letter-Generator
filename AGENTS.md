@@ -77,7 +77,7 @@ Each of these exists for a reason spelled out in `docs/architecture.md` §9. Cha
 | Area | Decision |
 |---|---|
 | Header images & fonts | Developer-committed files in `packages/certificate-assets`, copied into both apps; no admin upload |
-| Fonts | Self-hosted, OFL/Apache-licensed. **Times New Roman must not be bundled** — use Liberation Serif or Tinos |
+| Fonts | Self-hosted, OFL/Apache-licensed. **Times New Roman must not be bundled** — use **Liberation Serif** (D2) |
 | Templates | Immutable versions; editing creates a new version; issued certificates stay on theirs |
 | Template authoring | Developer-only, in the repo. No editor in the admin panel |
 | Audit | Full `certificate_audit` table, written transactionally |

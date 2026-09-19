@@ -13,7 +13,7 @@ Progress tracker for [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Architect
 | Phase | Scope | Status | Notes |
 |---|---|---|---|
 | 0 | Foundations | ✅ Complete | All of P0-01→P0-12 done |
-| 1 | Shared rendering core | 🔄 In progress | P1-01→P1-04 done. Needs decisions D2 (font) and D3 (one template or two) |
+| 1 | Shared rendering core | 🔄 In progress | P1-01→P1-10 done (render core). P1-11 done. Next: font, asset copy step, two templates (P1-12→P1-18). |
 | 2 | App shell, auth, templates | ⬜ Not started | |
 | 3 | Single issuance + PDF | ⬜ Not started | The core loop |
 | 4 | Certificate management | ⬜ Not started | |
@@ -39,8 +39,8 @@ Progress tracker for [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Architect
 | ID | Decision | Status | Needed by |
 |---|---|---|---|
 | D1 | Production database provider | ⏳ Deferred until the system runs against Aiven. Candidates: paid Aiven, DigitalOcean, Neon, PeekHosting (only if it passes the architecture §3 gate) | Phase 8 |
-| D2 | Font substitute for Times New Roman | ⏳ Liberation Serif vs Tinos — pick one and keep it, since changing it later moves every line break | Phase 1 |
-| D3 | Whether a second template is needed for the longer "outstanding contributions" wording | ⏳ The two sample DOCX files differ; confirm with MoraSpirit which wordings stay in use | Phase 1 |
+| D2 | Font substitute for Times New Roman | ✅ **Liberation Serif** (OFL) chosen 2026-09-19; never change it, since that moves every line break | — |
+| D3 | Whether a second template is needed for the longer "outstanding contributions" wording | ✅ **Two templates.** MoraSpirit confirmed on 2026-09-19 that the long wording is still used, so it gets its own template (see P1-18). `recipient_surname` is optional and used by whichever wording refers to the recipient by surname | — |
 | D4 | VPS provider and region | ⏳ Must sit near the database region | Phase 8 |
 | D7 | Dev `avnadmin` password was printed into a session transcript on 2026-09-19 | ✅ Rotated by the owner. `app_rw` / `verify_ro` passwords were generated locally and never printed | — |
 | D6 | Prisma is pinned to **7.10.0**; 8.0.0 exists only as a release candidate and the CLI nags about it. Revisit once 8 is stable — the upgrade changes client instantiation | ⏳ Open | Phase 8 |
@@ -69,19 +69,20 @@ Progress tracker for [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Architect
 - [x] **P1-02** zod schema generator built from a field schema (used later by form, import and API)
 - [x] **P1-03** `list` parser — split lines, strip `•` `-` `*` `U+F0B7`, drop blanks, keep order
 - [x] **P1-04** Unit tests for the `list` parser using the real cell strings from the pillar spreadsheet (fixtures use synthetic wording in the real cells' exact format, so no sample content is committed)
-- [ ] **P1-05** `packages/certificate-render`: the single configured Handlebars instance
-- [ ] **P1-06** Honorific → pronoun mapping (Mr./Ms./Mx.) with capitalized variants
-- [ ] **P1-07** `verb` helper for singular/plural agreement
-- [ ] **P1-08** `formatDate` helper producing "28th of April 2025" in `Asia/Colombo`
-- [ ] **P1-09** `renderCertificateHtml(templateVersion, data)` as the only entry point
-- [ ] **P1-10** Asset resolution: data URIs for Puppeteer, plain paths for the browser
-- [ ] **P1-11** Extract the letterhead image from the samples into `packages/certificate-assets`
+- [x] **P1-05** `packages/certificate-render`: the single configured Handlebars instance
+- [x] **P1-06** Honorific → pronoun mapping (Mr./Ms./Mx.) with capitalized variants
+- [x] **P1-07** `verb` helper for singular/plural agreement
+- [x] **P1-08** `formatDate` helper producing "28th of April 2025" in `Asia/Colombo`
+- [x] **P1-09** `renderCertificateHtml(templateVersion, data)` as the only entry point
+- [x] **P1-10** Asset resolution: data URIs for Puppeteer, plain paths for the browser
+- [x] **P1-11** Extract the letterhead image from the samples into `packages/certificate-assets` (cut into `mora-header-v1.jpg` + `mora-footer-v1.jpg`; see the package README for why)
 - [ ] **P1-12** Choose and add the font files (D2), with licences recorded in the package README
 - [ ] **P1-13** Build step copying assets into both apps' `public/certificate-assets/`
 - [ ] **P1-14** Author `moraspirit-service-letter/template.hbs` — US Letter, full-bleed letterhead, US spelling, QR placeholder
 - [ ] **P1-15** Author its `schema.json` with the field set from architecture §5
 - [ ] **P1-16** Pronoun tests for all three honorifics, including the "Ms. … he pursues" case
 - [ ] **P1-17** ✅ Exit criteria verified (sample letter reproduced; General letter omits the special section)
+- [ ] **P1-18** Author the second template (long "outstanding contributions" wording) with its own `schema.json` — decision D3
 
 ## Phase 2 — Issuance app shell, auth and templates
 
