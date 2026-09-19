@@ -12,7 +12,7 @@ Progress tracker for [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Architect
 
 | Phase | Scope | Status | Notes |
 |---|---|---|---|
-| 0 | Foundations | 🟡 In progress | P0-01→P0-04, P0-06 done. Blocked on P0-05 (Aiven instance — needs the owner's account) |
+| 0 | Foundations | 🟡 In progress | P0-01→P0-04, P0-06, P0-10 done. P0-05 part-done; next is the `moraspirit` database + CA file, then P0-07 |
 | 1 | Shared rendering core | ⬜ Not started | |
 | 2 | App shell, auth, templates | ⬜ Not started | |
 | 3 | Single issuance + PDF | ⬜ Not started | The core loop |
@@ -53,12 +53,12 @@ Progress tracker for [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Architect
 - [x] **P0-02** Scaffold `apps/issuance` (Next.js + TypeScript + Tailwind)
 - [x] **P0-03** Scaffold `apps/verify` (Next.js + TypeScript + Tailwind, no other features)
 - [x] **P0-04** Shared ESLint / Prettier / tsconfig and the `pnpm build` pipeline
-- [ ] **P0-05** Create the Aiven for MySQL free instance; download the TLS CA certificate
+- [~] **P0-05** Create the Aiven for MySQL free instance; download the TLS CA certificate — service running (MySQL 8.4.8, DigitalOcean `blr`, host `mysql-1834a754-...aivencloud.com:28605`). Remaining: create the `moraspirit` database and save the CA to `.certs/ca.pem`
 - [x] **P0-06** `packages/db`: Prisma schema for all 7 tables from architecture §4, with indexes, uniques and enums
 - [ ] **P0-07** First migration applied to Aiven over TLS (`?sslaccept=strict`)
 - [ ] **P0-08** Create the `app_rw` user (full read/write)
 - [ ] **P0-09** Create the `verify_ro` user (`SELECT` on `templates`, `template_versions`, `certificates` only) and prove it cannot write or read `admin_users` / `certificate_audit`
-- [ ] **P0-10** `.env.example` for both apps; confirm real `.env` files are git-ignored
+- [x] **P0-10** `.env.example` for both apps and `packages/db`; confirmed real `.env` files are git-ignored and the examples are not
 - [ ] **P0-11** Seed script: one admin user plus fake sample certificates, rebuilt in one command
 - [ ] **P0-12** ✅ Exit criteria verified (build passes, migration from empty DB, `verify_ro` restricted, seed works)
 

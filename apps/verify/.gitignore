@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Keep the committed template: the `.env*` rule above would otherwise hide it,
+# and a local rule beats the root .gitignore's negation.
+!.env.example
