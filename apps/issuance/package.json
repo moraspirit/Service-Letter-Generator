@@ -21,6 +21,7 @@
     "@moraspirit/db": "workspace:*",
     "@moraspirit/shared": "workspace:*",
     "@node-rs/argon2": "^2.2.1",
+    "inngest": "^4.20.0",
     "next": "16.3.5",
     "next-auth": "5.0.0-beta.32",
     "papaparse": "^5.7.0",
@@ -30,7 +31,8 @@
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "sanitize-html": "^2.17.7",
-    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
+    "yazl": "^3.3.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -41,6 +43,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/sanitize-html": "^2.16.1",
+    "@types/yazl": "^3.3.1",
     "babel-plugin-react-compiler": "1.0.0",
     "jsqr": "^1.4.0",
     "pngjs": "^7.0.0",

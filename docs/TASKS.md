@@ -18,7 +18,7 @@ Progress tracker for [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Architect
 | 3 | Single issuance + PDF | 🔄 Built, awaiting owner | M1 reached in automated checks; owner to click through the form once (P3-14) |
 | 4 | Certificate management | 🔄 Built, awaiting owner | Owner to click through edit / revoke / restore once (P4-09) |
 | 5 | Bulk import | 🔄 Built, awaiting owner | Automated checks pass, incl. the real sheet (analysis only); owner to click through the import UI once (P5-16) |
-| 6 | Bulk ZIP export | ⬜ Not started | |
+| 6 | Bulk ZIP export | 🔄 Built, awaiting owner | Verified with the real Inngest Dev Server and Chromium; owner to click through once (P6-11) |
 | 7 | Verification app | ⬜ Not started | |
 | 8 | Hardening & deploy | ⬜ Not started | Gated on the production DB decision |
 | 9 | Post-launch | ⬜ Optional | Only if real use asks |
@@ -152,15 +152,17 @@ Progress tracker for [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Architect
 
 ## Phase 6 — Bulk ZIP export
 
-- [ ] **P6-01** Inngest wired in (`/api/inngest`, signing key, Cloud free tier)
-- [ ] **P6-02** ZIP job with one step per certificate and capped Puppeteer concurrency
-- [ ] **P6-03** Temp export volume `/data/tmp-exports/{batch_id}/` and zipping
-- [ ] **P6-04** Progress on the batch row (`zip_status`, `zip_rendered_count`) shown in the UI
-- [ ] **P6-05** Failure report listing certificates that could not render (incl. one-page-rule failures)
-- [ ] **P6-06** Admin-authenticated ZIP download route (never a public path)
-- [ ] **P6-07** Cleanup cron deleting ZIPs after 24 h and marking them `expired`
-- [ ] **P6-08** Retry/interruption test proving no duplicate or corrupt output
-- [ ] **P6-09** ✅ Exit criteria verified — **Milestone M3**
+- [x] **P6-01** Inngest wired in: `/api/inngest` (excluded from the session proxy), client, functions. Runs against the free local Dev Server (`INNGEST_DEV=1`); Cloud keys are a Phase 8 task (P8-15)
+- [x] **P6-02** ZIP job: one step per certificate through the same render function, capped at 2 at a time, one ZIP job at once
+- [x] **P6-03** Temp export folder `EXPORT_DIR/{batch_id}/` and atomic zipping (`.tmp` + rename), folder removed after the batch row is updated
+- [x] **P6-04** Progress on the batch row (`zip_status`, `zip_rendered_count`) shown in the UI, polled every 2 s
+- [x] **P6-05** Failure report in the new `zip_report` column (migration `20260920100000_add_import_zip_report`), incl. one-page-rule failures and revoked certificates; the rest still build
+- [x] **P6-06** Admin-authenticated ZIP download route (`/imports/{id}/zip`); signed-out requests are redirected to login and never reach the file
+- [x] **P6-07** Hourly cleanup cron deleting ZIPs and folders after 24 h and marking them `expired`; never follows a stored path
+- [x] **P6-08** Crash/retry test: a job dying after 3 of 6 files, leaving partial files behind, then re-run, ends with 6 files and a complete ZIP; a failing ZIP build rejects cleanly and succeeds on retry (`zip-export.test.ts`)
+- [x] **P6-09** Exit criteria verified: with the real Inngest Dev Server and real Chromium, a 3-certificate fake batch went generating -> ready in about 6 s and produced a valid ZIP of three one-page PDFs. The 39-certificate size was not run (would need real recipients or a large fake batch), so M3 is reached in logic and at small scale
+- [x] **P6-10** Real bug found by the smoke test and fixed: the batch row is now updated before the PDF folder is removed, and a missing file fails the step instead of crashing the server
+- [~] **P6-11** Owner to click through once: open an import batch, Generate ZIP, watch progress, download and open the ZIP, then tick this. Needs the Inngest Dev Server running: `npx inngest-cli dev -u http://localhost:3001/api/inngest`
 
 ## Phase 7 — Public verification app
 
@@ -193,6 +195,7 @@ Progress tracker for [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Architect
 - [ ] **P8-11** Load sanity check on the verify page, watching connection counts
 - [ ] **P8-12** Operations runbook written (deploy, publish template, add asset, rotate credentials, restore, failed ZIP job)
 - [ ] **P8-13** Fresh-checkout deployment test using only the runbook
+- [ ] **P8-15** Create the Inngest Cloud account (free tier), copy its event key and signing key into the VPS environment (`INNGEST_EVENT_KEY`, `INNGEST_SIGNING_KEY`; never in the repo), remove `INNGEST_DEV`, point Inngest at `https://<admin-domain>/api/inngest`, and write the runbook entry
 - [ ] **P8-14** ✅ Exit criteria verified — **Milestone M4**, real issuance may begin
 
 ## Phase 9 — Post-launch (optional)

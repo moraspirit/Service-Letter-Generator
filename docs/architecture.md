@@ -176,6 +176,7 @@ import_batches
   zip_rendered_count   INT DEFAULT 0   -- progress for the UI
   zip_path             VARCHAR(500) NULL   -- temp file on the VPS export volume
   zip_expires_at       DATETIME NULL       -- generated_at + 24h; cleanup job deletes the file after this
+  zip_report           JSON NULL           -- what the last ZIP job left out and why: [{certificateId, memberId, reason}]; no names; kept after the ZIP expires
   admin_user_id        INT FK -> admin_users.id
   created_at           DATETIME
 
@@ -462,3 +463,16 @@ All editing happens on the **issuance app (VPS)** only — the verification app 
 - **Two steps, no server-side session:** "Check file" analyzes the upload and writes nothing; "Import" sends the same file again and the server re-runs the whole analysis (fit check included) before committing, so the browser's report is never trusted. The commit is one transaction: `import_batches` + `certificates` + a `created` audit row each (`lib/import/commit-import.ts`, an audited writer in `audit-guard.test.ts`).
 - **Duplicates:** the file hash warns that the file was imported before (a checkbox is required to import it again); each row whose `dedupe_key` matches an existing certificate, or an earlier row in the same file, is skipped unless the admin ticks "Issue anyway" for that row.
 - **Fit check cost:** every valid row is rendered with the PDF service's concurrency cap (2), on Check and again on Import. The UI shows a busy message, not a live counter.
+
+### ZIP export as built (Phase 6)
+
+- **Plain functions, thin job.** The logic lives in `apps/issuance/lib/export/` (`requestExport`, `renderCertificateToFile`, `finalizeExport`, `cleanupExpired`, ...) and is tested without Inngest. `lib/inngest/functions.ts` only calls them: one step per certificate (two at a time), a `start` step and a `build-zip` step, with 3 retries and a concurrency limit of 1 so only one ZIP renders at once. An `onFailure` handler marks the batch `failed`. The event carries only the batch id.
+- **Step results hold no personal data.** Inngest stores what a step returns, so steps return certificate ids and generic reasons only. PDFs go to disk under `EXPORT_DIR/{batch_id}/`; names never leave the database and the disk.
+- **Which certificates.** Only `active` ones. Revoked ones are listed in the report as "Revoked, so left out of the ZIP."
+- **File names.** `certificate-<member_id>.pdf`; a member id that is not filename-safe or repeats within the batch gets the first 8 characters of the certificate id. Names are deterministic, so a retried step overwrites the same file.
+- **Crash safety.** Every PDF and the ZIP are written under a `.tmp` name and renamed, the batch row is updated to `ready` *before* the PDF folder is removed, and a missing input file makes the step fail (and retry) instead of crashing. A partial ZIP is therefore never downloadable.
+- **Report.** `zip_report` holds one entry per certificate left out: `certificateId`, `memberId`, and a generic reason (`Does not fit on one page. Shorten '<field label>'.`, `The PDF could not be rendered.`, or the revoked notice). Status is `ready` with a non-empty report for a partial ZIP, `failed` when no certificate rendered or the job itself broke.
+- **Status flow.** `none|failed|expired` -> `queued` (button; refused for a batch with no active certificates) -> `generating` -> `ready` -> `expired` (hourly cron, 24 h after generation). "Generate again" wipes the previous files and report. It is refused while `queued` or `generating`. Progress (`zip_rendered_count`) is the number of PDFs on disk, recomputed after each step, and the batch page polls every 2 seconds while a job runs.
+- **Download.** `GET /imports/{id}/zip`: admin only, only while `ready` and unexpired, `no-store`. The file path is always computed from the batch id, never read from the database, and the cleanup job deletes only paths it derives the same way.
+- **`/api/inngest`** is excluded from the session proxy because Inngest cannot hold a login. In production it is protected by Inngest's request signature (`INNGEST_SIGNING_KEY`). In development set `INNGEST_DEV=1` and run the Dev Server (`npx inngest-cli dev -u http://localhost:3001/api/inngest`); no account is needed.
+- **Known limit.** If the app server is killed and never comes back, a batch can stay `generating`; Inngest resumes the run when the app returns. There is no separate watchdog.

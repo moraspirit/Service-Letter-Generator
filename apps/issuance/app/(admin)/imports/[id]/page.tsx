@@ -1,7 +1,9 @@
 import Link from "next/link";
+import type { ComponentProps } from "react";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/require-admin";
+import { ZipPanel } from "./zip-panel";
 
 export const dynamic = "force-dynamic";
 
@@ -51,6 +53,19 @@ export default async function ImportBatchPage({ params }: { params: Promise<{ id
           </div>
         ))}
       </dl>
+
+      <ZipPanel
+        batchId={batch.id}
+        status={batch.zipStatus}
+        rendered={batch.zipRenderedCount}
+        total={batch.certificates.filter((c) => c.status === "active").length}
+        expiresAt={batch.zipExpiresAt?.toISOString() ?? null}
+        report={
+          Array.isArray(batch.zipReport)
+            ? (batch.zipReport as unknown as ComponentProps<typeof ZipPanel>["report"])
+            : []
+        }
+      />
 
       <h2 className="mt-2 text-lg font-semibold">Certificates in this batch</h2>
       <table className="w-full text-left text-sm">

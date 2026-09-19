@@ -21,6 +21,9 @@ export default auth((request) => {
 });
 
 export const config = {
-  // Auth.js endpoints, framework internals and the (public) letterhead assets are excluded.
-  matcher: ["/((?!api/auth|_next/static|_next/image|favicon.ico|certificate-assets).*)"],
+  // Auth.js endpoints, the Inngest endpoint (signed by Inngest, not a session), framework
+  // internals and the (public) letterhead assets are excluded.
+  matcher: [
+    "/((?!api/auth|api/inngest|api/inngest|_next/static|_next/image|favicon.ico|certificate-assets).*)",
+  ],
 };

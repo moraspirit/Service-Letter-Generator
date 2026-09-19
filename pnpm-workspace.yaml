@@ -15,3 +15,4 @@ allowBuilds:
   esbuild: false
   msgpackr-extract: false
   workerd: false
+  protobufjs: false

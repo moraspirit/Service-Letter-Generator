@@ -222,6 +222,10 @@ model ImportBatch {
   zipPath      String?   @map("zip_path") @db.VarChar(500)
   zipExpiresAt DateTime? @map("zip_expires_at")
 
+  /// What the last ZIP job left out and why: [{ certificateId, memberId, reason }]. Kept after
+  /// the ZIP expires. Never holds recipient names.
+  zipReport Json? @map("zip_report")
+
   adminUserId Int      @map("admin_user_id")
   createdAt   DateTime @default(now()) @map("created_at")
 
