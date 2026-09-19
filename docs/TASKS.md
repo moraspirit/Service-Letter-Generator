@@ -81,8 +81,8 @@ Progress tracker for [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Architect
 - [ ] **P1-14** Author `moraspirit-service-letter/template.hbs` — US Letter, full-bleed letterhead, US spelling, QR placeholder
 - [ ] **P1-15** Author its `schema.json` with the field set from architecture §5
 - [ ] **P1-16** Pronoun tests for all three honorifics, including the "Ms. … he pursues" case
-- [ ] **P1-17** ✅ Exit criteria verified (sample letter reproduced; General letter omits the special section)
 - [ ] **P1-18** Author the second template (long "outstanding contributions" wording) with its own `schema.json` — decision D3
+- [ ] **P1-17** ✅ Exit criteria verified (sample letter reproduced; General letter omits the special section)
 
 ## Phase 2 — Issuance app shell, auth and templates
 

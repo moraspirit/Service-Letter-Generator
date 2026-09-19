@@ -1,0 +1,6 @@
+{
+  "name": "@moraspirit/certificate-assets",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Developer-committed images and fonts referenced by certificate templates as /certificate-assets/..."
+}
