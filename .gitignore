@@ -29,6 +29,8 @@ apps/*/public/certificate-assets/
 *.pfx
 ca-certificate.crt
 ca.pem
+.cert/
+.certs/
 
 # Runtime data (temporary ZIP exports, Docker volumes)
 /data/

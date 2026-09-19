@@ -12,7 +12,7 @@ Progress tracker for [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Architect
 
 | Phase | Scope | Status | Notes |
 |---|---|---|---|
-| 0 | Foundations | 🟡 In progress | P0-01→P0-04, P0-06, P0-10 done. P0-05 part-done; next is the `moraspirit` database + CA file, then P0-07 |
+| 0 | Foundations | 🟡 In progress | P0-01→P0-07, P0-10 done. Next: P0-08/P0-09 (the `app_rw` and `verify_ro` users), then P0-11 (seed) |
 | 1 | Shared rendering core | ⬜ Not started | |
 | 2 | App shell, auth, templates | ⬜ Not started | |
 | 3 | Single issuance + PDF | ⬜ Not started | The core loop |
@@ -42,6 +42,7 @@ Progress tracker for [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Architect
 | D2 | Font substitute for Times New Roman | ⏳ Liberation Serif vs Tinos — pick one and keep it, since changing it later moves every line break | Phase 1 |
 | D3 | Whether a second template is needed for the longer "outstanding contributions" wording | ⏳ The two sample DOCX files differ; confirm with MoraSpirit which wordings stay in use | Phase 1 |
 | D4 | VPS provider and region | ⏳ Must sit near the database region | Phase 8 |
+| D7 | Dev database password was printed into a session transcript on 2026-09-19 and should be rotated in the Aiven console | ⏳ Open | Before P0-11 |
 | D6 | Prisma is pinned to **7.10.0**; 8.0.0 exists only as a release candidate and the CLI nags about it. Revisit once 8 is stable — the upgrade changes client instantiation | ⏳ Open | Phase 8 |
 | D5 | Next.js 16 writes its own `AGENTS.md` / `CLAUDE.md` into each app on `next dev` and re-adds them if deleted. Currently kept, with a pointer appended to the root rules. Confirm this is acceptable or decide on a suppression approach | ⏳ Open | Phase 2 |
 
@@ -53,9 +54,9 @@ Progress tracker for [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Architect
 - [x] **P0-02** Scaffold `apps/issuance` (Next.js + TypeScript + Tailwind)
 - [x] **P0-03** Scaffold `apps/verify` (Next.js + TypeScript + Tailwind, no other features)
 - [x] **P0-04** Shared ESLint / Prettier / tsconfig and the `pnpm build` pipeline
-- [~] **P0-05** Create the Aiven for MySQL free instance; download the TLS CA certificate — service running (MySQL 8.4.8, DigitalOcean `blr`, host `mysql-1834a754-...aivencloud.com:28605`). Remaining: create the `moraspirit` database and save the CA to `.certs/ca.pem`
+- [x] **P0-05** Aiven for MySQL free instance running (MySQL 8.4.8, DigitalOcean `blr`), database `mora-spirit` created, CA certificate saved to `.cert/ca.pem`
 - [x] **P0-06** `packages/db`: Prisma schema for all 7 tables from architecture §4, with indexes, uniques and enums
-- [ ] **P0-07** First migration applied to Aiven over TLS (`?sslaccept=strict`)
+- [x] **P0-07** First migration `20260919131700_init` applied to Aiven over verified TLS (`sslaccept=strict&sslcert=../../.cert/ca.pem`); all 7 tables confirmed present
 - [ ] **P0-08** Create the `app_rw` user (full read/write)
 - [ ] **P0-09** Create the `verify_ro` user (`SELECT` on `templates`, `template_versions`, `certificates` only) and prove it cannot write or read `admin_users` / `certificate_audit`
 - [x] **P0-10** `.env.example` for both apps and `packages/db`; confirmed real `.env` files are git-ignored and the examples are not
