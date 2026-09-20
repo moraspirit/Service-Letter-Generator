@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { Banner, EmptyState, StatusPill } from "@moraspirit/ui";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/require-admin";
+import { PageHeader } from "../../_components/page-header";
 
 export const dynamic = "force-dynamic";
 
@@ -16,42 +18,62 @@ export default async function TemplatesPage() {
   });
 
   return (
-    <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-semibold">Templates</h1>
-      <p className="text-sm text-zinc-600">
-        Templates are authored in the repository and published with{" "}
-        <code className="rounded bg-zinc-100 px-1">pnpm templates:publish</code>. This screen is
-        read-only.
-      </p>
+    <div className="flex flex-col gap-5">
+      <PageHeader
+        title="Templates"
+        subtitle="The letters this system can issue, and every published version of each."
+      />
+
+      <Banner tone="info" title="This screen is read-only">
+        Templates are written in the repository by a developer and published with{" "}
+        <code className="ms-code">pnpm templates:publish</code>. There is no editor here on purpose:
+        a template is reviewed code, and every issued certificate is pinned to the exact version it
+        was created with.
+      </Banner>
+
       {templates.length === 0 ? (
-        <p className="text-zinc-600">No templates published yet.</p>
+        <EmptyState icon="file" title="No templates published yet">
+          Run <code className="ms-code">pnpm templates:publish</code> to publish the templates
+          already written in the repository.
+        </EmptyState>
       ) : (
-        <table className="w-full text-left text-sm">
-          <thead className="border-b border-zinc-300 text-zinc-600">
-            <tr>
-              <th className="py-2 pr-4">Name</th>
-              <th className="py-2 pr-4">Slug</th>
-              <th className="py-2 pr-4">Current version</th>
-              <th className="py-2">Versions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {templates.map((t) => (
-              <tr key={t.id} className="border-b border-zinc-200">
-                <td className="py-2 pr-4">
-                  <Link href={`/templates/${t.id}`} className="text-red-700 hover:underline">
-                    {t.name}
-                  </Link>
-                </td>
-                <td className="py-2 pr-4 font-mono text-xs">{t.slug}</td>
-                <td className="py-2 pr-4">
-                  {t.currentVersion ? `v${t.currentVersion.versionNumber}` : "none"}
-                </td>
-                <td className="py-2">{t._count.versions}</td>
+        <div className="ms-table-wrap">
+          <table className="ms-table ms-table-hover">
+            <caption className="sr-only">Published templates</caption>
+            <thead>
+              <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Slug</th>
+                <th scope="col">Current version</th>
+                <th scope="col">Versions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {templates.map((t) => (
+                <tr key={t.id}>
+                  <td>
+                    <Link href={`/templates/${t.id}`} className="ms-cell-link">
+                      {t.name}
+                    </Link>
+                  </td>
+                  <td className="ms-mono ms-cell-dim">{t.slug}</td>
+                  <td>
+                    {t.currentVersion ? (
+                      <StatusPill tone="ok" icon="check">
+                        v{t.currentVersion.versionNumber}
+                      </StatusPill>
+                    ) : (
+                      <StatusPill tone="warn" icon="alert">
+                        Not published
+                      </StatusPill>
+                    )}
+                  </td>
+                  <td className="ms-tnum ms-cell-dim">{t._count.versions}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );

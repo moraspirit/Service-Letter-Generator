@@ -20,6 +20,7 @@
     "@moraspirit/certificate-templates": "workspace:*",
     "@moraspirit/db": "workspace:*",
     "@moraspirit/shared": "workspace:*",
+    "@moraspirit/ui": "workspace:*",
     "@node-rs/argon2": "^2.2.1",
     "inngest": "^4.20.0",
     "next": "16.3.5",

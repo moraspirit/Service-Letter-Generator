@@ -3,7 +3,12 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactCompiler: true,
   // Workspace packages ship TypeScript source and are compiled by the app.
-  transpilePackages: ["@moraspirit/db", "@moraspirit/shared", "@moraspirit/certificate-render"],
+  transpilePackages: [
+    "@moraspirit/db",
+    "@moraspirit/shared",
+    "@moraspirit/certificate-render",
+    "@moraspirit/ui",
+  ],
   async headers() {
     return [
       {

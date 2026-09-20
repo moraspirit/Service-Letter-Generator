@@ -1,15 +1,44 @@
 "use client";
 
 import { useActionState, useState, useTransition } from "react";
+import { Banner, Button, Card, CardBody, CardHead, cx, Icon, StatusPill } from "@moraspirit/ui";
 import type { AnalyzedRow } from "@/lib/import/analyze-import";
 import { importAction, type ImportState } from "./actions";
 
 const initial: ImportState = { status: "idle" };
-const inputClass = "rounded border border-zinc-300 bg-white px-3 py-2 text-base text-zinc-900";
-const box = "rounded border px-3 py-2 text-sm";
 
 function rowProblems(row: AnalyzedRow): string[] {
   return Object.values(row.errors);
+}
+
+/** The only genuine sequence in the app, so the only place with a step rail. */
+function Steps({ current }: { current: 1 | 2 | 3 }) {
+  const steps = ["Choose the file", "Review every row", "Import"];
+  return (
+    <ol className="ms-steps" aria-label="Import progress">
+      {steps.map((label, i) => {
+        const n = i + 1;
+        const state = n === current ? "current" : n < current ? "done" : "todo";
+        return (
+          <li
+            key={label}
+            className={cx(
+              "ms-step",
+              state === "current" && "ms-step-current",
+              state === "done" && "ms-step-done",
+            )}
+            aria-current={state === "current" ? "step" : undefined}
+          >
+            <span className="ms-step-marker">
+              {state === "done" ? <Icon name="check" size={11} /> : n}
+            </span>
+            {label}
+            {state === "done" ? <span className="sr-only"> (done)</span> : null}
+          </li>
+        );
+      })}
+    </ol>
+  );
 }
 
 export function ImportForm({ templates }: { templates: { id: number; name: string }[] }) {
@@ -35,6 +64,7 @@ export function ImportForm({ templates }: { templates: { id: number; name: strin
   const duplicateRows = ready?.rows.filter((r) => r.duplicate && rowProblems(r).length === 0) ?? [];
   const okCount = (ready?.rows.length ?? 0) - errorRows.length;
   const importable = ready ? okCount > 0 && (errorRows.length === 0 || skipInvalid) : false;
+  const step: 1 | 2 | 3 = ready ? (importable ? 3 : 2) : 1;
 
   return (
     <form
@@ -49,235 +79,342 @@ export function ImportForm({ templates }: { templates: { id: number; name: strin
           setStale(true);
         }
       }}
-      className="flex flex-col gap-4"
+      className="ms-import"
     >
-      <div className="grid gap-4 sm:grid-cols-2">
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          Template
-          <select name="templateId" required className={inputClass} defaultValue="">
-            <option value="" disabled>
-              Choose…
-            </option>
-            {templates.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          Spreadsheet (.xlsx or UTF-8 .csv)
-          <input
-            type="file"
-            name="file"
-            required
-            accept=".xlsx,.csv"
-            className={`${inputClass} text-sm`}
-          />
-        </label>
-      </div>
+      <aside className="ms-import-rail">
+        <div className="ms-import-rail-inner">
+          <Steps current={step} />
+          <p className="ms-help">Nothing is written to the database until you press Import.</p>
+        </div>
+      </aside>
 
-      {result?.status === "choose_sheet" ? (
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          This workbook has several worksheets. Which one should be imported?
-          <select name="sheetName" required className={inputClass} defaultValue="">
-            <option value="" disabled>
-              Choose…
-            </option>
-            {result.sheetNames.map((name) => (
-              <option key={name} value={name}>
-                {name}
-              </option>
-            ))}
-          </select>
-        </label>
-      ) : ready?.sheetName ? (
-        <input type="hidden" name="sheetName" value={ready.sheetName} />
-      ) : null}
+      <div className="flex flex-col gap-5">
+        <Card>
+          <CardHead title="1 · Choose the file" />
+          <CardBody>
+            <div className="ms-grid-2">
+              <div className="ms-field">
+                <label className="ms-label" htmlFor="templateId">
+                  Template
+                  <span className="ms-required" aria-hidden="true">
+                    *
+                  </span>
+                </label>
+                <select
+                  id="templateId"
+                  name="templateId"
+                  required
+                  className="ms-select"
+                  defaultValue=""
+                >
+                  <option value="" disabled>
+                    Choose…
+                  </option>
+                  {templates.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-      <div className="flex items-center gap-3">
-        <button
-          type="submit"
-          name="intent"
-          value="check"
-          disabled={pending}
-          className="rounded bg-zinc-800 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-        >
-          {pending ? "Working…" : "Check file"}
-        </button>
-        {pending ? (
-          <span className="text-sm text-zinc-600" role="status">
-            Checking every row, including that each letter fits on one page. This can take up to a
-            minute for a large file.
-          </span>
+              <div className="ms-field">
+                <label className="ms-label" htmlFor="file">
+                  Spreadsheet
+                  <span className="ms-required" aria-hidden="true">
+                    *
+                  </span>
+                </label>
+                <input
+                  id="file"
+                  type="file"
+                  name="file"
+                  required
+                  accept=".xlsx,.csv"
+                  className="ms-file"
+                  aria-describedby="file-help"
+                />
+                <p className="ms-help" id="file-help">
+                  .xlsx, or .csv saved as UTF-8. Up to 5 MB.
+                </p>
+              </div>
+
+              {result?.status === "choose_sheet" ? (
+                <div className="ms-field ms-col-span">
+                  <label className="ms-label" htmlFor="sheetName">
+                    Which worksheet?
+                    <span className="ms-required" aria-hidden="true">
+                      *
+                    </span>
+                  </label>
+                  <select
+                    id="sheetName"
+                    name="sheetName"
+                    required
+                    className="ms-select"
+                    defaultValue=""
+                    aria-describedby="sheet-help"
+                  >
+                    <option value="" disabled>
+                      Choose…
+                    </option>
+                    {result.sheetNames.map((name) => (
+                      <option key={name} value={name}>
+                        {name}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="ms-help" id="sheet-help">
+                    This workbook has several worksheets, so the right one has to be named.
+                  </p>
+                </div>
+              ) : ready?.sheetName ? (
+                <input type="hidden" name="sheetName" value={ready.sheetName} />
+              ) : null}
+            </div>
+          </CardBody>
+          <div className="ms-card-foot">
+            <div className="flex flex-wrap items-center gap-3">
+              <Button
+                type="submit"
+                name="intent"
+                value="check"
+                variant="secondary"
+                disabled={pending}
+              >
+                {pending ? "Working…" : "Check file"}
+              </Button>
+              {pending ? (
+                <span className="ms-help" role="status">
+                  Checking every row, including that each letter fits on one page. This can take up
+                  to a minute for a large file.
+                </span>
+              ) : null}
+            </div>
+          </div>
+        </Card>
+
+        {state.status === "failed" && !stale ? (
+          <Banner tone="bad" role="alert" title="The file could not be read">
+            {state.message}
+          </Banner>
+        ) : null}
+        {state.status === "blocked" && !stale ? (
+          <Banner tone="warn" role="alert" title="Import blocked">
+            {state.message}
+          </Banner>
+        ) : null}
+
+        {result && result.status !== "ready" && result.status !== "choose_sheet" ? (
+          <Banner
+            tone="bad"
+            role="alert"
+            title={
+              result.status === "column_error"
+                ? "The columns do not match this template"
+                : "This file cannot be imported"
+            }
+          >
+            {result.status === "column_error" ? (
+              <>
+                {result.missingRequired.length > 0 ? (
+                  <p>
+                    <strong>Missing required columns:</strong> {result.missingRequired.join(", ")}.
+                  </p>
+                ) : null}
+                {result.duplicated.length > 0 ? (
+                  <p>
+                    <strong>Columns that repeat a field:</strong> {result.duplicated.join(", ")}.
+                  </p>
+                ) : null}
+                {result.unknown.length > 0 ? (
+                  <p>Ignored columns: {result.unknown.join(", ")}.</p>
+                ) : null}
+              </>
+            ) : (
+              <p>{result.message}</p>
+            )}
+          </Banner>
+        ) : null}
+
+        {ready ? (
+          <>
+            <Card>
+              <CardHead
+                title="2 · Review every row"
+                actions={
+                  <span className="ms-counts">
+                    <StatusPill tone="ok" icon="check">
+                      {okCount} will be issued
+                    </StatusPill>
+                    {errorRows.length > 0 ? (
+                      <StatusPill tone="bad" icon="revoked">
+                        {errorRows.length} with errors
+                      </StatusPill>
+                    ) : null}
+                    {duplicateRows.length > 0 ? (
+                      <StatusPill tone="warn" icon="alert">
+                        {duplicateRows.length} possible duplicates
+                      </StatusPill>
+                    ) : null}
+                  </span>
+                }
+              />
+              <CardBody>
+                <div className="flex flex-col gap-4">
+                  <p className="ms-help">
+                    {ready.rows.length} rows · template version {ready.templateVersionNumber}
+                    {ready.sheetName ? ` · sheet “${ready.sheetName}”` : ""}
+                  </p>
+
+                  {ready.unknownColumns.length > 0 ? (
+                    <Banner tone="info" title="Some columns were ignored">
+                      {ready.unknownColumns.join(", ")}. They do not match any field in this
+                      template and will not be imported.
+                    </Banner>
+                  ) : null}
+
+                  {ready.fileDuplicate ? (
+                    <Banner tone="warn" title="This exact file was already imported">
+                      <p>
+                        Imported on {ready.fileDuplicate.importedAt.slice(0, 10)} by{" "}
+                        {ready.fileDuplicate.adminEmail} ({ready.fileDuplicate.insertedCount}{" "}
+                        certificates).
+                      </p>
+                      <label className="ms-check pt-1">
+                        <input type="checkbox" name="confirmDuplicateFile" value="1" />
+                        <span>Import it again anyway</span>
+                      </label>
+                    </Banner>
+                  ) : null}
+
+                  <div className="ms-table-wrap">
+                    <table className="ms-table ms-table-top">
+                      <caption className="sr-only">Row-by-row import report</caption>
+                      <thead>
+                        <tr>
+                          <th scope="col">Row</th>
+                          <th scope="col">Recipient</th>
+                          <th scope="col">Result</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {ready.rows.map((row) => {
+                          const problems = rowProblems(row);
+                          return (
+                            <tr key={row.rowNumber}>
+                              <td className="ms-mono ms-tnum ms-cell-dim">{row.rowNumber}</td>
+                              <td className="ms-cell-name">{row.label || "—"}</td>
+                              <td>
+                                {problems.length > 0 ? (
+                                  <ul className="ms-row-problems">
+                                    {problems.map((p) => (
+                                      <li key={p}>
+                                        <Icon name="revoked" size={13} />
+                                        {p}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                ) : row.duplicate ? (
+                                  <div className="ms-row-dup">
+                                    <span>
+                                      {row.duplicate.earlierRow !== null
+                                        ? `Same as row ${row.duplicate.earlierRow} in this file. `
+                                        : ""}
+                                      {row.duplicate.existing.length > 0 ? (
+                                        <>
+                                          Already issued:{" "}
+                                          {row.duplicate.existing.map((e, i) => (
+                                            <span key={e.id}>
+                                              {i > 0 ? ", " : ""}
+                                              <a
+                                                href={`/certificates/${e.id}`}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="ms-link"
+                                              >
+                                                {e.issuedAt.slice(0, 10)} ({e.status})
+                                              </a>
+                                            </span>
+                                          ))}
+                                        </>
+                                      ) : null}
+                                    </span>
+                                    <label className="ms-check">
+                                      <input
+                                        type="checkbox"
+                                        name="issueAnyway"
+                                        value={row.rowNumber}
+                                      />
+                                      <span>Issue anyway (otherwise skipped)</span>
+                                    </label>
+                                  </div>
+                                ) : (
+                                  <StatusPill tone="ok" icon="check">
+                                    Will be issued
+                                  </StatusPill>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </CardBody>
+            </Card>
+
+            <Card>
+              <CardHead title="3 · Import" />
+              <CardBody>
+                <div className="flex flex-col gap-4">
+                  {errorRows.length > 0 ? (
+                    <Banner tone="bad" title={`${errorRows.length} rows cannot be issued`}>
+                      <p>
+                        Fix them in the spreadsheet and check the file again, or leave them out of
+                        this import. Invalid rows are never issued either way.
+                      </p>
+                      <label className="ms-check pt-1">
+                        <input
+                          type="checkbox"
+                          name="skipInvalid"
+                          value="1"
+                          checked={skipInvalid}
+                          onChange={(e) => setSkipInvalid(e.target.checked)}
+                        />
+                        <span>
+                          Skip the {errorRows.length} invalid{" "}
+                          {errorRows.length === 1 ? "row" : "rows"} and import the other {okCount}
+                        </span>
+                      </label>
+                    </Banner>
+                  ) : null}
+
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Button
+                      type="submit"
+                      name="intent"
+                      value="import"
+                      variant="primary"
+                      disabled={pending || !importable}
+                    >
+                      {pending
+                        ? "Importing…"
+                        : `Import ${okCount} ${okCount === 1 ? "certificate" : "certificates"}`}
+                    </Button>
+                    {!importable && errorRows.length > 0 && !skipInvalid ? (
+                      <span className="ms-help">
+                        Blocked while rows have errors. Tick the box above to go ahead without them.
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+              </CardBody>
+            </Card>
+          </>
         ) : null}
       </div>
-
-      {state.status === "failed" && !stale ? (
-        <p role="alert" className={`${box} border-red-300 bg-red-50 text-red-800`}>
-          {state.message}
-        </p>
-      ) : null}
-      {state.status === "blocked" && !stale ? (
-        <p role="alert" className={`${box} border-amber-300 bg-amber-50 text-amber-900`}>
-          {state.message}
-        </p>
-      ) : null}
-
-      {result && result.status !== "ready" && result.status !== "choose_sheet" ? (
-        <div role="alert" className={`${box} border-red-300 bg-red-50 text-red-800`}>
-          {result.status === "column_error" ? (
-            <>
-              <p className="font-medium">The columns do not match this template.</p>
-              {result.missingRequired.length > 0 ? (
-                <p>Missing required columns: {result.missingRequired.join(", ")}.</p>
-              ) : null}
-              {result.duplicated.length > 0 ? (
-                <p>Columns that repeat a field: {result.duplicated.join(", ")}.</p>
-              ) : null}
-              {result.unknown.length > 0 ? (
-                <p>Ignored columns: {result.unknown.join(", ")}.</p>
-              ) : null}
-            </>
-          ) : (
-            <p>{result.message}</p>
-          )}
-        </div>
-      ) : null}
-
-      {ready ? (
-        <section className="flex flex-col gap-4" aria-label="Import report">
-          <div className="flex flex-wrap gap-4 text-sm">
-            <span>{ready.rows.length} rows</span>
-            <span className="text-green-800">{okCount} valid</span>
-            <span className={errorRows.length ? "font-medium text-red-800" : ""}>
-              {errorRows.length} with errors
-            </span>
-            <span>{duplicateRows.length} possible duplicates</span>
-            <span className="text-zinc-500">
-              Template version {ready.templateVersionNumber}
-              {ready.sheetName ? ` · sheet “${ready.sheetName}”` : ""}
-            </span>
-          </div>
-
-          {ready.unknownColumns.length > 0 ? (
-            <p className={`${box} border-zinc-300 bg-zinc-50 text-zinc-700`}>
-              Ignored columns: {ready.unknownColumns.join(", ")}.
-            </p>
-          ) : null}
-
-          {ready.fileDuplicate ? (
-            <label
-              className={`${box} flex items-start gap-2 border-amber-300 bg-amber-50 text-amber-900`}
-            >
-              <input type="checkbox" name="confirmDuplicateFile" value="1" className="mt-1" />
-              <span>
-                This exact file was already imported on{" "}
-                {ready.fileDuplicate.importedAt.slice(0, 10)} by {ready.fileDuplicate.adminEmail} (
-                {ready.fileDuplicate.insertedCount} certificates). Tick to import it again.
-              </span>
-            </label>
-          ) : null}
-
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-zinc-300 text-zinc-600">
-              <tr>
-                <th className="py-2 pr-4">Row</th>
-                <th className="py-2 pr-4">Recipient</th>
-                <th className="py-2">Result</th>
-              </tr>
-            </thead>
-            <tbody>
-              {ready.rows.map((row) => {
-                const problems = rowProblems(row);
-                return (
-                  <tr key={row.rowNumber} className="border-b border-zinc-200 align-top">
-                    <td className="py-2 pr-4 font-mono text-xs">{row.rowNumber}</td>
-                    <td className="py-2 pr-4">{row.label || "—"}</td>
-                    <td className="py-2">
-                      {problems.length > 0 ? (
-                        <ul className="text-red-800">
-                          {problems.map((p) => (
-                            <li key={p}>{p}</li>
-                          ))}
-                        </ul>
-                      ) : row.duplicate ? (
-                        <div className="flex flex-col gap-1 text-amber-900">
-                          <span>
-                            {row.duplicate.earlierRow !== null
-                              ? `Same as row ${row.duplicate.earlierRow} in this file. `
-                              : ""}
-                            {row.duplicate.existing.length > 0 ? (
-                              <>
-                                Already issued:{" "}
-                                {row.duplicate.existing.map((e, i) => (
-                                  <span key={e.id}>
-                                    {i > 0 ? ", " : ""}
-                                    <a
-                                      href={`/certificates/${e.id}`}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      className="text-red-700 underline"
-                                    >
-                                      {e.issuedAt.slice(0, 10)} ({e.status})
-                                    </a>
-                                  </span>
-                                ))}
-                              </>
-                            ) : null}
-                          </span>
-                          <label className="flex items-center gap-2">
-                            <input type="checkbox" name="issueAnyway" value={row.rowNumber} />
-                            Issue anyway (otherwise skipped)
-                          </label>
-                        </div>
-                      ) : (
-                        <span className="text-green-800">Will be issued</span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-
-          {errorRows.length > 0 ? (
-            <label
-              className={`${box} flex items-start gap-2 border-red-300 bg-red-50 text-red-900`}
-            >
-              <input
-                type="checkbox"
-                name="skipInvalid"
-                value="1"
-                className="mt-1"
-                checked={skipInvalid}
-                onChange={(e) => setSkipInvalid(e.target.checked)}
-              />
-              <span>
-                Skip the {errorRows.length} invalid {errorRows.length === 1 ? "row" : "rows"} and
-                import the rest. Invalid rows are never issued.
-              </span>
-            </label>
-          ) : null}
-
-          <div>
-            <button
-              type="submit"
-              name="intent"
-              value="import"
-              disabled={pending || !importable}
-              className="rounded bg-red-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-40"
-            >
-              {pending ? "Importing…" : "Import valid rows"}
-            </button>
-            {errorRows.length > 0 && !skipInvalid ? (
-              <p className="mt-2 text-sm text-zinc-600">
-                Importing is blocked while rows have errors. Fix the file, or tick the box above.
-              </p>
-            ) : null}
-          </div>
-        </section>
-      ) : null}
     </form>
   );
 }

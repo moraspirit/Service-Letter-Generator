@@ -5,12 +5,20 @@ export const metadata: Metadata = { title: "Sign in · MoraSpirit Certificates" 
 
 export default function LoginPage() {
   return (
-    <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-6 px-4 py-16">
-      <div>
-        <h1 className="text-2xl font-semibold">MoraSpirit Certificates</h1>
-        <p className="mt-1 text-sm text-zinc-600">Administrator sign-in</p>
+    <main className="ms-login">
+      <div className="ms-login-card">
+        <div className="ms-login-head">
+          <p className="ms-wordmark">
+            MoraSpirit <span>Certificates</span>
+          </p>
+          <h1 className="ms-login-title">Administrator sign-in</h1>
+          <p className="ms-login-sub">
+            This panel issues and manages service letters. Certificate verification is a separate,
+            public site and does not need an account.
+          </p>
+        </div>
+        <LoginForm />
       </div>
-      <LoginForm />
     </main>
   );
 }

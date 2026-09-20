@@ -1,14 +1,35 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { CertificateData, FieldSchema } from "@moraspirit/shared";
+import {
+  Banner,
+  Card,
+  CardBody,
+  CardHead,
+  CertificateStatusPill,
+  DescriptionList,
+  Icon,
+  LinkButton,
+} from "@moraspirit/ui";
 import { prisma } from "@/lib/db";
 import { describeChanges } from "@/lib/audit-diff";
 import { requireAdmin } from "@/lib/require-admin";
 import { sanitizeRichText } from "@/lib/sanitize";
+import { PageHeader } from "../../../_components/page-header";
 import { StatusActions } from "./status-actions";
 import { buildVerifyUrl, UUID_PATTERN, VerifyUrlError } from "@/lib/verify-url";
 
 export const dynamic = "force-dynamic";
+
+const ACTION_ICON = {
+  created: "plus",
+  edited: "edit",
+  revoked: "revoked",
+  restored: "check",
+} as const;
+
+function utc(date: Date): string {
+  return `${date.toISOString().slice(0, 16).replace("T", " ")} UTC`;
+}
 
 export default async function CertificatePage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdmin();
@@ -30,6 +51,8 @@ export default async function CertificatePage({ params }: { params: Promise<{ id
 
   const schema = certificate.templateVersion.fieldSchema as unknown as FieldSchema;
   const data = certificate.data as unknown as CertificateData;
+  const status = certificate.status as "active" | "revoked";
+  const name = typeof data.recipient_name === "string" ? data.recipient_name : "Certificate";
 
   let verifyUrl: string | null = null;
   let verifyProblem: string | null = null;
@@ -41,129 +64,177 @@ export default async function CertificatePage({ params }: { params: Promise<{ id
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <Link href="/certificates" className="text-sm text-red-700 hover:underline">
-          ← All certificates
-        </Link>
-        <h1 className="mt-2 text-2xl font-semibold">Certificate</h1>
-        <p className="font-mono text-xs text-zinc-600">{certificate.id}</p>
-      </div>
+    <div className="flex flex-col gap-5">
+      <PageHeader
+        crumbs={[{ label: "Certificates", href: "/certificates" }, { label: name }]}
+        title={name}
+        subtitle={
+          <>
+            {certificate.templateVersion.template.name} · v
+            {certificate.templateVersion.versionNumber} · issued {utc(certificate.issuedAt)}
+          </>
+        }
+        actions={
+          <>
+            {status === "active" ? (
+              <LinkButton
+                href={`/certificates/${certificate.id}/edit`}
+                variant="secondary"
+                icon="edit"
+              >
+                Edit
+              </LinkButton>
+            ) : null}
+            <LinkButton
+              href={`/certificates/${certificate.id}/pdf`}
+              variant="primary"
+              icon="download"
+            >
+              Download PDF
+            </LinkButton>
+          </>
+        }
+      />
 
-      <div className="flex flex-wrap items-center gap-4">
-        <a
-          href={`/certificates/${certificate.id}/pdf`}
-          className="rounded bg-red-700 px-4 py-2 font-medium text-white"
-        >
-          Download PDF
-        </a>
-        {certificate.status === "active" ? (
-          <Link
-            href={`/certificates/${certificate.id}/edit`}
-            className="rounded border border-zinc-300 px-4 py-2 font-medium"
-          >
-            Edit
-          </Link>
-        ) : null}
-        <span
-          className={`rounded px-2 py-0.5 text-xs ${
-            certificate.status === "active"
-              ? "bg-green-100 text-green-800"
-              : "bg-red-100 text-red-800"
-          }`}
-        >
-          {certificate.status}
-        </span>
-      </div>
-
-      {certificate.status === "revoked" ? (
-        <p className="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">
-          Revoked {certificate.revokedAt ? certificate.revokedAt.toISOString().slice(0, 10) : ""}
-          {certificate.revocationReason ? `: ${certificate.revocationReason}` : ""}. Visitors who
-          scan its QR code see that it is revoked. Its details are not shown to them.
-        </p>
+      {status === "revoked" ? (
+        <Banner tone="bad" title="This certificate is revoked">
+          <p>
+            Revoked {certificate.revokedAt ? certificate.revokedAt.toISOString().slice(0, 10) : ""}
+            {certificate.revocationReason ? ` — ${certificate.revocationReason}` : ""}. Anyone
+            scanning its QR code is told it is no longer valid; they are never shown the reason or
+            the certificate&apos;s contents.
+          </p>
+        </Banner>
       ) : null}
 
-      <StatusActions certificateId={certificate.id} status={certificate.status} />
+      <div className="ms-detail">
+        <div className="flex flex-col gap-5">
+          <Card>
+            <CardHead title="Certificate contents" />
+            <CardBody>
+              <DescriptionList
+                items={schema.flatMap((field) => {
+                  const value = data[field.name];
+                  if (
+                    value === undefined ||
+                    value === "" ||
+                    (Array.isArray(value) && value.length === 0)
+                  ) {
+                    return [];
+                  }
+                  return [
+                    {
+                      label: field.label,
+                      value: Array.isArray(value) ? (
+                        <ul className="ms-bullets">
+                          {value.map((item, i) => (
+                            <li key={i}>{item}</li>
+                          ))}
+                        </ul>
+                      ) : field.type === "richtext" ? (
+                        <div
+                          className="ms-richtext"
+                          dangerouslySetInnerHTML={{ __html: sanitizeRichText(value) }}
+                        />
+                      ) : (
+                        value
+                      ),
+                    },
+                  ];
+                })}
+              />
+            </CardBody>
+          </Card>
 
-      <dl className="grid grid-cols-[max-content_1fr] gap-x-6 gap-y-2 text-sm">
-        <dt className="text-zinc-600">Template</dt>
-        <dd>
-          {certificate.templateVersion.template.name} · v{certificate.templateVersion.versionNumber}
-        </dd>
-        <dt className="text-zinc-600">Issued</dt>
-        <dd>{certificate.issuedAt.toISOString().slice(0, 16).replace("T", " ")} UTC</dd>
-        <dt className="text-zinc-600">Verification URL</dt>
-        <dd className="break-all">
-          {verifyUrl ? (
-            <span className="font-mono text-xs">{verifyUrl}</span>
-          ) : (
-            <span className="text-red-700">{verifyProblem}</span>
-          )}
-        </dd>
-        {schema.map((field) => {
-          const value = data[field.name];
-          if (value === undefined || value === "" || (Array.isArray(value) && value.length === 0)) {
-            return null;
-          }
-          return (
-            <div key={field.name} className="contents">
-              <dt className="text-zinc-600">{field.label}</dt>
-              <dd>
-                {Array.isArray(value) ? (
-                  <ul className="list-disc pl-5">
-                    {value.map((item, i) => (
-                      <li key={i}>{item}</li>
-                    ))}
-                  </ul>
-                ) : field.type === "richtext" ? (
-                  <div dangerouslySetInnerHTML={{ __html: sanitizeRichText(value) }} />
-                ) : (
-                  value
-                )}
-              </dd>
-            </div>
-          );
-        })}
-      </dl>
+          <Card>
+            <CardHead title="History" />
+            <CardBody>
+              <ol className="ms-timeline">
+                {certificate.auditEntries.map((entry) => {
+                  const changes =
+                    entry.action === "edited"
+                      ? describeChanges(
+                          schema,
+                          entry.oldData as unknown as CertificateData | null,
+                          entry.newData as unknown as CertificateData | null,
+                        )
+                      : [];
+                  return (
+                    <li key={String(entry.id)}>
+                      <span className="ms-timeline-marker">
+                        <Icon
+                          name={ACTION_ICON[entry.action as keyof typeof ACTION_ICON] ?? "info"}
+                          size={12}
+                        />
+                      </span>
+                      <div className="ms-timeline-body">
+                        <p className="ms-timeline-head">
+                          <span className="ms-timeline-action">{entry.action}</span>
+                          <span className="ms-timeline-meta">
+                            {entry.adminUser.email} · {utc(entry.createdAt)}
+                          </span>
+                        </p>
+                        {entry.reason ? <p className="ms-timeline-reason">{entry.reason}</p> : null}
+                        {changes.length > 0 ? (
+                          <ul className="ms-changes">
+                            {changes.map((c) => (
+                              <li key={c.label}>
+                                <span className="ms-changes-label">{c.label}</span>
+                                <del>{c.before}</del>
+                                <Icon name="arrowRight" size={12} />
+                                <ins>{c.after}</ins>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : null}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ol>
+            </CardBody>
+          </Card>
+        </div>
 
-      <section>
-        <h2 className="mb-2 text-lg font-semibold">History</h2>
-        <ol className="flex flex-col gap-3 text-sm">
-          {certificate.auditEntries.map((entry) => {
-            const changes =
-              entry.action === "edited"
-                ? describeChanges(
-                    schema,
-                    entry.oldData as unknown as CertificateData | null,
-                    entry.newData as unknown as CertificateData | null,
-                  )
-                : [];
-            return (
-              <li key={String(entry.id)} className="border-l-2 border-zinc-300 pl-3">
-                <p>
-                  <span className="font-medium">{entry.action}</span> by {entry.adminUser.email} ·{" "}
-                  {entry.createdAt.toISOString().slice(0, 16).replace("T", " ")} UTC
-                </p>
-                {entry.reason ? <p className="text-zinc-700">Reason: {entry.reason}</p> : null}
-                {changes.length > 0 ? (
-                  <ul className="mt-1 flex flex-col gap-1">
-                    {changes.map((c) => (
-                      <li key={c.label}>
-                        <span className="text-zinc-600">{c.label}:</span>{" "}
-                        <span className="whitespace-pre-wrap text-red-800 line-through">
-                          {c.before}
-                        </span>{" "}
-                        → <span className="whitespace-pre-wrap text-green-800">{c.after}</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-              </li>
-            );
-          })}
-        </ol>
-      </section>
+        <aside className="flex flex-col gap-5">
+          <Card>
+            <CardHead title="Record" actions={<CertificateStatusPill status={status} />} />
+            <CardBody>
+              <DescriptionList
+                className="ms-dl-stack"
+                items={[
+                  {
+                    label: "Certificate ID",
+                    value: <span className="ms-mono">{certificate.id}</span>,
+                  },
+                  {
+                    label: "Template",
+                    value: `${certificate.templateVersion.template.name} · v${certificate.templateVersion.versionNumber}`,
+                  },
+                  { label: "Issued", value: utc(certificate.issuedAt) },
+                  {
+                    label: "Verification link",
+                    value: verifyUrl ? (
+                      <a
+                        className="ms-link ms-mono ms-break"
+                        href={verifyUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {verifyUrl}
+                      </a>
+                    ) : (
+                      <span className="ms-error">{verifyProblem}</span>
+                    ),
+                  },
+                ]}
+              />
+            </CardBody>
+          </Card>
+
+          <StatusActions certificateId={certificate.id} status={status} />
+        </aside>
+      </div>
     </div>
   );
 }

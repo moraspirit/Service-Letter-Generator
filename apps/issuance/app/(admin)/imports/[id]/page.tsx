@@ -1,8 +1,18 @@
 import Link from "next/link";
 import type { ComponentProps } from "react";
 import { notFound } from "next/navigation";
+import {
+  Card,
+  CardBody,
+  CardHead,
+  CertificateStatusPill,
+  DescriptionList,
+  EmptyState,
+  StatusPill,
+} from "@moraspirit/ui";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/require-admin";
+import { PageHeader } from "../../../_components/page-header";
 import { ZipPanel } from "./zip-panel";
 
 export const dynamic = "force-dynamic";
@@ -25,74 +35,120 @@ export default async function ImportBatchPage({ params }: { params: Promise<{ id
   });
   if (!batch) notFound();
 
-  const facts: [string, string][] = [
-    ["File", batch.fileName + (batch.sheetName ? ` (sheet "${batch.sheetName}")` : "")],
-    [
-      "Template",
-      `${batch.templateVersion.template.name} · v${batch.templateVersion.versionNumber}`,
-    ],
-    ["Imported", batch.createdAt.toISOString().slice(0, 16).replace("T", " ") + " UTC"],
-    ["By", batch.adminUser.email],
-    ["Rows in file", String(batch.rowCount)],
-    ["Issued", String(batch.insertedCount)],
-    ["Skipped as duplicates", String(batch.skippedCount)],
-    ["Rejected as invalid", String(batch.rejectedCount)],
-  ];
+  const activeCount = batch.certificates.filter((c) => c.status === "active").length;
 
   return (
-    <div className="flex flex-col gap-4">
-      <Link href="/imports" className="w-fit text-sm text-red-700 hover:underline">
-        ← All imports
-      </Link>
-      <h1 className="text-2xl font-semibold">Import #{batch.id}</h1>
-      <dl className="grid max-w-xl grid-cols-[12rem_1fr] gap-y-1 text-sm">
-        {facts.map(([label, value]) => (
-          <div key={label} className="contents">
-            <dt className="text-zinc-600">{label}</dt>
-            <dd>{value}</dd>
-          </div>
-        ))}
-      </dl>
-
-      <ZipPanel
-        batchId={batch.id}
-        status={batch.zipStatus}
-        rendered={batch.zipRenderedCount}
-        total={batch.certificates.filter((c) => c.status === "active").length}
-        expiresAt={batch.zipExpiresAt?.toISOString() ?? null}
-        report={
-          Array.isArray(batch.zipReport)
-            ? (batch.zipReport as unknown as ComponentProps<typeof ZipPanel>["report"])
-            : []
+    <div className="flex flex-col gap-5">
+      <PageHeader
+        crumbs={[{ label: "Bulk imports", href: "/imports" }, { label: `Import #${batch.id}` }]}
+        title={`Import #${batch.id}`}
+        subtitle={batch.fileName + (batch.sheetName ? ` · sheet “${batch.sheetName}”` : "")}
+        actions={
+          <span className="ms-counts">
+            <StatusPill tone="ok" icon="check">
+              {batch.insertedCount} issued
+            </StatusPill>
+            {batch.skippedCount > 0 ? (
+              <StatusPill tone="warn" icon="alert">
+                {batch.skippedCount} skipped
+              </StatusPill>
+            ) : null}
+            {batch.rejectedCount > 0 ? (
+              <StatusPill tone="bad" icon="revoked">
+                {batch.rejectedCount} rejected
+              </StatusPill>
+            ) : null}
+          </span>
         }
       />
 
-      <h2 className="mt-2 text-lg font-semibold">Certificates in this batch</h2>
-      <table className="w-full text-left text-sm">
-        <thead className="border-b border-zinc-300 text-zinc-600">
-          <tr>
-            <th className="py-2 pr-4">Member ID</th>
-            <th className="py-2 pr-4">Name</th>
-            <th className="py-2">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {batch.certificates.map((c) => {
-            const data = c.data as Record<string, unknown>;
-            return (
-              <tr key={c.id} className="border-b border-zinc-200">
-                <td className="py-2 pr-4 font-mono text-xs">
-                  <Link href={`/certificates/${c.id}`} className="text-red-700 hover:underline">
-                    {String(data.member_id ?? c.id.slice(0, 8))}
-                  </Link>
-                </td>
-                <td className="py-2 pr-4">{String(data.recipient_name ?? "")}</td>
-                <td className="py-2">{c.status}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+      <div className="ms-detail">
+        <div className="flex flex-col gap-5">
+          <ZipPanel
+            batchId={batch.id}
+            status={batch.zipStatus}
+            rendered={batch.zipRenderedCount}
+            total={activeCount}
+            expiresAt={batch.zipExpiresAt?.toISOString() ?? null}
+            report={
+              Array.isArray(batch.zipReport)
+                ? (batch.zipReport as unknown as ComponentProps<typeof ZipPanel>["report"])
+                : []
+            }
+          />
+
+          <Card>
+            <CardHead
+              title="Certificates in this batch"
+              actions={<span className="ms-help">{batch.certificates.length}</span>}
+            />
+            {batch.certificates.length === 0 ? (
+              <CardBody>
+                <EmptyState icon="file" title="No certificates were created">
+                  Every row was either rejected as invalid or skipped as a duplicate.
+                </EmptyState>
+              </CardBody>
+            ) : (
+              <table className="ms-table ms-table-hover">
+                <caption className="sr-only">Certificates created by this import</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Member ID</th>
+                    <th scope="col">Recipient</th>
+                    <th scope="col">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {batch.certificates.map((c) => {
+                    const data = c.data as Record<string, unknown>;
+                    return (
+                      <tr key={c.id}>
+                        <td>
+                          <Link href={`/certificates/${c.id}`} className="ms-mono ms-cell-link">
+                            {String(data.member_id ?? c.id.slice(0, 8))}
+                          </Link>
+                        </td>
+                        <td className="ms-cell-name">{String(data.recipient_name ?? "—")}</td>
+                        <td>
+                          <CertificateStatusPill status={c.status as "active" | "revoked"} />
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+          </Card>
+        </div>
+
+        <aside>
+          <Card>
+            <CardHead title="Batch record" />
+            <CardBody>
+              <DescriptionList
+                className="ms-dl-stack"
+                items={[
+                  { label: "File", value: <span className="ms-break">{batch.fileName}</span> },
+                  ...(batch.sheetName ? [{ label: "Worksheet", value: batch.sheetName }] : []),
+                  {
+                    label: "Template",
+                    value: `${batch.templateVersion.template.name} · v${batch.templateVersion.versionNumber}`,
+                  },
+                  {
+                    label: "Imported",
+                    value: `${batch.createdAt.toISOString().slice(0, 16).replace("T", " ")} UTC`,
+                  },
+                  { label: "By", value: <span className="ms-break">{batch.adminUser.email}</span> },
+                  { label: "Rows in file", value: String(batch.rowCount) },
+                  { label: "Issued", value: String(batch.insertedCount) },
+                  { label: "Skipped as duplicates", value: String(batch.skippedCount) },
+                  { label: "Rejected as invalid", value: String(batch.rejectedCount) },
+                ]}
+              />
+            </CardBody>
+          </Card>
+        </aside>
+      </div>
     </div>
   );
 }

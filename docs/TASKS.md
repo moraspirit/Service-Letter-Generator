@@ -20,6 +20,7 @@ Progress tracker for [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Architect
 | 5 | Bulk import | 🔄 Built, awaiting owner | Automated checks pass, incl. the real sheet (analysis only); owner to click through the import UI once (P5-16) |
 | 6 | Bulk ZIP export | 🔄 Built, awaiting owner | Verified with the real Inngest Dev Server and Chromium; owner to click through once (P6-11) |
 | 7 | Verification app | 🔄 Built, awaiting deployment | Works against the Aiven dev database; a phone scan of a real PDF needs the deployed domain (Phase 8) |
+| U | Interface & design system | 🔄 Built, awaiting owner | Both apps on one light-only design system; owner to click through and confirm the look |
 | 8 | Hardening & deploy | ⬜ Not started | Gated on the production DB decision |
 | 9 | Post-launch | ⬜ Optional | Only if real use asks |
 
@@ -179,6 +180,32 @@ Progress tracker for [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Architect
 - [~] **P7-11** Independence: the verify process talks only to MySQL and has no URL or credential for the issuance app, and ran as its own process. The literal "issuance stopped" check was not done here (the owner's issuance dev server was running); repeat it once deployed
 - [x] **P7-12** Test that a revoked certificate's content, member id and reason are absent from the HTML (`verify-page.test.ts`), also when `?full=1` is requested
 - [~] **P7-13** Exit criteria verified except the phone scan of a real PDF's QR code, which needs the deployed public domain (dev QR codes point at `http://localhost:3001`) — **Milestone M2** is reached at Phase 8
+
+## Phase U — Interface and design system
+
+Cross-cutting, so it is lettered: the numeric `P8-xx` IDs referenced elsewhere keep
+their meaning. Sequenced after Phase 7 and before Phase 8, so the apps are
+deployed in the form people will actually use.
+
+Strategy lives in `PRODUCT.md`; the visual system is documented in `DESIGN.md`.
+
+- [x] **PU-01** `PRODUCT.md` — register, users, purpose, personality, anti-references, principles, accessibility target (WCAG 2.2 AA)
+- [x] **PU-02** `packages/ui` — token stylesheet plus the primitives both apps share (`Button`, `Card`, `StatusPill`, `Banner`, `DescriptionList`, `EmptyState`, `Icon`); wired into both apps via `transpilePackages`
+- [x] **PU-03** Palette anchored on the letterhead's own red (`#e73529`, sampled from `mora-letterhead-v1.jpg`), OKLCH throughout, neutrals tinted to hue 29
+- [x] **PU-04** Every colour pairing verified against WCAG 2.2 AA before use, including control boundaries at 3:1 (SC 1.4.11); ratios recorded beside the tokens
+- [x] **PU-05** Dark mode removed from both apps; one light theme to design and test
+- [x] **PU-06** Inter via `next/font/google` in both apps, fixed rem type scale, system mono for IDs
+- [x] **PU-07** Verify app rebuilt: valid, revoked, not-found and full-letter views. Documented wording kept verbatim ("Verified — Authentic", "This certificate has been revoked", "Not a valid certificate"), and the tuned `zoom` breakpoint ladder preserved
+- [x] **PU-08** Admin shell: sticky top bar with active-destination marking, skip link, per-page action bar (`PageHeader`)
+- [x] **PU-09** All 12 admin screens rebuilt — login, dashboard, certificate list / issue / detail / edit, imports list / new / batch, templates list / detail / version preview
+- [x] **PU-10** Step rail on `/imports/new` only, where the sequence is real; the issue form stays one screen because the live preview depends on it
+- [x] **PU-11** Revoke moved into a bordered danger zone with an outline button, so it can never be confused with the red-filled primary action
+- [x] **PU-12** Empty states that teach the workflow, pending states on every submit, and `prefers-reduced-motion` honoured globally
+- [x] **PU-13** No horizontal overflow at 360 / 390 / 768 / 1280 px on any screen in either app, checked in real Chromium
+- [x] **PU-14** `DESIGN.md` written: tokens, type scale, component rules, motion, accessibility, and what the system deliberately does not do
+- [x] **PU-15** Bug found and fixed during the pass: the Tailwind Prettier plugin strips leading spaces inside template-literal `className`s, fusing class names (`ms-field` + `ms-col-span` → `ms-fieldms-col-span`). All such call sites now use `cx()`; recorded in `DESIGN.md`
+- [ ] **PU-16** Owner to click through both apps once and confirm the look, then tick this
+- [ ] **PU-17** Exit criteria: `format:check`, `lint`, `typecheck`, `build` and all test suites pass; both apps render correctly at 360 px; `DESIGN.md` matches the code
 
 ## Phase 8 — Hardening, deployment and handover
 

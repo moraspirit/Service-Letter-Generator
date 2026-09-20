@@ -17,6 +17,7 @@
     "@moraspirit/certificate-render": "workspace:*",
     "@moraspirit/db": "workspace:*",
     "@moraspirit/shared": "workspace:*",
+    "@moraspirit/ui": "workspace:*",
     "@upstash/ratelimit": "^2.1.0",
     "@upstash/redis": "^1.38.4",
     "next": "16.3.5",

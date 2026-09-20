@@ -1,176 +1,149 @@
 @import "tailwindcss";
+/* Workspace-relative: Tailwind's CSS resolver does not consult a package's
+   `exports` map, so a bare "@moraspirit/ui/tokens.css" fails under Turbopack. */
+@import "../../../packages/ui/src/tokens.css";
 
-:root {
-  --background: #fafaf9;
-  --foreground: #1c1917;
-  --muted: #57534e;
-  --line: #e7e5e4;
-  --card: #ffffff;
-  --ok: #166534;
-  --ok-bg: #dcfce7;
-  --bad: #991b1b;
-  --bad-bg: #fee2e2;
-  --neutral-bg: #f5f5f4;
-  --brand: #b91c1c;
-}
+/* This app is one public page. Everything it needs beyond the shared design
+   system is below — there is no shell, no navigation and no account surface. */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0c0a09;
-    --foreground: #fafaf9;
-    --muted: #a8a29e;
-    --line: #292524;
-    --card: #1c1917;
-    --ok: #86efac;
-    --ok-bg: #14532d;
-    --bad: #fca5a5;
-    --bad-bg: #7f1d1d;
-    --neutral-bg: #292524;
-    --brand: #f87171;
-  }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family:
-    system-ui,
-    -apple-system,
-    "Segoe UI",
-    Roboto,
-    sans-serif;
-  line-height: 1.5;
-}
-
-.shell {
-  margin: 0 auto;
-  max-width: 44rem;
-  padding: 1rem;
-}
-
-.brand {
-  padding: 0.5rem 0 1rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  color: var(--brand);
-}
-
-.card {
-  border: 1px solid var(--line);
-  border-radius: 0.75rem;
-  background: var(--card);
-  padding: 1.25rem;
-}
-
-.badge {
+.ms-verify-page {
   display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  border-radius: 0.75rem;
-  padding: 1rem 1.25rem;
-  font-size: 1.25rem;
+  min-height: 100dvh;
+  flex-direction: column;
+}
+
+/* The letterhead's red edge, reduced to a hairline so the page is recognisably
+   MoraSpirit without imitating the letter it is vouching for. */
+.ms-verify-rule {
+  height: 3px;
+  background: var(--ms-brand-500);
+}
+
+.ms-verify-head {
+  border-bottom: 1px solid var(--ms-line);
+  background: var(--ms-bg-0);
+}
+.ms-verify-head-inner {
+  margin: 0 auto;
+  max-width: 46rem;
+  padding: var(--ms-space-4);
+}
+.ms-verify-org {
+  color: var(--ms-ink-strong);
+  font-size: var(--ms-text-base);
   font-weight: 700;
+  letter-spacing: -0.02em;
 }
-.badge-ok {
-  background: var(--ok-bg);
-  color: var(--ok);
-}
-.badge-bad {
-  background: var(--bad-bg);
-  color: var(--bad);
-}
-.badge-neutral {
-  background: var(--neutral-bg);
-  color: var(--foreground);
-}
-.badge svg {
-  flex: none;
+.ms-verify-kicker {
+  color: var(--ms-ink-muted); /* 5.18:1 */
+  font-size: var(--ms-text-sm);
 }
 
-.facts {
+.ms-verify-main {
+  flex: 1;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 46rem;
+  padding: var(--ms-space-6) var(--ms-space-4) var(--ms-space-7);
+}
+
+/* ---- The verdict -------------------------------------------------------
+   The one thing a visitor came for. It is the largest element on the page and
+   states itself in a word, an icon and a colour — never colour alone. */
+
+/* On a phone the icon takes its own line so the verdict gets the full width and
+   lands on one or two clean lines; side by side from 480px up. */
+.ms-verdict {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--ms-space-3);
+  border: 1px solid;
+  border-radius: var(--ms-radius-lg);
+  padding: var(--ms-space-5);
+}
+.ms-verdict-icon {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.75rem;
-  margin: 0;
+  place-items: center;
+  flex: none;
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--ms-radius-pill);
 }
+.ms-verdict-text {
+  min-width: 0;
+}
+.ms-verdict-title {
+  color: inherit; /* takes the verdict's tone, not the base heading ink */
+  font-size: var(--ms-text-xl);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: var(--ms-leading-tight);
+  text-wrap: pretty; /* `balance` splits short verdicts into lopsided lines */
+}
+.ms-verdict-note {
+  padding-top: var(--ms-space-1);
+  font-size: var(--ms-text-base);
+  line-height: var(--ms-leading-snug);
+}
+
+.ms-verdict-ok {
+  background: var(--ms-ok-bg);
+  border-color: var(--ms-ok-line);
+  color: var(--ms-ok-fg); /* 6.48:1 on ok-bg */
+}
+.ms-verdict-ok .ms-verdict-icon {
+  background: var(--ms-ok-fg);
+  color: var(--ms-ok-bg);
+}
+.ms-verdict-bad {
+  background: var(--ms-bad-bg);
+  border-color: var(--ms-bad-line);
+  color: var(--ms-bad-fg); /* 8.31:1 on brand-50 */
+}
+.ms-verdict-bad .ms-verdict-icon {
+  background: var(--ms-bad-fg);
+  color: var(--ms-bad-bg);
+}
+.ms-verdict-unknown {
+  background: var(--ms-bg-2);
+  border-color: var(--ms-line-strong);
+  color: var(--ms-ink-strong); /* 12.01:1 on bg-2 */
+}
+.ms-verdict-unknown .ms-verdict-icon {
+  background: var(--ms-ink-soft);
+  color: var(--ms-bg-0);
+}
+
 @media (min-width: 30rem) {
-  .facts {
-    grid-template-columns: 10rem 1fr;
+  .ms-verdict {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--ms-space-4);
+    padding: var(--ms-space-5) var(--ms-space-6);
   }
-}
-.facts dt {
-  font-size: 0.8125rem;
-  color: var(--muted);
-}
-.facts dd {
-  margin: 0;
-  font-size: 1.0625rem;
-  font-weight: 600;
-  overflow-wrap: anywhere;
+  .ms-verdict-icon {
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+  .ms-verdict-title {
+    font-size: var(--ms-text-3xl);
+  }
 }
 
-.note {
-  color: var(--muted);
-  font-size: 0.875rem;
+.ms-verify-note {
+  color: var(--ms-ink-soft); /* 7.66:1 */
+  font-size: var(--ms-text-sm);
+  line-height: var(--ms-leading-snug);
 }
 
-.button {
-  display: inline-block;
-  border-radius: 0.5rem;
-  background: var(--foreground);
-  color: var(--background);
-  padding: 0.75rem 1.25rem;
-  font-weight: 600;
-  text-decoration: none;
-}
-.link {
-  color: var(--brand);
-  text-decoration: underline;
-}
-
-/* The certificate is a fixed US Letter page (8.5in x 11in at 96 dpi). `zoom` shrinks the box and
-   the content together, so on a phone the whole page fits the width without scripts. */
-.letter-scroller {
-  overflow-x: auto;
-  border: 1px solid var(--line);
-  border-radius: 0.5rem;
-  background: #ffffff;
-}
-.letter-frame {
-  display: block;
-  width: 816px;
-  height: 1056px;
-  border: 0;
-  background: #ffffff;
-}
-@media (max-width: 860px) {
-  .letter-frame {
-    zoom: 0.9;
-  }
-}
-@media (max-width: 660px) {
-  .letter-frame {
-    zoom: 0.68;
-  }
-}
-@media (max-width: 500px) {
-  .letter-frame {
-    zoom: 0.52;
-  }
-}
-@media (max-width: 440px) {
-  .letter-frame {
-    zoom: 0.46;
-  }
-}
-@media (max-width: 400px) {
-  .letter-frame {
-    zoom: 0.42;
-  }
-}
-@media (max-width: 370px) {
-  .letter-frame {
-    zoom: 0.39;
-  }
+.ms-verify-foot {
+  margin: 0 auto;
+  width: 100%;
+  max-width: 46rem;
+  border-top: 1px solid var(--ms-line-soft);
+  padding: var(--ms-space-4) var(--ms-space-4) var(--ms-space-6);
+  color: var(--ms-ink-muted); /* 5.18:1 */
+  font-size: var(--ms-text-sm);
+  line-height: var(--ms-leading-snug);
 }

@@ -4,12 +4,16 @@ import Link from "next/link";
 import { useActionState, useMemo, useState } from "react";
 import { renderCertificateHtml } from "@moraspirit/certificate-render";
 import { dataFromRawValues, type FieldDefinition, type FieldSchema } from "@moraspirit/shared";
+import { Banner, Button, Card, CardBody, CardHead, cx, Icon } from "@moraspirit/ui";
 import { stateMessage, type FormState } from "./form-state";
 
-const PREVIEW_SCALE = 0.6;
+const PREVIEW_SCALE = 0.62;
 const initial: FormState = { status: "idle" };
-const inputClass =
-  "rounded border border-zinc-300 bg-white px-3 py-2 text-base font-normal text-zinc-900";
+
+/** Long-form inputs get the full width; short ones pair up two to a row. */
+function isWide(field: FieldDefinition): boolean {
+  return field.type === "list" || field.type === "richtext";
+}
 
 function Field({
   field,
@@ -23,15 +27,40 @@ function Field({
   onChange: (value: string) => void;
 }) {
   const id = `field-${field.name}`;
-  const common = { id, name: field.name, value, required: field.required, className: inputClass };
+  const helpId = `${id}-help`;
+  const errorId = `${id}-error`;
+  const help =
+    field.type === "list"
+      ? "One item per line. A leading bullet is removed."
+      : field.type === "richtext"
+        ? "Plain text. A blank line starts a new paragraph."
+        : null;
+
+  const common = {
+    id,
+    name: field.name,
+    value,
+    required: field.required,
+    "aria-invalid": error ? (true as const) : undefined,
+    "aria-describedby":
+      [help ? helpId : null, error ? errorId : null].filter(Boolean).join(" ") || undefined,
+  };
+
   return (
-    <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="text-sm font-medium">
+    <div className={cx("ms-field", isWide(field) && "ms-col-span")}>
+      <label className="ms-label" htmlFor={id}>
         {field.label}
-        {field.required ? null : <span className="font-normal text-zinc-500"> (optional)</span>}
+        {field.required ? (
+          <span className="ms-required" aria-hidden="true">
+            *
+          </span>
+        ) : (
+          <span className="ms-label-optional">(optional)</span>
+        )}
       </label>
+
       {field.type === "select" ? (
-        <select {...common} onChange={(e) => onChange(e.target.value)}>
+        <select {...common} className="ms-select" onChange={(e) => onChange(e.target.value)}>
           <option value="">Choose…</option>
           {field.options.map((o) => (
             <option key={o} value={o}>
@@ -39,28 +68,30 @@ function Field({
             </option>
           ))}
         </select>
-      ) : field.type === "list" || field.type === "richtext" ? (
-        <>
-          <textarea
-            {...common}
-            rows={field.type === "list" ? 6 : 4}
-            onChange={(e) => onChange(e.target.value)}
-          />
-          <p className="text-xs text-zinc-500">
-            {field.type === "list"
-              ? "One item per line. A leading bullet is removed."
-              : "Plain text. A blank line starts a new paragraph."}
-          </p>
-        </>
+      ) : isWide(field) ? (
+        <textarea
+          {...common}
+          className="ms-textarea"
+          rows={field.type === "list" ? 6 : 4}
+          onChange={(e) => onChange(e.target.value)}
+        />
       ) : (
         <input
           {...common}
+          className="ms-input"
           type={field.type === "date" ? "date" : "text"}
           onChange={(e) => onChange(e.target.value)}
         />
       )}
+
+      {help ? (
+        <p className="ms-help" id={helpId}>
+          {help}
+        </p>
+      ) : null}
       {error ? (
-        <p role="alert" className="text-sm text-red-700">
+        <p className="ms-error" id={errorId} role="alert">
+          <Icon name="alert" size={14} />
           {error}
         </p>
       ) : null}
@@ -71,6 +102,9 @@ function Field({
 /**
  * The form generated from a template version's field schema. Used to issue a new
  * certificate and to edit an existing one (which additionally requires a reason).
+ *
+ * The preview is the reason this screen is not a wizard: the letter has to be
+ * visible while the fields that build it are being typed.
  */
 export function CertificateForm({
   mode,
@@ -79,6 +113,7 @@ export function CertificateForm({
   htmlContent,
   fieldSchema,
   defaults,
+  cancelHref,
 }: {
   mode: "issue" | "edit";
   action: (previous: FormState, formData: FormData) => Promise<FormState>;
@@ -87,6 +122,7 @@ export function CertificateForm({
   htmlContent: string;
   fieldSchema: FieldSchema;
   defaults: Record<string, string>;
+  cancelHref: string;
 }) {
   const [values, setValues] = useState<Record<string, string>>(defaults);
   const [reason, setReason] = useState("");
@@ -108,124 +144,149 @@ export function CertificateForm({
   const errors = state.status === "invalid" ? state.errors : {};
   const message = stateMessage(state);
   const anyway = mode === "issue" ? "Issue anyway" : "Save anyway";
+  const submitLabel = mode === "issue" ? "Issue certificate" : "Save changes";
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[minmax(0,26rem)_1fr]">
-      <form action={formAction} className="flex flex-col gap-4">
+    <form action={formAction} className="ms-issue">
+      <div className="flex flex-col gap-4">
         {Object.entries(hidden).map(([name, value]) => (
           <input key={name} type="hidden" name={name} value={value} />
         ))}
-        {fieldSchema.map((field) => (
-          <Field
-            key={field.name}
-            field={field}
-            value={values[field.name] ?? ""}
-            error={errors[field.name]}
-            onChange={(v) => setValues((prev) => ({ ...prev, [field.name]: v }))}
-          />
-        ))}
+
+        <Card>
+          <CardHead title="Certificate details" />
+          <CardBody>
+            <div className="ms-grid-2">
+              {fieldSchema.map((field) => (
+                <Field
+                  key={field.name}
+                  field={field}
+                  value={values[field.name] ?? ""}
+                  error={errors[field.name]}
+                  onChange={(v) => setValues((prev) => ({ ...prev, [field.name]: v }))}
+                />
+              ))}
+            </div>
+          </CardBody>
+        </Card>
 
         {mode === "edit" ? (
-          <div className="flex flex-col gap-1 border-t border-zinc-200 pt-4">
-            <label htmlFor="reason" className="text-sm font-medium">
-              Reason for this change
-            </label>
-            <textarea
-              id="reason"
-              name="reason"
-              rows={2}
-              maxLength={500}
-              required
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              className={inputClass}
-            />
-            <p className="text-xs text-zinc-500">Recorded in the audit history.</p>
-            {errors.reason ? (
-              <p role="alert" className="text-sm text-red-700">
-                {errors.reason}
-              </p>
-            ) : null}
-          </div>
+          <Card>
+            <CardHead title="Why is this changing?" />
+            <CardBody>
+              <div className="ms-field">
+                <label className="ms-label" htmlFor="reason">
+                  Reason for this change
+                  <span className="ms-required" aria-hidden="true">
+                    *
+                  </span>
+                </label>
+                <textarea
+                  id="reason"
+                  name="reason"
+                  className="ms-textarea"
+                  rows={2}
+                  maxLength={500}
+                  required
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  aria-invalid={errors.reason ? true : undefined}
+                  aria-describedby="reason-help"
+                />
+                <p className="ms-help" id="reason-help">
+                  Kept in the certificate&apos;s history alongside the old and new values. Write it
+                  for whoever reads this in a year&apos;s time.
+                </p>
+                {errors.reason ? (
+                  <p className="ms-error" role="alert">
+                    <Icon name="alert" size={14} />
+                    {errors.reason}
+                  </p>
+                ) : null}
+              </div>
+            </CardBody>
+          </Card>
         ) : null}
 
         {message ? (
-          <p
-            role="alert"
-            className="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800"
-          >
+          <Banner tone="bad" role="alert" title="This could not be saved">
             {message}
-          </p>
+          </Banner>
         ) : null}
 
         {state.status === "duplicate" ? (
-          <div
-            role="alert"
-            className="rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900"
-          >
-            <p className="font-medium">A certificate with the same key already exists.</p>
-            <ul className="mt-1 list-disc pl-5">
+          <Banner tone="warn" role="alert" title="A certificate with the same key already exists">
+            <p>
+              Duplicates are allowed — this is a warning, not a block. Check the existing
+              {state.existing.length === 1 ? " certificate" : " certificates"} first:
+            </p>
+            <ul className="ms-dup-list">
               {state.existing.map((e) => (
                 <li key={e.id}>
-                  <Link href={`/certificates/${e.id}`} className="underline" target="_blank">
-                    {e.id.slice(0, 8)}…
+                  <Link href={`/certificates/${e.id}`} className="ms-link" target="_blank">
+                    <span className="ms-mono">{e.id.slice(0, 8)}…</span>
                   </Link>{" "}
-                  ({e.state}, issued {e.issuedAt.slice(0, 10)})
+                  — {e.state}, issued {e.issuedAt.slice(0, 10)}
                 </li>
               ))}
             </ul>
-            <button
-              type="submit"
-              name="confirmDuplicate"
-              value="1"
-              disabled={pending}
-              className="mt-3 rounded bg-amber-700 px-3 py-1.5 font-medium text-white disabled:opacity-60"
-            >
-              {anyway}
-            </button>
-          </div>
+            <div className="pt-1">
+              <Button
+                type="submit"
+                name="confirmDuplicate"
+                value="1"
+                variant="secondary"
+                size="sm"
+                disabled={pending}
+              >
+                {anyway}
+              </Button>
+            </div>
+          </Banner>
         ) : null}
 
-        <button
-          type="submit"
-          disabled={pending}
-          className="w-fit rounded bg-red-700 px-4 py-2 font-medium text-white disabled:opacity-60"
-        >
-          {pending
-            ? mode === "issue"
-              ? "Issuing…"
-              : "Saving…"
-            : mode === "issue"
-              ? "Issue certificate"
-              : "Save changes"}
-        </button>
-      </form>
-
-      <div>
-        <p className="mb-2 text-sm text-zinc-600">Live preview (the QR code is a placeholder)</p>
-        {preview ? (
-          <div
-            className="overflow-hidden rounded border border-zinc-300 bg-zinc-100"
-            style={{ width: `${8.5 * PREVIEW_SCALE}in`, height: `${11 * PREVIEW_SCALE}in` }}
-          >
-            <iframe
-              title="Certificate preview"
-              sandbox=""
-              srcDoc={preview}
-              style={{
-                width: "8.5in",
-                height: "11in",
-                border: 0,
-                transform: `scale(${PREVIEW_SCALE})`,
-                transformOrigin: "top left",
-                background: "#fff",
-              }}
-            />
-          </div>
-        ) : (
-          <p className="text-sm text-zinc-600">Fill in the form to see a preview.</p>
-        )}
+        <div className="ms-formbar">
+          <Button type="submit" variant="primary" disabled={pending}>
+            {pending ? (mode === "issue" ? "Issuing…" : "Saving…") : submitLabel}
+          </Button>
+          <Link href={cancelHref} className="ms-btn ms-btn-ghost">
+            Cancel
+          </Link>
+          {pending ? (
+            <span className="ms-help" role="status">
+              Checking the letter still fits on one page…
+            </span>
+          ) : null}
+        </div>
       </div>
-    </div>
+
+      <aside className="ms-preview-col" aria-label="Live preview">
+        <div className="ms-preview-sticky">
+          <div className="flex items-baseline justify-between gap-3 pb-2">
+            <h2 className="ms-section-title">Live preview</h2>
+            <span className="ms-help">QR code is a placeholder</span>
+          </div>
+          {preview ? (
+            <div
+              className="ms-preview-frame"
+              style={{ width: `${8.5 * PREVIEW_SCALE}in`, height: `${11 * PREVIEW_SCALE}in` }}
+            >
+              <iframe
+                title="Certificate preview"
+                sandbox=""
+                srcDoc={preview}
+                style={{
+                  width: "8.5in",
+                  height: "11in",
+                  transform: `scale(${PREVIEW_SCALE})`,
+                }}
+              />
+            </div>
+          ) : (
+            <p className="ms-help">Fill in the form to see the letter build here.</p>
+          )}
+        </div>
+      </aside>
+    </form>
   );
 }

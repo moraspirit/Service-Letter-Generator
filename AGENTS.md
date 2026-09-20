@@ -17,7 +17,8 @@ Do this **before** writing code, before proposing a plan, and before answering q
 | 3 | `docs/IMPLEMENTATION_PLAN.md` | The 9-phase build order, what each phase contains, and its exit criteria |
 | 4 | `docs/TASKS.md` | Current progress, open decisions (D1–D4), and anything blocked |
 | 5 | `docs/samples/` | The real letters and spreadsheet the system must reproduce and import — read before Phase 1 and Phase 5 |
-| 6 | `docs/RUNBOOK.md` | Operations. Does not exist until Phase 8 |
+| 6 | `PRODUCT.md` / `DESIGN.md` | Who the two audiences are, and the visual system both apps render |
+| 7 | `docs/RUNBOOK.md` | Operations. Does not exist until Phase 8 |
 
 Then **state where the project stands** — the current phase and the next unchecked task from `docs/TASKS.md` — before proposing work. Never assume the phase; read it.
 
@@ -52,6 +53,9 @@ The implementation plan carries a per-phase table naming the architecture sectio
 - **The verification app stays minimal:** one route (`/verify/[uuid]`) plus rate-limit middleware. No auth, no Puppeteer, no write code, no admin routes — ever.
 - **Templates and assets are developer-authored files** in `packages/certificate-templates` and `packages/certificate-assets`, published to the database by `templates:publish`. There is no template editor or image upload in the admin panel.
 - **Assets and template versions are immutable.** Never rename, overwrite or delete an existing asset file or `template_versions` row — issued certificates reference them. Changes create a new file or version.
+- **One design system.** Tokens and component classes live in `packages/ui/src/tokens.css`; shared primitives in `packages/ui/src/`. Component styling uses the `ms-*` classes. **Never use Tailwind utilities inside `packages/ui`** — neither app scans that package, so they silently do nothing. Read `DESIGN.md` before changing anything visual.
+- **Never build a `className` by concatenating into a template literal.** The Tailwind Prettier plugin strips leading spaces inside them and fuses the class names. Use `cx()` from `@moraspirit/ui`.
+- **Light theme only.** Do not reintroduce `prefers-color-scheme` blocks.
 - Match the surrounding code's style, naming and comment density. Don't introduce a new library when one already in the stack does the job.
 
 ---

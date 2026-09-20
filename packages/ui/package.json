@@ -1,0 +1,22 @@
+{
+  "name": "@moraspirit/ui",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The shared design system: token stylesheet, component classes and the primitives both apps render",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./tokens.css": "./src/tokens.css"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19",
+    "typescript": "^5"
+  }
+}

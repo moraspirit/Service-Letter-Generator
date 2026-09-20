@@ -1,9 +1,10 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { richTextToPlainText, type CertificateData, type FieldSchema } from "@moraspirit/shared";
+import { Banner, LinkButton } from "@moraspirit/ui";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/require-admin";
 import { UUID_PATTERN } from "@/lib/verify-url";
+import { PageHeader } from "../../../../_components/page-header";
 import { CertificateForm } from "../../_components/certificate-form";
 import { editCertificateAction } from "./actions";
 
@@ -21,20 +22,29 @@ export default async function EditCertificatePage({ params }: { params: Promise<
   });
   if (!certificate) notFound();
 
-  const back = (
-    <Link href={`/certificates/${id}`} className="w-fit text-sm text-red-700 hover:underline">
-      ← Back to the certificate
-    </Link>
-  );
+  const data = certificate.data as unknown as CertificateData;
+  const name = typeof data.recipient_name === "string" ? data.recipient_name : "Certificate";
+  const crumbs = [
+    { label: "Certificates", href: "/certificates" },
+    { label: name, href: `/certificates/${id}` },
+    { label: "Edit" },
+  ];
 
   if (certificate.status === "revoked") {
     return (
-      <div className="flex flex-col gap-4">
-        {back}
-        <h1 className="text-2xl font-semibold">Edit certificate</h1>
-        <p className="rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
-          This certificate is revoked. Restore it before editing.
-        </p>
+      <div className="flex flex-col gap-5">
+        <PageHeader crumbs={crumbs} title="Edit certificate" />
+        <Banner tone="warn" title="This certificate is revoked">
+          <p>
+            A revoked certificate cannot be edited, so the record matches what the public
+            verification page shows. Restore it first, then make the change.
+          </p>
+          <div className="pt-2">
+            <LinkButton href={`/certificates/${id}`} variant="secondary" size="sm">
+              Back to the certificate
+            </LinkButton>
+          </div>
+        </Banner>
       </div>
     );
   }
@@ -42,7 +52,6 @@ export default async function EditCertificatePage({ params }: { params: Promise<
   // The pinned version's schema and template: an edit never moves a certificate to a newer version.
   const version = certificate.templateVersion;
   const fieldSchema = version.fieldSchema as unknown as FieldSchema;
-  const data = certificate.data as unknown as CertificateData;
   const defaults = Object.fromEntries(
     fieldSchema.map((field) => {
       const value = data[field.name];
@@ -53,13 +62,12 @@ export default async function EditCertificatePage({ params }: { params: Promise<
   );
 
   return (
-    <div className="flex flex-col gap-4">
-      {back}
-      <h1 className="text-2xl font-semibold">Edit certificate</h1>
-      <p className="text-sm text-zinc-600">
-        {version.template.name} · v{version.versionNumber}. Editing keeps the template version this
-        certificate was issued with.
-      </p>
+    <div className="flex flex-col gap-5">
+      <PageHeader
+        crumbs={crumbs}
+        title="Edit certificate"
+        subtitle={`${version.template.name} · v${version.versionNumber}. Editing keeps the template version this certificate was issued with, so its wording and layout do not shift.`}
+      />
       <CertificateForm
         mode="edit"
         action={editCertificateAction}
@@ -70,6 +78,7 @@ export default async function EditCertificatePage({ params }: { params: Promise<
         htmlContent={version.htmlContent}
         fieldSchema={fieldSchema}
         defaults={defaults}
+        cancelHref={`/certificates/${id}`}
       />
     </div>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { Banner, Button } from "@moraspirit/ui";
 import { loginAction, type LoginState } from "./actions";
 
 const initial: LoginState = {};
@@ -10,38 +11,45 @@ export function LoginForm() {
 
   return (
     <form action={action} className="flex flex-col gap-4">
-      <label className="flex flex-col gap-1 text-sm font-medium">
-        Email
+      <div className="ms-field">
+        <label className="ms-label" htmlFor="email">
+          Email
+        </label>
         <input
+          id="email"
           name="email"
           type="email"
           autoComplete="username"
           required
-          className="rounded border border-zinc-300 bg-white px-3 py-2 text-base font-normal text-zinc-900"
+          autoFocus
+          className="ms-input"
         />
-      </label>
-      <label className="flex flex-col gap-1 text-sm font-medium">
-        Password
+      </div>
+
+      <div className="ms-field">
+        <label className="ms-label" htmlFor="password">
+          Password
+        </label>
         <input
+          id="password"
           name="password"
           type="password"
           autoComplete="current-password"
           required
-          className="rounded border border-zinc-300 bg-white px-3 py-2 text-base font-normal text-zinc-900"
+          className="ms-input"
         />
-      </label>
+      </div>
+
+      {/* Deliberately generic: the message never reveals whether the account exists. */}
       {state.error ? (
-        <p role="alert" className="text-sm text-red-700">
+        <Banner tone="bad" role="alert">
           {state.error}
-        </p>
+        </Banner>
       ) : null}
-      <button
-        type="submit"
-        disabled={pending}
-        className="rounded bg-red-700 px-4 py-2 font-medium text-white disabled:opacity-60"
-      >
+
+      <Button type="submit" variant="primary" size="lg" block disabled={pending}>
         {pending ? "Signing in…" : "Sign in"}
-      </button>
+      </Button>
     </form>
   );
 }

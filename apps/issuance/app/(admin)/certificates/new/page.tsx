@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { FieldSchema } from "@moraspirit/shared";
+import { EmptyState, Icon } from "@moraspirit/ui";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/require-admin";
+import { PageHeader } from "../../../_components/page-header";
 import { CertificateForm } from "../_components/certificate-form";
 import { issueCertificateAction } from "./actions";
 
@@ -17,30 +19,34 @@ export default async function NewCertificatePage({
 
   const templateParam = (await searchParams).template;
 
+  // Step one: which letter. Templates are developer-authored, so this is a
+  // choice between a handful of published wordings, not a blank canvas.
   if (!templateParam) {
     const templates = await prisma.template.findMany({
       where: { currentVersionId: { not: null } },
       orderBy: { name: "asc" },
       select: { id: true, name: true },
     });
+
     return (
-      <div className="flex flex-col gap-4">
-        <h1 className="text-2xl font-semibold">Issue a certificate</h1>
-        <p className="text-zinc-600">Choose a template.</p>
+      <div className="flex flex-col gap-5">
+        <PageHeader
+          title="Issue a certificate"
+          subtitle="Choose the letter to issue. Each template has its own wording and its own set of fields."
+        />
         {templates.length === 0 ? (
-          <p className="text-zinc-600">
-            No published templates. Run{" "}
-            <code className="rounded bg-zinc-100 px-1">pnpm templates:publish</code>.
-          </p>
+          <EmptyState icon="file" title="No published templates">
+            Templates live in the repository and are published by a developer. Run{" "}
+            <code className="ms-code">pnpm templates:publish</code> to publish the ones already
+            written.
+          </EmptyState>
         ) : (
-          <ul className="flex flex-col gap-2">
+          <ul className="ms-choices">
             {templates.map((t) => (
               <li key={t.id}>
-                <Link
-                  href={`/certificates/new?template=${t.id}`}
-                  className="text-red-700 hover:underline"
-                >
-                  {t.name}
+                <Link href={`/certificates/new?template=${t.id}`} className="ms-choice">
+                  <span className="ms-choice-title">{t.name}</span>
+                  <Icon name="arrowRight" size={16} />
                 </Link>
               </li>
             ))}
@@ -64,11 +70,15 @@ export default async function NewCertificatePage({
   );
 
   return (
-    <div className="flex flex-col gap-4">
-      <Link href="/certificates/new" className="w-fit text-sm text-red-700 hover:underline">
-        ← Choose another template
-      </Link>
-      <h1 className="text-2xl font-semibold">{template.name}</h1>
+    <div className="flex flex-col gap-5">
+      <PageHeader
+        crumbs={[
+          { label: "Issue a certificate", href: "/certificates/new" },
+          { label: template.name },
+        ]}
+        title={template.name}
+        subtitle={`Version ${template.currentVersion.versionNumber}. The letter builds beside the form as you type; it must fit on one page to be issued.`}
+      />
       <CertificateForm
         mode="issue"
         action={issueCertificateAction}
@@ -76,6 +86,7 @@ export default async function NewCertificatePage({
         htmlContent={template.currentVersion.htmlContent}
         fieldSchema={fieldSchema}
         defaults={defaults}
+        cancelHref="/certificates"
       />
     </div>
   );

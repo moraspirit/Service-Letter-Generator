@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
     "@moraspirit/shared",
     "@moraspirit/certificate-render",
     "@moraspirit/certificate-templates",
+    "@moraspirit/ui",
   ],
   // Node-only browser driver: keep it out of the bundle.
   serverExternalPackages: ["puppeteer-core"],

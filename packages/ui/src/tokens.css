@@ -1,0 +1,837 @@
+/*
+ * MoraSpirit design system — tokens and component classes.
+ *
+ * Consumed by both apps. Plain CSS on purpose: the verify app must be able to
+ * import this without a Tailwind pipeline, and component classes defined once
+ * here cannot drift between the two apps the way duplicated utilities would.
+ *
+ * Colour is anchored on the letterhead's own red, sampled from
+ * packages/certificate-assets/mora-letterhead-v1.jpg: #e73529 = oklch(60.7% 0.215 29).
+ * Neutrals carry a trace of that hue (chroma 0.002–0.018) so greys read as
+ * MoraSpirit's greys rather than stock zinc.
+ *
+ * Every pairing below was checked against WCAG 2.2 AA before it was written:
+ * body text >= 4.5:1, large/non-text >= 3:1. The ratio is noted next to any
+ * token whose job depends on it. Light only — there is no dark theme.
+ */
+
+:root {
+  /* ---- Brand ramp (hue 29) ------------------------------------------- */
+  --ms-brand-50: oklch(96.5% 0.017 29);
+  --ms-brand-100: oklch(92.8% 0.037 29);
+  --ms-brand-200: oklch(86.8% 0.071 29);
+  --ms-brand-300: oklch(78% 0.129 29);
+  --ms-brand-500: oklch(62.8% 0.212 29); /* the letterhead red; non-text use */
+  --ms-brand-600: oklch(56.5% 0.205 29); /* 5.04:1 on white — primary fill */
+  --ms-brand-700: oklch(49.5% 0.18 29); /* 6.60:1 — links, hover fill */
+  --ms-brand-800: oklch(41.5% 0.148 29); /* 8.31:1 on brand-50 — badge text */
+  --ms-brand-900: oklch(33% 0.112 29);
+
+  /* ---- Neutrals ------------------------------------------------------- */
+  --ms-bg-0: oklch(99.2% 0.002 29); /* page */
+  --ms-bg-1: oklch(97.4% 0.004 29); /* raised panel */
+  --ms-bg-2: oklch(95.5% 0.006 29); /* sunken well, table header */
+  --ms-line-soft: oklch(92.5% 0.007 29); /* hairline inside a card */
+  --ms-line: oklch(88.7% 0.009 29); /* default border */
+  --ms-line-strong: oklch(83% 0.011 29);
+  --ms-field-line: oklch(62.5% 0.014 29); /* 3.50:1 — control boundary, SC 1.4.11 */
+  --ms-ink-faint: oklch(71% 0.013 29); /* decorative only, never text */
+  --ms-ink-muted: oklch(53% 0.016 29); /* 5.18:1 — labels, helper, placeholder */
+  --ms-ink-soft: oklch(44% 0.018 29); /* 7.66:1 — secondary text */
+  --ms-ink: oklch(30% 0.018 29); /* 13.39:1 — body */
+  --ms-ink-strong: oklch(22% 0.016 29); /* 16.97:1 — headings */
+
+  /* ---- Semantic states ------------------------------------------------ */
+  --ms-ok-fg: oklch(44% 0.116 152); /* 6.48:1 on ok-bg */
+  --ms-ok-bg: oklch(95.5% 0.03 152);
+  --ms-ok-line: oklch(86% 0.07 152);
+  --ms-warn-fg: oklch(47% 0.099 75); /* 6.17:1 on warn-bg */
+  --ms-warn-bg: oklch(95.8% 0.045 85);
+  --ms-warn-line: oklch(86.5% 0.085 80);
+  --ms-info-fg: oklch(46% 0.13 255); /* 6.33:1 on info-bg */
+  --ms-info-bg: oklch(95.8% 0.02 255);
+  --ms-info-line: oklch(87% 0.06 255);
+  --ms-bad-fg: var(--ms-brand-800);
+  --ms-bad-bg: var(--ms-brand-50);
+  --ms-bad-line: var(--ms-brand-200);
+
+  /* ---- Type ------------------------------------------------------------
+     Fixed rem steps, ratio ~1.15. Product UI is read at a consistent DPI, so
+     fluid clamp() headings would only make a sidebar heading shrink oddly. */
+  --ms-font-sans:
+    var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --ms-font-mono: ui-monospace, SFMono-Regular, Menlo, "Cascadia Mono", monospace;
+
+  --ms-text-2xs: 0.6875rem; /* 11px — pill text, table micro-labels */
+  --ms-text-xs: 0.75rem; /* 12px */
+  --ms-text-sm: 0.8125rem; /* 13px — helper text */
+  --ms-text-base: 0.9375rem; /* 15px — UI body */
+  --ms-text-md: 1.0625rem; /* 17px — prose, fact values */
+  --ms-text-lg: 1.25rem; /* 20px */
+  --ms-text-xl: 1.5rem; /* 24px — page title */
+  --ms-text-2xl: 1.75rem; /* 28px */
+  --ms-text-3xl: 2.125rem; /* 34px — verify verdict */
+
+  --ms-leading-tight: 1.2;
+  --ms-leading-snug: 1.35;
+  --ms-leading-normal: 1.55;
+  --ms-leading-prose: 1.65;
+
+  /* ---- Space ----------------------------------------------------------- */
+  --ms-space-1: 0.25rem;
+  --ms-space-2: 0.5rem;
+  --ms-space-3: 0.75rem;
+  --ms-space-4: 1rem;
+  --ms-space-5: 1.5rem;
+  --ms-space-6: 2rem;
+  --ms-space-7: 2.5rem;
+  --ms-space-8: 3.5rem;
+
+  /* ---- Radius ---------------------------------------------------------- */
+  --ms-radius-sm: 0.25rem;
+  --ms-radius: 0.375rem; /* controls */
+  --ms-radius-md: 0.5rem;
+  --ms-radius-lg: 0.75rem; /* cards top out here */
+  --ms-radius-pill: 999px;
+
+  /* ---- Elevation -------------------------------------------------------
+     Deliberately shallow. A card gets a border or a shadow, never both as
+     decoration; the only wide shadow belongs to overlays. */
+  --ms-shadow-sm: 0 1px 2px oklch(22% 0.016 29 / 0.06);
+  --ms-shadow: 0 1px 3px oklch(22% 0.016 29 / 0.08);
+  --ms-shadow-overlay: 0 12px 32px oklch(22% 0.016 29 / 0.16);
+
+  /* ---- Z-index --------------------------------------------------------- */
+  --ms-z-base: 0;
+  --ms-z-sticky: 100;
+  --ms-z-dropdown: 200;
+  --ms-z-overlay: 300;
+  --ms-z-modal: 400;
+  --ms-z-toast: 500;
+
+  /* ---- Motion ----------------------------------------------------------
+     150–250ms. Users are mid-task; nobody should wait on choreography. */
+  --ms-ease: cubic-bezier(0.22, 1, 0.36, 1); /* ease-out-quart */
+  --ms-dur-fast: 120ms;
+  --ms-dur: 180ms;
+  --ms-dur-slow: 240ms;
+
+  --ms-focus-ring: 0 0 0 2px var(--ms-bg-0), 0 0 0 4px var(--ms-brand-600);
+}
+
+/* ---- Base ------------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--ms-bg-0);
+  color: var(--ms-ink);
+  font-family: var(--ms-font-sans);
+  font-size: var(--ms-text-base);
+  line-height: var(--ms-leading-normal);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  color: var(--ms-ink-strong);
+  font-weight: 650;
+  line-height: var(--ms-leading-tight);
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+
+p {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+/* A visible, non-colour-dependent focus indicator on everything focusable. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--ms-brand-600);
+  outline-offset: 2px;
+  border-radius: var(--ms-radius-sm);
+}
+
+::placeholder {
+  color: var(--ms-ink-muted); /* 5.18:1 — placeholders hold the body ratio */
+  opacity: 1;
+}
+
+::selection {
+  background: var(--ms-brand-100);
+  color: var(--ms-ink-strong);
+}
+
+/* Numerals line up in tables, IDs and counts. */
+.ms-tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+.ms-mono {
+  font-family: var(--ms-font-mono);
+  font-size: 0.9em;
+  letter-spacing: -0.01em;
+}
+
+/* ---- Skip link --------------------------------------------------------- */
+
+.ms-skip {
+  position: absolute;
+  left: var(--ms-space-3);
+  top: var(--ms-space-3);
+  z-index: var(--ms-z-toast);
+  transform: translateY(-200%);
+  border-radius: var(--ms-radius);
+  background: var(--ms-ink-strong);
+  color: var(--ms-bg-0);
+  padding: var(--ms-space-2) var(--ms-space-4);
+  font-size: var(--ms-text-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform var(--ms-dur) var(--ms-ease);
+}
+.ms-skip:focus {
+  transform: translateY(0);
+}
+
+/* ---- Link -------------------------------------------------------------- */
+
+.ms-link {
+  color: var(--ms-brand-700); /* 6.60:1 */
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  text-decoration-thickness: from-font;
+}
+.ms-link:hover {
+  color: var(--ms-brand-800);
+}
+
+/* ---- Button ------------------------------------------------------------
+   One shape across both apps. Variants differ by fill, never by geometry. */
+
+.ms-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ms-space-2);
+  border: 1px solid transparent;
+  border-radius: var(--ms-radius);
+  padding: 0.5rem 0.875rem;
+  font: inherit;
+  font-size: var(--ms-text-base);
+  font-weight: 600;
+  line-height: 1.25;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--ms-dur) var(--ms-ease),
+    border-color var(--ms-dur) var(--ms-ease),
+    color var(--ms-dur) var(--ms-ease);
+}
+.ms-btn:disabled,
+.ms-btn[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.ms-btn-primary {
+  background: var(--ms-brand-600); /* white on this = 5.04:1 */
+  color: #fff;
+}
+.ms-btn-primary:hover:not(:disabled) {
+  background: var(--ms-brand-700);
+}
+
+.ms-btn-secondary {
+  background: var(--ms-bg-0);
+  border-color: var(--ms-field-line); /* 3.50:1 boundary */
+  color: var(--ms-ink);
+}
+.ms-btn-secondary:hover:not(:disabled) {
+  background: var(--ms-bg-2);
+  border-color: var(--ms-ink-muted);
+}
+
+.ms-btn-ghost {
+  background: transparent;
+  color: var(--ms-ink-soft);
+}
+.ms-btn-ghost:hover:not(:disabled) {
+  background: var(--ms-bg-2);
+  color: var(--ms-ink-strong);
+}
+
+/* Destructive: outline, never a fill. Fill is reserved for the primary action,
+   so the two can never be confused at a glance. */
+.ms-btn-danger {
+  background: var(--ms-bg-0);
+  border-color: var(--ms-brand-600);
+  color: var(--ms-brand-700); /* 6.60:1 */
+}
+.ms-btn-danger:hover:not(:disabled) {
+  background: var(--ms-brand-50);
+  border-color: var(--ms-brand-700);
+}
+
+.ms-btn-sm {
+  padding: 0.3125rem 0.625rem;
+  font-size: var(--ms-text-sm);
+}
+.ms-btn-lg {
+  padding: 0.6875rem 1.25rem;
+  font-size: var(--ms-text-md);
+}
+.ms-btn-block {
+  width: 100%;
+}
+
+/* ---- Card -------------------------------------------------------------- */
+
+.ms-card {
+  border: 1px solid var(--ms-line);
+  border-radius: var(--ms-radius-lg);
+  background: var(--ms-bg-0);
+}
+.ms-card-pad {
+  padding: var(--ms-space-5);
+}
+.ms-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ms-space-4);
+  border-bottom: 1px solid var(--ms-line-soft);
+  padding: var(--ms-space-4) var(--ms-space-5);
+}
+.ms-card-title {
+  font-size: var(--ms-text-base);
+  font-weight: 650;
+  letter-spacing: -0.005em;
+}
+.ms-card-body {
+  padding: var(--ms-space-5);
+}
+.ms-card-foot {
+  border-top: 1px solid var(--ms-line-soft);
+  background: var(--ms-bg-1);
+  padding: var(--ms-space-4) var(--ms-space-5);
+  border-radius: 0 0 calc(var(--ms-radius-lg) - 1px) calc(var(--ms-radius-lg) - 1px);
+}
+
+/* ---- Form controls ----------------------------------------------------- */
+
+.ms-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ms-space-2);
+  min-width: 0;
+}
+
+.ms-label {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.3em;
+  color: var(--ms-ink); /* 13.39:1 — labels are not greyed out */
+  font-size: var(--ms-text-sm);
+  font-weight: 600;
+}
+.ms-label-optional {
+  color: var(--ms-ink-muted); /* 5.18:1 */
+  font-weight: 400;
+}
+.ms-required {
+  color: var(--ms-brand-700);
+  font-weight: 700;
+}
+
+.ms-input,
+.ms-select,
+.ms-textarea {
+  width: 100%;
+  border: 1px solid var(--ms-field-line); /* 3.50:1 — SC 1.4.11 */
+  border-radius: var(--ms-radius);
+  background: var(--ms-bg-0);
+  padding: 0.5rem 0.75rem;
+  color: var(--ms-ink);
+  font: inherit;
+  font-size: var(--ms-text-base);
+  line-height: 1.45;
+  transition:
+    border-color var(--ms-dur) var(--ms-ease),
+    box-shadow var(--ms-dur) var(--ms-ease);
+}
+.ms-textarea {
+  min-height: 5rem;
+  resize: vertical;
+}
+.ms-input:hover:not(:disabled),
+.ms-select:hover:not(:disabled),
+.ms-textarea:hover:not(:disabled) {
+  border-color: var(--ms-ink-muted);
+}
+.ms-input:disabled,
+.ms-select:disabled,
+.ms-textarea:disabled {
+  background: var(--ms-bg-2);
+  color: var(--ms-ink-muted);
+  cursor: not-allowed;
+}
+.ms-input[aria-invalid="true"],
+.ms-select[aria-invalid="true"],
+.ms-textarea[aria-invalid="true"] {
+  border-color: var(--ms-brand-600);
+  box-shadow: inset 0 0 0 1px var(--ms-brand-600);
+}
+
+.ms-select {
+  /* Chevron drawn as a data URI so no request is made and no icon font is needed. */
+  appearance: none;
+  padding-right: 2rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5 6 6.5l5-5' stroke='%23756966' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+}
+
+.ms-file {
+  width: 100%;
+  border: 1px dashed var(--ms-field-line);
+  border-radius: var(--ms-radius);
+  background: var(--ms-bg-1);
+  padding: var(--ms-space-3);
+  font-size: var(--ms-text-sm);
+  color: var(--ms-ink-soft);
+}
+.ms-file::file-selector-button {
+  margin-right: var(--ms-space-3);
+  border: 1px solid var(--ms-field-line);
+  border-radius: var(--ms-radius);
+  background: var(--ms-bg-0);
+  padding: 0.3125rem 0.625rem;
+  font: inherit;
+  font-size: var(--ms-text-sm);
+  font-weight: 600;
+  color: var(--ms-ink);
+  cursor: pointer;
+}
+
+.ms-help {
+  color: var(--ms-ink-muted); /* 5.18:1 — helper text holds the body ratio */
+  font-size: var(--ms-text-sm);
+  line-height: var(--ms-leading-snug);
+}
+
+.ms-error {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ms-space-2);
+  color: var(--ms-brand-700); /* 6.60:1 */
+  font-size: var(--ms-text-sm);
+  font-weight: 500;
+}
+
+/* Checkbox / radio rows: the whole row is the target, not just the 16px box. */
+.ms-check {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ms-space-3);
+  cursor: pointer;
+}
+.ms-check input {
+  margin: 0;
+  flex: none;
+  width: 1.0625rem;
+  height: 1.0625rem;
+  margin-top: 0.125rem;
+  accent-color: var(--ms-brand-600);
+}
+
+/* Two-column field grid; collapses to one column on narrow screens. */
+.ms-grid-2 {
+  display: grid;
+  gap: var(--ms-space-4) var(--ms-space-5);
+  grid-template-columns: 1fr;
+}
+@media (min-width: 40rem) {
+  .ms-grid-2 {
+    grid-template-columns: 1fr 1fr;
+  }
+  .ms-col-span {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ---- Pill -------------------------------------------------------------- */
+
+.ms-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375em;
+  border: 1px solid transparent;
+  border-radius: var(--ms-radius-pill);
+  padding: 0.1875rem 0.5rem;
+  font-size: var(--ms-text-2xs);
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+.ms-pill svg {
+  flex: none;
+}
+.ms-pill-ok {
+  background: var(--ms-ok-bg);
+  border-color: var(--ms-ok-line);
+  color: var(--ms-ok-fg);
+}
+.ms-pill-bad {
+  background: var(--ms-bad-bg);
+  border-color: var(--ms-bad-line);
+  color: var(--ms-bad-fg);
+}
+.ms-pill-warn {
+  background: var(--ms-warn-bg);
+  border-color: var(--ms-warn-line);
+  color: var(--ms-warn-fg);
+}
+.ms-pill-info {
+  background: var(--ms-info-bg);
+  border-color: var(--ms-info-line);
+  color: var(--ms-info-fg);
+}
+.ms-pill-neutral {
+  background: var(--ms-bg-2);
+  border-color: var(--ms-line);
+  color: var(--ms-ink-soft);
+}
+
+/* ---- Banner ------------------------------------------------------------ */
+
+.ms-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ms-space-3);
+  border: 1px solid;
+  border-radius: var(--ms-radius-md);
+  padding: var(--ms-space-4);
+  font-size: var(--ms-text-sm);
+  line-height: var(--ms-leading-snug);
+}
+.ms-banner svg {
+  flex: none;
+  margin-top: 0.0625rem;
+}
+.ms-banner-content {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--ms-space-1);
+}
+.ms-banner-title {
+  font-weight: 650;
+}
+.ms-banner-ok {
+  background: var(--ms-ok-bg);
+  border-color: var(--ms-ok-line);
+  color: var(--ms-ok-fg);
+}
+.ms-banner-bad {
+  background: var(--ms-bad-bg);
+  border-color: var(--ms-bad-line);
+  color: var(--ms-bad-fg);
+}
+.ms-banner-warn {
+  background: var(--ms-warn-bg);
+  border-color: var(--ms-warn-line);
+  color: var(--ms-warn-fg);
+}
+.ms-banner-info {
+  background: var(--ms-info-bg);
+  border-color: var(--ms-info-line);
+  color: var(--ms-info-fg);
+}
+
+/* ---- Description list (facts) ------------------------------------------ */
+
+/* Narrow: each term sits directly above its value, tightly paired. Wide: the
+   rows become a two-column grid, which needs the wrapper out of the way. */
+.ms-dl {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ms-space-4);
+  margin: 0;
+}
+.ms-dl-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ms-space-1);
+  min-width: 0;
+}
+@media (min-width: 34rem) {
+  .ms-dl {
+    display: grid;
+    grid-template-columns: minmax(7rem, 11rem) 1fr;
+    gap: var(--ms-space-4) var(--ms-space-5);
+  }
+  .ms-dl-row {
+    display: contents;
+  }
+}
+.ms-dl dt {
+  color: var(--ms-ink-muted); /* 5.18:1 */
+  font-size: var(--ms-text-sm);
+  font-weight: 500;
+}
+.ms-dl dd {
+  margin: 0;
+  color: var(--ms-ink-strong);
+  font-size: var(--ms-text-md);
+  font-weight: 600;
+  line-height: var(--ms-leading-snug);
+  overflow-wrap: anywhere;
+}
+
+/* ---- Table ------------------------------------------------------------- */
+
+.ms-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--ms-line);
+  border-radius: var(--ms-radius-lg);
+  background: var(--ms-bg-0);
+}
+.ms-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--ms-text-sm);
+  text-align: left;
+}
+.ms-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: var(--ms-z-base);
+  background: var(--ms-bg-2);
+  border-bottom: 1px solid var(--ms-line);
+  padding: var(--ms-space-3) var(--ms-space-4);
+  color: var(--ms-ink-soft); /* 6.87:1 on bg-2 */
+  font-size: var(--ms-text-xs);
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.ms-table tbody td {
+  border-bottom: 1px solid var(--ms-line-soft);
+  padding: var(--ms-space-3) var(--ms-space-4);
+  vertical-align: middle;
+}
+.ms-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+.ms-table tbody tr {
+  transition: background-color var(--ms-dur-fast) var(--ms-ease);
+}
+.ms-table-hover tbody tr:hover {
+  background: var(--ms-bg-1);
+}
+.ms-table-top tbody td {
+  vertical-align: top;
+}
+
+/* ---- Empty state ------------------------------------------------------- */
+
+.ms-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ms-space-3);
+  border: 1px dashed var(--ms-line-strong);
+  border-radius: var(--ms-radius-lg);
+  background: var(--ms-bg-1);
+  padding: var(--ms-space-7) var(--ms-space-5);
+  text-align: center;
+}
+.ms-empty-icon {
+  color: var(--ms-ink-faint);
+}
+.ms-empty-title {
+  font-size: var(--ms-text-md);
+  font-weight: 650;
+  color: var(--ms-ink-strong);
+}
+.ms-empty-body {
+  max-width: 44ch;
+  color: var(--ms-ink-soft);
+  font-size: var(--ms-text-sm);
+  line-height: var(--ms-leading-snug);
+}
+
+/* ---- Danger zone -------------------------------------------------------
+   A full border, never a left stripe. The heading and the outline button do
+   the signalling; the typed reason does the actual protecting. */
+.ms-danger {
+  border: 1px solid var(--ms-brand-200);
+  border-radius: var(--ms-radius-lg);
+  background: var(--ms-bg-0);
+}
+.ms-danger-head {
+  border-bottom: 1px solid var(--ms-brand-100);
+  background: var(--ms-brand-50);
+  border-radius: calc(var(--ms-radius-lg) - 1px) calc(var(--ms-radius-lg) - 1px) 0 0;
+  padding: var(--ms-space-3) var(--ms-space-5);
+  color: var(--ms-brand-800); /* 8.31:1 on brand-50 */
+  font-size: var(--ms-text-sm);
+  font-weight: 650;
+}
+
+/* ---- Step rail ---------------------------------------------------------
+   Only used where there is genuine sequence. */
+.ms-steps {
+  /* Narrow screens wrap the steps rather than hiding them behind a sideways
+     scroll the user has no reason to expect. */
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: var(--ms-space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+@media (min-width: 60rem) {
+  .ms-steps {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: var(--ms-space-1);
+  }
+}
+.ms-step {
+  display: flex;
+  align-items: center;
+  gap: var(--ms-space-3);
+  border-radius: var(--ms-radius-md);
+  padding: var(--ms-space-2) var(--ms-space-3);
+  color: var(--ms-ink-muted);
+  font-size: var(--ms-text-sm);
+  font-weight: 500;
+}
+.ms-step-marker {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 1.375rem;
+  height: 1.375rem;
+  border: 1px solid var(--ms-line-strong);
+  border-radius: var(--ms-radius-pill);
+  background: var(--ms-bg-0);
+  font-size: var(--ms-text-2xs);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.ms-step-current {
+  background: var(--ms-brand-50);
+  color: var(--ms-brand-800);
+  font-weight: 650;
+}
+.ms-step-current .ms-step-marker {
+  border-color: var(--ms-brand-600);
+  background: var(--ms-brand-600);
+  color: #fff;
+}
+.ms-step-done {
+  color: var(--ms-ink-soft);
+}
+.ms-step-done .ms-step-marker {
+  border-color: var(--ms-ok-line);
+  background: var(--ms-ok-bg);
+  color: var(--ms-ok-fg);
+}
+
+/* ---- Progress ---------------------------------------------------------- */
+
+.ms-progress {
+  height: 0.5rem;
+  overflow: hidden;
+  border-radius: var(--ms-radius-pill);
+  background: var(--ms-bg-2);
+}
+.ms-progress-bar {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ms-brand-600);
+  transition: width var(--ms-dur-slow) var(--ms-ease);
+}
+
+/* ---- Certificate letter frame ------------------------------------------
+   The letter is a fixed US Letter page (8.5in x 11in at 96dpi). `zoom` shrinks
+   the box and its content together, so a phone fits the whole page with no
+   script and no sideways scrolling. */
+.ms-letter-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--ms-line);
+  border-radius: var(--ms-radius-lg);
+  background: #fff;
+  box-shadow: var(--ms-shadow-sm);
+}
+.ms-letter {
+  display: block;
+  width: 816px;
+  height: 1056px;
+  border: 0;
+  background: #fff;
+}
+@media (max-width: 860px) {
+  .ms-letter {
+    zoom: 0.9;
+  }
+}
+@media (max-width: 660px) {
+  .ms-letter {
+    zoom: 0.68;
+  }
+}
+@media (max-width: 500px) {
+  .ms-letter {
+    zoom: 0.52;
+  }
+}
+@media (max-width: 440px) {
+  .ms-letter {
+    zoom: 0.46;
+  }
+}
+@media (max-width: 400px) {
+  .ms-letter {
+    zoom: 0.42;
+  }
+}
+@media (max-width: 370px) {
+  .ms-letter {
+    zoom: 0.39;
+  }
+}
+
+/* ---- Reduced motion ---------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

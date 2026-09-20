@@ -1,26 +1,709 @@
 @import "tailwindcss";
+/* Workspace-relative: Tailwind's CSS resolver does not consult a package's
+   `exports` map, so a bare "@moraspirit/ui/tokens.css" fails under Turbopack. */
+@import "../../../packages/ui/src/tokens.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
+/* The design system's tokens, exposed to Tailwind so page-level layout can use
+   utilities such as `bg-bg-1` or `text-ink-muted` and stay on the same ramp.
+   Component styling belongs to the `ms-*` classes, not to utilities. */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg-0: var(--ms-bg-0);
+  --color-bg-1: var(--ms-bg-1);
+  --color-bg-2: var(--ms-bg-2);
+  --color-line-soft: var(--ms-line-soft);
+  --color-line: var(--ms-line);
+  --color-line-strong: var(--ms-line-strong);
+  --color-ink-faint: var(--ms-ink-faint);
+  --color-ink-muted: var(--ms-ink-muted);
+  --color-ink-soft: var(--ms-ink-soft);
+  --color-ink: var(--ms-ink);
+  --color-ink-strong: var(--ms-ink-strong);
+  --color-brand-50: var(--ms-brand-50);
+  --color-brand-100: var(--ms-brand-100);
+  --color-brand-600: var(--ms-brand-600);
+  --color-brand-700: var(--ms-brand-700);
+  --color-brand-800: var(--ms-brand-800);
+  --font-sans: var(--ms-font-sans);
+  --font-mono: var(--ms-font-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ---- Admin shell -------------------------------------------------------
+   A top bar rather than a sidebar: four destinations do not earn a rail, and
+   the certificate and import tables want the full width. */
+
+.ms-topbar {
+  position: sticky;
+  top: 0;
+  z-index: var(--ms-z-sticky);
+  border-bottom: 1px solid var(--ms-line);
+  background: var(--ms-bg-0);
+}
+/* The letterhead's red edge, reduced to a hairline. */
+.ms-topbar::before {
+  content: "";
+  display: block;
+  height: 3px;
+  background: var(--ms-brand-500);
+}
+.ms-topbar-inner {
+  display: flex;
+  align-items: center;
+  gap: var(--ms-space-5);
+  margin: 0 auto;
+  max-width: 78rem;
+  padding: var(--ms-space-3) var(--ms-space-4);
+}
+
+.ms-wordmark {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  color: var(--ms-ink-strong);
+  font-size: var(--ms-text-base);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.ms-wordmark span {
+  color: var(--ms-ink-muted);
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.ms-topbar-account {
+  display: flex;
+  align-items: center;
+  gap: var(--ms-space-3);
+  margin-left: auto;
+}
+.ms-topbar-user {
+  display: none;
+  color: var(--ms-ink-muted); /* 5.18:1 */
+  font-size: var(--ms-text-sm);
+}
+@media (min-width: 48rem) {
+  .ms-topbar-user {
+    display: inline;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.ms-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--ms-space-1);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.ms-nav::-webkit-scrollbar {
+  display: none;
+}
+.ms-nav a {
+  position: relative;
+  border-radius: var(--ms-radius);
+  padding: 0.4rem 0.7rem;
+  color: var(--ms-ink-soft); /* 7.66:1 */
+  font-size: var(--ms-text-sm);
+  font-weight: 550;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background-color var(--ms-dur) var(--ms-ease),
+    color var(--ms-dur) var(--ms-ease);
+}
+.ms-nav a:hover {
+  background: var(--ms-bg-2);
+  color: var(--ms-ink-strong);
+}
+.ms-nav a[aria-current="page"] {
+  background: var(--ms-brand-50);
+  color: var(--ms-brand-800); /* 8.31:1 on brand-50 */
+  font-weight: 650;
+}
+
+.ms-main {
+  margin: 0 auto;
+  width: 100%;
+  max-width: 78rem;
+  padding: var(--ms-space-5) var(--ms-space-4) var(--ms-space-8);
+}
+
+/* ---- Login -------------------------------------------------------------
+   No navigation and nothing to compare: one card, centred, on the sunken
+   surface so the card itself reads as the only thing to do. */
+
+.ms-login {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  background: var(--ms-bg-1);
+  padding: var(--ms-space-5) var(--ms-space-4);
+}
+.ms-login-card {
+  display: flex;
+  width: 100%;
+  max-width: 24rem;
+  flex-direction: column;
+  gap: var(--ms-space-5);
+  border: 1px solid var(--ms-line);
+  border-top: 3px solid var(--ms-brand-500);
+  border-radius: var(--ms-radius-lg);
+  background: var(--ms-bg-0);
+  padding: var(--ms-space-6) var(--ms-space-5);
+  box-shadow: var(--ms-shadow);
+}
+.ms-login-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ms-space-2);
+}
+.ms-login-title {
+  font-size: var(--ms-text-lg);
+}
+.ms-login-sub {
+  color: var(--ms-ink-soft); /* 7.66:1 */
+  font-size: var(--ms-text-sm);
+  line-height: var(--ms-leading-snug);
+}
+
+/* ---- Page header + action bar ------------------------------------------ */
+
+.ms-pagehead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--ms-space-4);
+}
+.ms-pagehead h1 {
+  font-size: var(--ms-text-xl);
+}
+.ms-pagehead-sub {
+  padding-top: var(--ms-space-1);
+  max-width: 68ch;
+  color: var(--ms-ink-soft);
+  font-size: var(--ms-text-sm);
+  line-height: var(--ms-leading-snug);
+}
+.ms-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ms-space-2);
+}
+
+.ms-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding-bottom: var(--ms-space-2);
+  color: var(--ms-ink-muted); /* 5.18:1 */
+  font-size: var(--ms-text-sm);
+}
+.ms-breadcrumb a {
+  color: var(--ms-ink-soft);
+  text-decoration: none;
+}
+.ms-breadcrumb a:hover {
+  color: var(--ms-brand-700);
+  text-decoration: underline;
+}
+
+.ms-section-title {
+  font-size: var(--ms-text-base);
+  font-weight: 650;
+}
+.ms-link-sm {
+  font-size: var(--ms-text-sm);
+}
+
+/* ---- Dashboard ---------------------------------------------------------
+   Three things to do, not three numbers to read. Sized by `auto-fit` so the
+   row reflows without a breakpoint. */
+
+.ms-tasks {
+  display: grid;
+  gap: var(--ms-space-4);
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+}
+.ms-task {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ms-space-2);
+  border: 1px solid var(--ms-line);
+  border-radius: var(--ms-radius-lg);
+  background: var(--ms-bg-0);
+  padding: var(--ms-space-5);
+  text-decoration: none;
+  transition:
+    border-color var(--ms-dur) var(--ms-ease),
+    background-color var(--ms-dur) var(--ms-ease);
+}
+.ms-task:hover {
+  border-color: var(--ms-brand-300);
+  background: var(--ms-brand-50);
+}
+.ms-task-icon {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--ms-radius-md);
+  background: var(--ms-brand-50);
+  color: var(--ms-brand-700); /* 6.60:1 */
+}
+.ms-task:hover .ms-task-icon {
+  background: var(--ms-brand-600);
+  color: #fff;
+}
+.ms-task-title {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--ms-ink-strong);
+  font-size: var(--ms-text-base);
+  font-weight: 650;
+}
+.ms-task-body {
+  color: var(--ms-ink-soft); /* 7.66:1 */
+  font-size: var(--ms-text-sm);
+  line-height: var(--ms-leading-snug);
+}
+
+/* ---- Recent list -------------------------------------------------------
+   A list, not a table: five rows do not need column headers, and this keeps
+   the dashboard from looking like a second certificates screen. */
+
+.ms-recent {
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--ms-line);
+  border-radius: var(--ms-radius-lg);
+  overflow: hidden;
+}
+.ms-recent li + li {
+  border-top: 1px solid var(--ms-line-soft);
+}
+.ms-recent-row {
+  display: grid;
+  align-items: center;
+  gap: var(--ms-space-1) var(--ms-space-4);
+  grid-template-columns: 1fr auto;
+  padding: var(--ms-space-3) var(--ms-space-4);
+  text-decoration: none;
+  transition: background-color var(--ms-dur-fast) var(--ms-ease);
+}
+.ms-recent-row:hover {
+  background: var(--ms-bg-1);
+}
+.ms-recent-name {
+  color: var(--ms-ink-strong);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.ms-recent-id {
+  color: var(--ms-ink-soft);
+  justify-self: start;
+}
+.ms-recent-meta {
+  color: var(--ms-ink-muted); /* 5.18:1 */
+  font-size: var(--ms-text-sm);
+}
+@media (min-width: 52rem) {
+  .ms-recent-row {
+    grid-template-columns: minmax(0, 1fr) 7rem minmax(0, 12rem) 6rem auto;
+  }
+  .ms-recent-id {
+    justify-self: auto;
+  }
+}
+
+/* ---- Toolbar (filters above a table) ----------------------------------- */
+
+.ms-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--ms-space-3);
+  border: 1px solid var(--ms-line);
+  border-radius: var(--ms-radius-lg);
+  background: var(--ms-bg-1);
+  padding: var(--ms-space-4);
+}
+.ms-toolbar .ms-field {
+  flex: 1 1 11rem;
+  min-width: 9rem;
+}
+.ms-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--ms-space-2);
+}
+
+/* ---- Table cells -------------------------------------------------------- */
+
+.ms-cell-link {
+  color: var(--ms-brand-700); /* 6.60:1 */
+  font-weight: 600;
+  text-decoration: none;
+}
+.ms-cell-link:hover {
+  text-decoration: underline;
+}
+.ms-cell-name {
+  color: var(--ms-ink-strong);
+  font-weight: 550;
+}
+.ms-cell-dim {
+  color: var(--ms-ink-muted); /* 5.18:1 */
+}
+
+.ms-version {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ms-space-2);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* The letter is a fixed 816px page; centre it when the viewport is wider. */
+.ms-letter-center {
+  display: flex;
+  justify-content: center;
+}
+
+.ms-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ms-space-1);
+}
+
+.ms-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ms-space-3);
+}
+
+/* ---- Import layout -----------------------------------------------------
+   The step rail runs across the top on narrow screens and down the side once
+   there is room for it. */
+
+.ms-import {
+  display: grid;
+  gap: var(--ms-space-5);
+  grid-template-columns: 1fr;
+  align-items: start;
+}
+@media (min-width: 60rem) {
+  .ms-import {
+    grid-template-columns: 14rem minmax(0, 1fr);
+    gap: var(--ms-space-6);
+  }
+}
+.ms-import-rail {
+  min-width: 0;
+}
+.ms-import-rail-inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ms-space-3);
+}
+@media (min-width: 60rem) {
+  .ms-import-rail-inner {
+    position: sticky;
+    top: calc(var(--ms-space-5) + 3.25rem);
+  }
+}
+
+.ms-row-problems {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ms-space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--ms-brand-700); /* 6.60:1 */
+}
+.ms-row-problems li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ms-space-2);
+}
+.ms-row-problems svg {
+  flex: none;
+  margin-top: 0.15em;
+}
+.ms-row-dup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ms-space-2);
+  color: var(--ms-warn-fg); /* 6.80:1 */
+}
+
+/* ---- Detail layout -----------------------------------------------------
+   Contents and history lead; the record card and the revoke box sit in a rail
+   beside them once there is room, and fall underneath when there is not. */
+
+.ms-detail {
+  display: grid;
+  gap: var(--ms-space-5);
+  grid-template-columns: 1fr;
+  align-items: start;
+}
+@media (min-width: 64rem) {
+  .ms-detail {
+    grid-template-columns: minmax(0, 1fr) 21rem;
+  }
+}
+
+/* In the narrow rail the two-column term/value grid would crush the values. */
+.ms-dl-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ms-space-4);
+}
+.ms-dl-stack .ms-dl-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ms-space-1);
+}
+.ms-dl-stack dd {
+  font-size: var(--ms-text-base);
+}
+.ms-break {
+  overflow-wrap: anywhere;
+}
+
+/* Tailwind's preflight removes list markers, so the design system puts back the
+   ones that carry meaning. */
+.ms-bullets {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ms-space-1);
+  margin: 0;
+  padding-left: 1.1rem;
+  list-style: disc;
+  font-weight: 500;
+}
+.ms-richtext {
+  font-weight: 500;
+}
+.ms-richtext p + p {
+  margin-top: var(--ms-space-3);
+}
+
+.ms-danger-lede {
+  padding-bottom: var(--ms-space-3);
+}
+
+/* ---- Audit timeline ----------------------------------------------------
+   A list with a rule down the markers, not a card per entry: the entries are
+   short and a stack of cards would bury them in chrome. */
+
+.ms-timeline {
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.ms-timeline > li {
+  position: relative;
+  display: flex;
+  gap: var(--ms-space-4);
+  padding-bottom: var(--ms-space-5);
+}
+.ms-timeline > li:last-child {
+  padding-bottom: 0;
+}
+.ms-timeline > li::before {
+  content: "";
+  position: absolute;
+  left: 0.6875rem;
+  top: 1.5rem;
+  bottom: 0;
+  width: 1px;
+  background: var(--ms-line);
+}
+.ms-timeline > li:last-child::before {
+  display: none;
+}
+.ms-timeline-marker {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 1.375rem;
+  height: 1.375rem;
+  border: 1px solid var(--ms-line-strong);
+  border-radius: var(--ms-radius-pill);
+  background: var(--ms-bg-0);
+  color: var(--ms-ink-muted);
+}
+.ms-timeline-body {
+  min-width: 0;
+  padding-top: 0.0625rem;
+}
+.ms-timeline-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem var(--ms-space-3);
+}
+.ms-timeline-action {
+  color: var(--ms-ink-strong);
+  font-weight: 650;
+  text-transform: capitalize;
+}
+.ms-timeline-meta {
+  color: var(--ms-ink-muted); /* 5.18:1 */
+  font-size: var(--ms-text-sm);
+}
+.ms-timeline-reason {
+  padding-top: var(--ms-space-1);
+  color: var(--ms-ink-soft); /* 7.66:1 */
+  font-size: var(--ms-text-sm);
+}
+
+/* Before/after pairs. `del`/`ins` carry the meaning for a screen reader, so the
+   colour is reinforcement rather than the only signal. */
+.ms-changes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ms-space-2);
+  margin: var(--ms-space-3) 0 0;
+  padding: var(--ms-space-3);
+  list-style: none;
+  border-radius: var(--ms-radius-md);
+  background: var(--ms-bg-1);
+  font-size: var(--ms-text-sm);
+}
+.ms-changes li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--ms-space-2);
+}
+.ms-changes-label {
+  color: var(--ms-ink-muted);
+  font-weight: 600;
+}
+.ms-changes del {
+  color: var(--ms-brand-800); /* 8.31:1-class red */
+  white-space: pre-wrap;
+}
+.ms-changes ins {
+  color: var(--ms-ok-fg); /* 7.17:1 */
+  text-decoration: none;
+  white-space: pre-wrap;
+}
+
+.ms-code {
+  border: 1px solid var(--ms-line);
+  border-radius: var(--ms-radius-sm);
+  background: var(--ms-bg-2);
+  padding: 0.1em 0.35em;
+  font-family: var(--ms-font-mono);
+  font-size: 0.875em;
+}
+
+/* ---- Choice list (pick a template) ------------------------------------- */
+
+.ms-choices {
+  display: grid;
+  gap: var(--ms-space-3);
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.ms-choice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ms-space-4);
+  border: 1px solid var(--ms-line);
+  border-radius: var(--ms-radius-lg);
+  background: var(--ms-bg-0);
+  padding: var(--ms-space-4) var(--ms-space-5);
+  color: var(--ms-ink-soft);
+  text-decoration: none;
+  transition:
+    border-color var(--ms-dur) var(--ms-ease),
+    background-color var(--ms-dur) var(--ms-ease);
+}
+.ms-choice:hover {
+  border-color: var(--ms-brand-300);
+  background: var(--ms-brand-50);
+  color: var(--ms-brand-700);
+}
+.ms-choice-title {
+  color: var(--ms-ink-strong);
+  font-weight: 600;
+}
+
+/* ---- Issue / edit layout -----------------------------------------------
+   Form and preview side by side once there is room for both; stacked below
+   that, with the preview underneath because the fields come first. */
+
+.ms-issue {
+  display: grid;
+  gap: var(--ms-space-5);
+  grid-template-columns: 1fr;
+  align-items: start;
+}
+@media (min-width: 64rem) {
+  .ms-issue {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--ms-space-6);
+  }
+}
+.ms-preview-col {
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.ms-formbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ms-space-3);
+  border-top: 1px solid var(--ms-line);
+  padding-top: var(--ms-space-4);
+}
+
+.ms-dup-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ms-space-1);
+  margin: 0;
+  padding-left: 1.1rem;
+  list-style: disc;
+}
+
+/* ---- Live preview ------------------------------------------------------
+   The preview is the point of the issue screen, so it stays in view while the
+   form scrolls on a wide screen. */
+
+.ms-preview-sticky {
+  position: sticky;
+  top: calc(var(--ms-space-6) + 3.25rem);
+}
+.ms-preview-frame {
+  overflow: hidden;
+  border: 1px solid var(--ms-line);
+  border-radius: var(--ms-radius-lg);
+  background: #fff;
+  box-shadow: var(--ms-shadow-sm);
+}
+.ms-preview-frame iframe {
+  display: block;
+  border: 0;
+  background: #fff;
+  transform-origin: top left;
 }

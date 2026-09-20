@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/require-admin";
 import { renderVersionPreview } from "@/lib/template-preview";
+import { PageHeader } from "../../../../../_components/page-header";
 
 export const dynamic = "force-dynamic";
 
@@ -27,25 +27,26 @@ export default async function VersionPreviewPage({
   const html = renderVersionPreview(version.template.slug, version);
 
   return (
-    <div className="flex flex-col gap-4">
-      <Link href={`/templates/${id}`} className="w-fit text-sm text-red-700 hover:underline">
-        ← {version.template.name}
-      </Link>
-      <h1 className="text-2xl font-semibold">
-        {version.template.name} · v{version.versionNumber}
-      </h1>
-      <p className="text-sm text-zinc-600">
-        Preview with fabricated sample data. The QR box is a placeholder until a real certificate is
-        rendered.
-      </p>
-      <div className="overflow-auto rounded border border-zinc-300 bg-zinc-100 p-4">
+    <div className="flex flex-col gap-5">
+      <PageHeader
+        crumbs={[
+          { label: "Templates", href: "/templates" },
+          { label: version.template.name, href: `/templates/${id}` },
+          { label: `v${version.versionNumber}` },
+        ]}
+        title={`${version.template.name} · v${version.versionNumber}`}
+        subtitle="Rendered with fabricated sample data. The QR box is a placeholder until a real certificate is issued."
+      />
+
+      <div className="ms-letter-wrap ms-letter-center">
         {/* sandbox="" = no scripts, no same-origin: template output can never run code here. */}
         <iframe
+          className="ms-letter"
           title={`${version.template.name} version ${version.versionNumber} preview`}
           sandbox=""
           srcDoc={html}
-          className="mx-auto block bg-white shadow"
-          style={{ width: "8.5in", height: "11in", border: 0 }}
+          width={816}
+          height={1056}
         />
       </div>
     </div>
