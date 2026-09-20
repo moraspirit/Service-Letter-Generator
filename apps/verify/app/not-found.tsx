@@ -2,7 +2,7 @@ import { Verdict } from "./verify/[uuid]/verdict";
 
 export default function NotFound() {
   return (
-    <div className="flex flex-col gap-5">
+    <div className="ms-verify-col flex flex-col gap-5">
       <Verdict
         tone="unknown"
         icon="unknown"

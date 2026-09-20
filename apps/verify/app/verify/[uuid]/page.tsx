@@ -29,7 +29,7 @@ export default async function VerifyPage({ params, searchParams }: PageProps) {
   // loaded, so there is nothing else here to leak (architecture §6 D).
   if (result.kind === "revoked") {
     return (
-      <div className="flex flex-col gap-5">
+      <div className="ms-verify-col flex flex-col gap-5">
         <Verdict
           tone="bad"
           icon="revoked"
@@ -65,64 +65,84 @@ export default async function VerifyPage({ params, searchParams }: PageProps) {
     { label: "Status", value: "Active" },
   ];
 
-  return (
-    <div className="flex flex-col gap-5">
-      <Verdict
-        tone="ok"
-        icon="check"
-        title="Verified — Authentic"
-        note="This certificate is in MoraSpirit's records and is currently valid."
-      />
+  const verdict = (
+    <Verdict
+      tone="ok"
+      icon="check"
+      title="Verified — Authentic"
+      note="This certificate is in MoraSpirit's records and is currently valid."
+    />
+  );
 
-      <Card>
-        <CardBody>
-          <h2 className="sr-only">Certificate summary</h2>
-          <DescriptionList items={facts} />
-        </CardBody>
-      </Card>
+  const summaryCard = (
+    <Card>
+      <CardBody>
+        <h2 className="sr-only">Certificate summary</h2>
+        <DescriptionList items={facts} />
+      </CardBody>
+    </Card>
+  );
 
-      {fullHtml ? (
-        <section className="flex flex-col gap-3" aria-label="Full certificate">
-          <div className="ms-letter-wrap">
-            <iframe
-              className="ms-letter"
-              title="Full certificate"
-              sandbox=""
-              srcDoc={fullHtml}
-              width={816}
-              height={1056}
-            />
+  const checkedNote = (
+    <p className="ms-verify-note flex items-start gap-2">
+      <Icon name="info" size={16} />
+      <span>
+        Checked against MoraSpirit&apos;s records just now. Reload this page at any time to check
+        again.
+      </span>
+    </p>
+  );
+
+  // With the letter on screen the summary moves into a rail beside it, so the two
+  // can be read together and the fixed-width page still fits its column.
+  if (fullHtml) {
+    return (
+      <div className="flex flex-col gap-5">
+        {verdict}
+        <div className="ms-full">
+          <div className="ms-full-side">
+            {summaryCard}
+            <div>
+              <LinkButton href={`/verify/${uuid}`} icon="eyeOff" variant="secondary">
+                Hide the full certificate
+              </LinkButton>
+            </div>
+            {checkedNote}
           </div>
-          <div>
-            <LinkButton href={`/verify/${uuid}`} icon="eyeOff" variant="secondary">
-              Hide the full certificate
-            </LinkButton>
-          </div>
-        </section>
-      ) : (
-        <div className="flex flex-col gap-2">
-          <LinkButton
-            href={`/verify/${uuid}?full=1`}
-            variant="primary"
-            size="lg"
-            icon="eye"
-            className="self-start"
-          >
-            View full certificate
-          </LinkButton>
-          <p className="ms-verify-note">
-            Opens the letter itself, exactly as MoraSpirit issued it.
-          </p>
+          <section className="ms-letter-col" aria-label="Full certificate">
+            <div className="ms-letter-wrap">
+              <iframe
+                className="ms-letter"
+                title="Full certificate"
+                sandbox=""
+                srcDoc={fullHtml}
+                width={816}
+                height={1056}
+              />
+            </div>
+          </section>
         </div>
-      )}
+      </div>
+    );
+  }
 
-      <p className="ms-verify-note flex items-start gap-2">
-        <Icon name="info" size={16} />
-        <span>
-          Checked against MoraSpirit&apos;s records just now. Reload this page at any time to check
-          again.
-        </span>
-      </p>
+  return (
+    <div className="ms-verify-col flex flex-col gap-5">
+      {verdict}
+      {summaryCard}
+      <div className="flex flex-col gap-2">
+        <LinkButton
+          href={`/verify/${uuid}?full=1`}
+          variant="primary"
+          size="lg"
+          icon="eye"
+          className="self-start"
+        >
+          View full certificate
+        </LinkButton>
+        <p className="ms-verify-note">Opens the letter itself, exactly as MoraSpirit issued it.</p>
+      </div>
+      {checkedNote}
     </div>
   );
 }
