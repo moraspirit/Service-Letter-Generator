@@ -873,3 +873,44 @@
 .ms-import-step-title {
   font-size: var(--ms-text-base);
 }
+
+/* ---- Import column guide ------------------------------------------------ */
+
+.ms-guide {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ms-space-4);
+  margin-top: var(--ms-space-5);
+  border-top: 1px solid var(--ms-line-soft);
+  padding-top: var(--ms-space-5);
+}
+.ms-guide-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--ms-space-3);
+}
+.ms-guide-heading {
+  text-align: left;
+  white-space: nowrap;
+}
+.ms-guide-how {
+  color: var(--ms-ink-soft); /* 7.66:1 */
+  line-height: var(--ms-leading-snug);
+}
+.ms-guide-rules {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ms-space-2);
+  margin: 0;
+  padding-left: 1.1rem;
+  list-style: disc;
+  color: var(--ms-ink-soft);
+  font-size: var(--ms-text-sm);
+  line-height: var(--ms-leading-snug);
+}
+.ms-guide-rules strong {
+  color: var(--ms-ink-strong);
+  font-weight: 600;
+}

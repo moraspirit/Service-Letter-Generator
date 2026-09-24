@@ -14,7 +14,7 @@ import {
 
 const ASSETS_DIR = path.join(process.cwd(), "public", "certificate-assets");
 
-function sampleFor(slug: string, fieldSchema: FieldSchema): CertificateData {
+export function sampleFor(slug: string, fieldSchema: FieldSchema): CertificateData {
   // Prefer the hand-written sample.json from the template folder, but only if it
   // still fits this (possibly older) version's schema.
   const fromFolder = loadAllTemplates().find((t) => t.slug === slug)?.sampleData;

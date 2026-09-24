@@ -150,6 +150,7 @@ Progress tracker for [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Architect
 - [x] **P5-14** Exit criteria verified by tests (`import.test.ts`): General/Special rows, re-upload warns before writing, bullets become list items with curly quotes intact
 - [x] **P5-15** Migration `20260919180000_add_import_rejected_count`; every valid row is rendered as a one-page fit check
 - [~] **P5-16** Owner to click through `/imports/new` once with a fake spreadsheet (check, skip invalid, import, batch page), then tick this
+- [x] **P5-17** Column guide and blank spreadsheet on `/imports/new`: under the template picker, a table of the chosen template's columns (required / optional / filled automatically, how to fill each, the missing-data rules) and a "Download blank spreadsheet" button (`GET /imports/template/{id}`, admin only). Both are generated from the template's field schema (`buildImportGuide` in `packages/shared`); a round-trip test feeds the generated workbook through the real importer for every template. Owner to look at it in the browser
 
 ## Phase 6 — Bulk ZIP export
 

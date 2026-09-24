@@ -1,3 +1,4 @@
+import { buildImportGuide, type FieldSchema } from "@moraspirit/shared";
 import { EmptyState } from "@moraspirit/ui";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/require-admin";
@@ -8,18 +9,23 @@ export const dynamic = "force-dynamic";
 
 export default async function NewImportPage() {
   await requireAdmin();
-  const templates = await prisma.template.findMany({
+  const rows = await prisma.template.findMany({
     where: { currentVersionId: { not: null } },
     orderBy: { name: "asc" },
-    select: { id: true, name: true },
+    include: { currentVersion: { select: { fieldSchema: true } } },
   });
+  const templates = rows.map((t) => ({
+    id: t.id,
+    name: t.name,
+    guide: buildImportGuide((t.currentVersion?.fieldSchema ?? []) as unknown as FieldSchema),
+  }));
 
   return (
     <div className="flex flex-col gap-5">
       <PageHeader
         crumbs={[{ label: "Bulk imports", href: "/imports" }, { label: "New import" }]}
         title="Import certificates"
-        subtitle="Pick a template and a spreadsheet whose column headings match its fields — for the service letters: Member ID, Name, Gender, Pillar, Start date, End date, General Points, Special Points. Every row is checked before anything is saved."
+        subtitle="Pick a template to see the columns its spreadsheet needs, then choose the file. Every row is checked before anything is saved."
       />
       {templates.length === 0 ? (
         <EmptyState icon="file" title="No published templates">

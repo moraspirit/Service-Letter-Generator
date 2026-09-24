@@ -2,8 +2,10 @@
 
 import { useActionState, useState, useTransition } from "react";
 import { Banner, Button, Card, CardBody, CardHead, cx, Icon, StatusPill } from "@moraspirit/ui";
+import type { GuideColumn } from "@moraspirit/shared";
 import type { AnalyzedRow } from "@/lib/import/analyze-import";
 import { importAction, type ImportState } from "./actions";
+import { ColumnGuide } from "./column-guide";
 
 const initial: ImportState = { status: "idle" };
 
@@ -41,12 +43,18 @@ function Steps({ current }: { current: 1 | 2 | 3 }) {
   );
 }
 
-export function ImportForm({ templates }: { templates: { id: number; name: string }[] }) {
+export function ImportForm({
+  templates,
+}: {
+  templates: { id: number; name: string; guide: GuideColumn[] }[];
+}) {
   const [state, dispatch] = useActionState(importAction, initial);
   const [pending, startTransition] = useTransition();
   // Changing the file, template or sheet makes the last report out of date.
   const [stale, setStale] = useState(false);
   const [skipInvalid, setSkipInvalid] = useState(false);
+  const [templateId, setTemplateId] = useState<number | null>(null);
+  const chosen = templates.find((t) => t.id === templateId) ?? null;
 
   function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -106,6 +114,7 @@ export function ImportForm({ templates }: { templates: { id: number; name: strin
                   required
                   className="ms-select"
                   defaultValue=""
+                  onChange={(e) => setTemplateId(Number(e.target.value) || null)}
                 >
                   <option value="" disabled>
                     Choose…
@@ -172,6 +181,18 @@ export function ImportForm({ templates }: { templates: { id: number; name: strin
                 <input type="hidden" name="sheetName" value={ready.sheetName} />
               ) : null}
             </div>
+            {chosen ? (
+              <ColumnGuide
+                templateId={chosen.id}
+                templateName={chosen.name}
+                columns={chosen.guide}
+              />
+            ) : (
+              <p className="ms-help">
+                Choose a template to see the columns its spreadsheet needs, and to download a blank
+                one to start from.
+              </p>
+            )}
           </CardBody>
           <div className="ms-card-foot">
             <div className="flex flex-wrap items-center gap-3">
