@@ -1,11 +1,12 @@
 "use client";
 
-import { useActionState, useState, useTransition } from "react";
+import { useActionState, useMemo, useState, useTransition } from "react";
 import { Banner, Button, Card, CardBody, CardHead, cx, Icon, StatusPill } from "@moraspirit/ui";
 import type { GuideColumn } from "@moraspirit/shared";
 import type { AnalyzedRow } from "@/lib/import/analyze-import";
 import { importAction, type ImportState } from "./actions";
 import { ColumnGuide } from "./column-guide";
+import { FailedRows } from "./failed-rows";
 
 const initial: ImportState = { status: "idle" };
 
@@ -54,6 +55,7 @@ export function ImportForm({
   const [stale, setStale] = useState(false);
   const [skipInvalid, setSkipInvalid] = useState(false);
   const [templateId, setTemplateId] = useState<number | null>(null);
+  const [fileName, setFileName] = useState("");
   const chosen = templates.find((t) => t.id === templateId) ?? null;
 
   function onSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -68,7 +70,11 @@ export function ImportForm({
 
   const result = state.status === "analysis" && !stale ? state.result : null;
   const ready = result?.status === "ready" ? result : null;
-  const errorRows = ready?.rows.filter((r) => rowProblems(r).length > 0) ?? [];
+  // Stable between renders: the fix queue is created once per report, keyed on this array.
+  const errorRows = useMemo(
+    () => ready?.rows.filter((r) => rowProblems(r).length > 0) ?? [],
+    [ready],
+  );
   const duplicateRows = ready?.rows.filter((r) => r.duplicate && rowProblems(r).length === 0) ?? [];
   const okCount = (ready?.rows.length ?? 0) - errorRows.length;
   const importable = ready ? okCount > 0 && (errorRows.length === 0 || skipInvalid) : false;
@@ -85,6 +91,9 @@ export function ImportForm({
           )
         ) {
           setStale(true);
+        }
+        if ((e.target as unknown as HTMLInputElement).name === "file") {
+          setFileName((e.target as unknown as HTMLInputElement).files?.[0]?.name ?? "");
         }
       }}
       className="ms-import"
@@ -386,6 +395,10 @@ export function ImportForm({
               </CardBody>
             </Card>
 
+            {templateId && errorRows.length > 0 ? (
+              <FailedRows templateId={templateId} fileName={fileName} rows={errorRows} />
+            ) : null}
+
             <Card>
               <CardHead title="3 · Import" />
               <CardBody>
@@ -393,8 +406,9 @@ export function ImportForm({
                   {errorRows.length > 0 ? (
                     <Banner tone="bad" title={`${errorRows.length} rows cannot be issued`}>
                       <p>
-                        Fix them in the spreadsheet and check the file again, or leave them out of
-                        this import. Invalid rows are never issued either way.
+                        Fix them by hand from the list above, fix them in the spreadsheet and check
+                        the file again, or leave them out of this import. Invalid rows are never
+                        issued either way.
                       </p>
                       <label className="ms-check pt-1">
                         <input

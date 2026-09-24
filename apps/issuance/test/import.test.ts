@@ -97,6 +97,44 @@ describe("analyzeImport", () => {
     expect(second!.data).toMatchObject({ honorific: "Mr.", special_points: ["Special", "Two"] });
   });
 
+  it("keeps the typed values of failed rows for the fix queue, and only of failed rows", async () => {
+    const result = await analyzeImport({
+      ...base(),
+      fileName: "a.xlsx",
+      buffer: xlsx([good("R1"), good("R2", { 2: "", 4: "04/28/2025" })]),
+    });
+    if (result.status !== "ready") throw new Error(result.status);
+    const [ok, failed] = result.rows;
+    expect(ok!.raw).toBeUndefined();
+    expect(failed!.raw).toMatchObject({
+      member_id: "R2",
+      recipient_name: "Person R2",
+      start_date: "04/28/2025",
+    });
+    expect(failed!.raw?.honorific).toBeUndefined();
+    expect(Object.keys(failed!.errors).sort()).toEqual(["honorific", "start_date"]);
+  });
+
+  it("keeps the typed values of a row that only fails the one-page check", async () => {
+    const overflow = vi.fn(async () => {
+      throw new PageOverflowError("Does not fit", "general_points");
+    });
+    const result = await analyzeImport({
+      ...base(),
+      renderPdf: overflow,
+      fileName: "a.xlsx",
+      buffer: xlsx([good("O1")]),
+    });
+    if (result.status !== "ready") throw new Error(result.status);
+    const [row] = result.rows;
+    expect(row!.data).toBeUndefined();
+    expect(row!.errors.general_points).toBeDefined();
+    expect(row!.raw).toMatchObject({
+      member_id: "O1",
+      general_points: "• It’s one\n\n• Two “quoted”",
+    });
+  });
+
   it("reads real Excel date cells without a time-zone shift", async () => {
     const wb = XLSX.utils.book_new();
     const sheet = XLSX.utils.aoa_to_sheet([HEADER, good("D1")]);

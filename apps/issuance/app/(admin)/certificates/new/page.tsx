@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import type { FieldSchema } from "@moraspirit/shared";
 import { EmptyState, LinkButton } from "@moraspirit/ui";
 import { prisma } from "@/lib/db";
+import { isQueueKey } from "@/lib/fix-queue";
 import { requireAdmin } from "@/lib/require-admin";
 import { renderVersionPreview } from "@/lib/template-preview";
 import { templateFacts } from "@/lib/template-facts";
@@ -15,11 +16,17 @@ export const dynamic = "force-dynamic";
 export default async function NewCertificatePage({
   searchParams,
 }: {
-  searchParams: Promise<{ template?: string }>;
+  searchParams: Promise<{ template?: string; fix?: string; row?: string }>;
 }) {
   await requireAdmin();
 
-  const templateParam = (await searchParams).template;
+  const query = await searchParams;
+  const templateParam = query.template;
+  const fixRow = Number(query.row);
+  const fix =
+    isQueueKey(query.fix) && Number.isInteger(fixRow) && fixRow > 0
+      ? { key: query.fix, row: fixRow }
+      : undefined;
 
   // Step one: which letter. Templates are developer-authored, so this is a
   // choice between a handful of published wordings, not a blank canvas.
@@ -121,6 +128,7 @@ export default async function NewCertificatePage({
         fieldSchema={fieldSchema}
         defaults={defaults}
         cancelHref="/certificates"
+        fix={fix}
       />
     </div>
   );

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import type { RawValues } from "@moraspirit/shared";
 import { prisma } from "@/lib/db";
 import { issueCertificate } from "@/lib/issue-certificate";
+import { isQueueKey } from "@/lib/fix-queue";
 import { requireAdmin } from "@/lib/require-admin";
 import type { FormState } from "../_components/form-state";
 
@@ -35,7 +36,16 @@ export async function issueCertificateAction(
     return { status: "render_failed", message: "The certificate could not be issued." };
   }
 
-  if (result.status === "issued") redirect(`/certificates/${result.id}`);
+  if (result.status === "issued") {
+    // Coming from the import fix queue: carry its key and row so the certificate page can
+    // mark the row as issued and offer the next one. Neither is personal data.
+    const fixKey = formData.get("fixKey");
+    const fixRow = Number(formData.get("fixRow"));
+    if (isQueueKey(fixKey) && Number.isInteger(fixRow) && fixRow > 0) {
+      redirect(`/certificates/${result.id}?fix=${fixKey}&row=${fixRow}`);
+    }
+    redirect(`/certificates/${result.id}`);
+  }
   if (result.status === "duplicate") {
     return {
       status: "duplicate",

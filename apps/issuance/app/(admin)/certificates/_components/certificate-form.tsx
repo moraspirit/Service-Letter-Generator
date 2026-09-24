@@ -5,6 +5,8 @@ import { useActionState, useMemo, useState } from "react";
 import { renderCertificateHtml } from "@moraspirit/certificate-render";
 import { dataFromRawValues, type FieldDefinition, type FieldSchema } from "@moraspirit/shared";
 import { Banner, Button, Card, CardBody, CardHead, cx, Icon } from "@moraspirit/ui";
+import { useFixQueue } from "@/lib/use-fix-queue";
+import { FixQueueBanner } from "./fix-queue-banner";
 import { stateMessage, type FormState } from "./form-state";
 
 const PREVIEW_SCALE = 0.62;
@@ -106,15 +108,39 @@ function Field({
  * The preview is the reason this screen is not a wizard: the letter has to be
  * visible while the fields that build it are being typed.
  */
-export function CertificateForm({
-  mode,
-  action,
-  hidden,
-  htmlContent,
-  fieldSchema,
-  defaults,
-  cancelHref,
-}: {
+export function CertificateForm(props: FormProps & { fix?: { key: string; row: number } }) {
+  const { fix, ...rest } = props;
+  // Read after hydration: the queue only exists in this browser, so the first render matches
+  // the server and the form remounts (via `key`) once the prefilled values are known.
+  const queue = useFixQueue(fix?.key ?? null);
+  const row = fix ? queue?.rows.find((r) => r.rowNumber === fix.row) : undefined;
+  const usable = row && queue?.templateId === Number(rest.hidden.templateId) ? row : undefined;
+
+  const imported = usable
+    ? {
+        values: Object.fromEntries(Object.entries(usable.raw).filter(([, v]) => v !== "")),
+        errors: usable.errors,
+      }
+    : undefined;
+
+  return (
+    <>
+      {fix ? (
+        <div className="pb-4">
+          <FixQueueBanner queueKey={fix.key} queue={queue} rowNumber={fix.row} />
+        </div>
+      ) : null}
+      <CertificateFormBody
+        key={usable ? `fix-${usable.rowNumber}` : "plain"}
+        {...rest}
+        hidden={fix ? { ...rest.hidden, fixKey: fix.key, fixRow: String(fix.row) } : rest.hidden}
+        imported={imported}
+      />
+    </>
+  );
+}
+
+interface FormProps {
   mode: "issue" | "edit";
   action: (previous: FormState, formData: FormData) => Promise<FormState>;
   /** Extra hidden inputs the action needs (template id, or certificate id + loaded timestamp). */
@@ -123,8 +149,29 @@ export function CertificateForm({
   fieldSchema: FieldSchema;
   defaults: Record<string, string>;
   cancelHref: string;
+}
+
+function CertificateFormBody({
+  mode,
+  action,
+  hidden,
+  htmlContent,
+  fieldSchema,
+  defaults,
+  cancelHref,
+  imported,
+}: FormProps & {
+  /** A failed import row: its typed values, and what was wrong with each field. */
+  imported?: { values: Record<string, string>; errors: Record<string, string> };
 }) {
-  const [values, setValues] = useState<Record<string, string>>(defaults);
+  const [values, setValues] = useState<Record<string, string>>({
+    ...defaults,
+    ...imported?.values,
+  });
+  // What the import said was wrong; each message goes away once its field is edited.
+  const [importedErrors, setImportedErrors] = useState<Record<string, string>>(
+    imported?.errors ?? {},
+  );
   const [reason, setReason] = useState("");
   const [state, formAction, pending] = useActionState(action, initial);
 
@@ -141,7 +188,7 @@ export function CertificateForm({
     }
   }, [htmlContent, fieldSchema, values]);
 
-  const errors = state.status === "invalid" ? state.errors : {};
+  const errors = { ...importedErrors, ...(state.status === "invalid" ? state.errors : {}) };
   const message = stateMessage(state);
   const anyway = mode === "issue" ? "Issue anyway" : "Save anyway";
   const submitLabel = mode === "issue" ? "Issue certificate" : "Save changes";
@@ -163,7 +210,10 @@ export function CertificateForm({
                   field={field}
                   value={values[field.name] ?? ""}
                   error={errors[field.name]}
-                  onChange={(v) => setValues((prev) => ({ ...prev, [field.name]: v }))}
+                  onChange={(v) => {
+                    setValues((prev) => ({ ...prev, [field.name]: v }));
+                    setImportedErrors(({ [field.name]: _cleared, ...others }) => others);
+                  }}
                 />
               ))}
             </div>
@@ -206,6 +256,12 @@ export function CertificateForm({
               </div>
             </CardBody>
           </Card>
+        ) : null}
+
+        {importedErrors._render ? (
+          <Banner tone="bad" role="alert" title="This row also failed to render">
+            {importedErrors._render}
+          </Banner>
         ) : null}
 
         {message ? (

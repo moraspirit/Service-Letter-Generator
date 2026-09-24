@@ -914,3 +914,12 @@
   color: var(--ms-ink-strong);
   font-weight: 600;
 }
+
+/* ---- Failed-rows table ---------------------------------------------------- */
+
+.ms-fix-open {
+  display: block;
+  margin-top: var(--ms-space-1);
+  position: relative; /* above the row's stretched link */
+  font-size: var(--ms-text-sm);
+}

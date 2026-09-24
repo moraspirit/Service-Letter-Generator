@@ -10,6 +10,7 @@ import {
   type CertificateData,
   type ColumnMapping,
   type FieldSchema,
+  type RawValues,
 } from "@moraspirit/shared";
 import { computeDedupeKey } from "../dedupe";
 import { PageOverflowError, renderCertificatePdf, type RenderInput } from "../pdf/render-pdf";
@@ -28,6 +29,8 @@ export interface AnalyzedRow {
   /** Shown to the admin so they can find the row: member id and name as typed. */
   label: string;
   errors: Record<string, string>;
+  /** The row's values as typed, present only when the row has errors. Feeds the fix queue. */
+  raw?: RawValues;
   /** Only present for rows without errors. */
   data?: CertificateData;
   dedupeKey?: string;
@@ -142,13 +145,14 @@ export async function analyzeImport(input: AnalyzeInput): Promise<AnalysisResult
     // A date that could not be parsed is reported as such, not as "required".
     const errors = { ...(validation.ok ? {} : validation.errors), ...converted.errors };
     if (!validation.ok || Object.keys(converted.errors).length > 0) {
-      return { rowNumber, label, errors };
+      return { rowNumber, label, errors, raw: converted.raw };
     }
     const data = sanitizeRichTextFields(schema, validation.data);
     return {
       rowNumber,
       label,
       errors,
+      raw: converted.raw,
       data,
       dedupeKey: computeDedupeKey(template.id, schema, data),
     };
@@ -200,6 +204,8 @@ export async function analyzeImport(input: AnalyzeInput): Promise<AnalysisResult
       }
     },
   );
+  // The typed values are only kept for rows that failed.
+  for (const row of rows) if (Object.keys(row.errors).length === 0) delete row.raw;
 
   // 4. Was this exact file imported before?
   const previous = await prisma.importBatch.findFirst({

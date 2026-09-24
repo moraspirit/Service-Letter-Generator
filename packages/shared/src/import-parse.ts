@@ -127,7 +127,11 @@ export function convertRow(
     if (field.type === "date" && cell) {
       const iso = normalizeDateText(cell);
       if (iso) raw[target] = iso;
-      else errors[target] = `${field.label} must be YYYY-MM-DD or DD/MM/YYYY`;
+      else {
+        // Keep the typed text so the admin can see what was wrong when fixing it by hand.
+        raw[target] = cell;
+        errors[target] = `${field.label} must be YYYY-MM-DD or DD/MM/YYYY`;
+      }
       continue;
     }
     // Lists keep their inner line breaks; the list parser splits them later.

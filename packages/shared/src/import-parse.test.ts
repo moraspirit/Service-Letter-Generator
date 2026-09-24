@@ -112,4 +112,10 @@ describe("convertRow", () => {
     expect(row({ 2: "x" }).errors.honorific).toContain("not Male or Female");
     expect(row({ 3: "04/28/2025" }).errors.start_date).toContain("DD/MM/YYYY");
   });
+
+  it("keeps the typed text of an unreadable date, so it can be corrected by hand", () => {
+    const { raw, errors } = row({ 3: "04/28/2025" });
+    expect(errors.start_date).toBeDefined();
+    expect(raw.start_date).toBe("04/28/2025");
+  });
 });

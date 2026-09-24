@@ -12,9 +12,11 @@ import {
 } from "@moraspirit/ui";
 import { prisma } from "@/lib/db";
 import { describeChanges } from "@/lib/audit-diff";
+import { isQueueKey } from "@/lib/fix-queue";
 import { requireAdmin } from "@/lib/require-admin";
 import { sanitizeRichText } from "@/lib/sanitize";
 import { PageHeader } from "../../../_components/page-header";
+import { FixQueueNotice } from "./fix-queue-notice";
 import { StatusActions } from "./status-actions";
 import { buildVerifyUrl, UUID_PATTERN, VerifyUrlError } from "@/lib/verify-url";
 
@@ -31,10 +33,22 @@ function utc(date: Date): string {
   return `${date.toISOString().slice(0, 16).replace("T", " ")} UTC`;
 }
 
-export default async function CertificatePage({ params }: { params: Promise<{ id: string }> }) {
+export default async function CertificatePage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ fix?: string; row?: string }>;
+}) {
   await requireAdmin();
 
   const { id } = await params;
+  const query = await searchParams;
+  const fixRow = Number(query.row);
+  const fix =
+    isQueueKey(query.fix) && Number.isInteger(fixRow) && fixRow > 0
+      ? { key: query.fix, row: fixRow }
+      : null;
   if (!UUID_PATTERN.test(id)) notFound();
 
   const certificate = await prisma.certificate.findUnique({
@@ -95,6 +109,10 @@ export default async function CertificatePage({ params }: { params: Promise<{ id
           </>
         }
       />
+
+      {fix ? (
+        <FixQueueNotice queueKey={fix.key} rowNumber={fix.row} certificateId={certificate.id} />
+      ) : null}
 
       {status === "revoked" ? (
         <Banner tone="bad" title="This certificate is revoked">
