@@ -1,11 +1,12 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { FieldSchema } from "@moraspirit/shared";
-import { EmptyState, Icon, LinkButton } from "@moraspirit/ui";
+import { EmptyState, LinkButton } from "@moraspirit/ui";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/require-admin";
 import { renderVersionPreview } from "@/lib/template-preview";
+import { templateFacts } from "@/lib/template-facts";
 import { PageHeader } from "../../../_components/page-header";
+import { TemplateCard } from "../../../_components/template-card";
 import { CertificateForm } from "../_components/certificate-form";
 import { issueCertificateAction } from "./actions";
 
@@ -32,20 +33,13 @@ export default async function NewCertificatePage({
       rows.flatMap((t) => {
         const version = t.currentVersion;
         if (!version) return [];
-        const fields = version.fieldSchema as unknown as FieldSchema;
         return [
           prisma.certificate
             .count({ where: { templateVersion: { templateId: t.id } } })
             .then((issued) => ({
               id: t.id,
               name: t.name,
-              versionNumber: version.versionNumber,
-              issued,
-              fieldCount: fields.length,
-              requiredCount: fields.filter((f) => f.required && f.default === undefined).length,
-              sections: fields
-                .filter((f) => f.type === "list" || f.type === "richtext")
-                .map((f) => (f.required ? f.label : `${f.label} (optional)`)),
+              facts: templateFacts(version, issued),
               preview: renderVersionPreview(t.slug, version),
             })),
         ];
@@ -68,48 +62,13 @@ export default async function NewCertificatePage({
           <ul className="ms-choices">
             {templates.map((t) => (
               <li key={t.id}>
-                <Link href={`/certificates/new?template=${t.id}`} className="ms-choice">
-                  <div className="ms-choice-thumb" aria-hidden="true">
-                    {/* sandbox="" = no scripts, no same-origin, as in the template preview. */}
-                    <iframe
-                      title={`${t.name} preview`}
-                      sandbox=""
-                      srcDoc={t.preview}
-                      width={816}
-                      height={1056}
-                      tabIndex={-1}
-                    />
-                  </div>
-                  <div className="ms-choice-body">
-                    <h2 className="ms-choice-title">{t.name}</h2>
-                    <dl className="ms-choice-facts">
-                      <div>
-                        <dt>Version</dt>
-                        <dd className="ms-tnum">v{t.versionNumber}</dd>
-                      </div>
-                      <div>
-                        <dt>Fields</dt>
-                        <dd className="ms-tnum">
-                          {t.fieldCount} ({t.requiredCount} to fill in)
-                        </dd>
-                      </div>
-                      <div>
-                        <dt>Issued so far</dt>
-                        <dd className="ms-tnum">{t.issued}</dd>
-                      </div>
-                      {t.sections.length > 0 ? (
-                        <div>
-                          <dt>Written sections</dt>
-                          <dd>{t.sections.join(", ")}</dd>
-                        </div>
-                      ) : null}
-                    </dl>
-                    <span className="ms-btn ms-btn-primary ms-choice-cta">
-                      Issue this letter
-                      <Icon name="arrowRight" size={16} />
-                    </span>
-                  </div>
-                </Link>
+                <TemplateCard
+                  href={`/certificates/new?template=${t.id}`}
+                  name={t.name}
+                  preview={t.preview}
+                  facts={t.facts}
+                  cta="Issue this letter"
+                />
               </li>
             ))}
           </ul>

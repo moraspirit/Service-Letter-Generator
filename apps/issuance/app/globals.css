@@ -797,3 +797,79 @@
   background: #fff;
   transform-origin: top left;
 }
+
+/* ---- Thumbnail placeholder, rail preview, table inside a card ----------- */
+
+.ms-choice-thumb-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: var(--ms-bg-2);
+  color: var(--ms-ink-muted); /* 5.18:1 */
+  font-size: var(--ms-text-sm);
+}
+.ms-rail-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ms-space-4);
+}
+.ms-rail-preview .ms-dl {
+  align-self: stretch;
+}
+.ms-table-flush {
+  border: 0;
+  border-radius: 0 0 var(--ms-radius-lg) var(--ms-radius-lg);
+}
+
+/* ---- Bulk import landing ------------------------------------------------ */
+
+.ms-import-hero {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ms-space-5);
+  border: 1px solid var(--ms-line);
+  border-radius: var(--ms-radius-lg);
+  background: var(--ms-bg-1);
+  padding: var(--ms-space-5);
+}
+.ms-import-hero-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ms-space-4);
+}
+.ms-import-hero-title {
+  font-size: var(--ms-text-lg);
+}
+.ms-import-steps {
+  display: grid;
+  gap: var(--ms-space-4);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.ms-import-steps > li {
+  display: flex;
+  gap: var(--ms-space-3);
+  border-top: 1px solid var(--ms-line);
+  padding-top: var(--ms-space-4);
+}
+.ms-import-step-no {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: var(--ms-brand-50);
+  color: var(--ms-brand-800); /* 8.31:1 */
+  font-size: var(--ms-text-sm);
+  font-weight: 650;
+}
+.ms-import-step-title {
+  font-size: var(--ms-text-base);
+}
