@@ -11,6 +11,59 @@ export const fixtureSchema: FieldSchema = [
   { name: "points", label: "Points", type: "list", required: true },
 ];
 
+const STALE_AFTER_MS = 10 * 60 * 1000;
+
+/**
+ * Remove a scratch template and everything hanging off it, in foreign-key order.
+ * Deliberately blunt: it deletes by template and by admin rather than by ids a
+ * test remembered, so a run that died half way (pool timeout, failed assertion in
+ * a hook) cannot leave rows that block the delete.
+ */
+async function purgeScratch(prisma: PrismaClient, templateId: number, adminId: number) {
+  const versionIds = (
+    await prisma.templateVersion.findMany({ where: { templateId }, select: { id: true } })
+  ).map((v) => v.id);
+  const certificateIds = (
+    await prisma.certificate.findMany({
+      where: { templateVersionId: { in: versionIds } },
+      select: { id: true },
+    })
+  ).map((c) => c.id);
+
+  await prisma.certificateAudit.deleteMany({
+    where: { OR: [{ certificateId: { in: certificateIds } }, { adminUserId: adminId }] },
+  });
+  await prisma.certificate.deleteMany({ where: { id: { in: certificateIds } } });
+  await prisma.importBatch.deleteMany({
+    where: { OR: [{ templateVersionId: { in: versionIds } }, { adminUserId: adminId }] },
+  });
+  await prisma.template.update({ where: { id: templateId }, data: { currentVersionId: null } });
+  await prisma.templateVersion.deleteMany({ where: { templateId } });
+  await prisma.template.delete({ where: { id: templateId } });
+  await prisma.adminUser.delete({ where: { id: adminId } });
+}
+
+/**
+ * Sweep scratch data left behind by an earlier run that never reached its
+ * cleanup. Only fixtures older than ten minutes, so a fixture that another file
+ * is using right now is never touched.
+ */
+async function sweepStale(prisma: PrismaClient) {
+  const cutoff = new Date(Date.now() - STALE_AFTER_MS);
+  const stale = await prisma.template.findMany({
+    where: { slug: { startsWith: "test-fixture-" }, createdAt: { lt: cutoff } },
+    select: { id: true, slug: true },
+  });
+  for (const t of stale) {
+    const admin = await prisma.adminUser.findUnique({
+      where: { email: `fixture-${t.slug.slice("test-fixture-".length)}@example.test` },
+      select: { id: true },
+    });
+    if (!admin) continue;
+    await purgeScratch(prisma, t.id, admin.id).catch(() => undefined);
+  }
+}
+
 export interface Fixture {
   prisma: PrismaClient;
   adminId: number;
@@ -25,6 +78,7 @@ export async function createFixture(
   html = "<p>{{recipient_name}}</p>",
 ): Promise<Fixture> {
   const prisma = createPrismaClient({ connectionLimit: 2 });
+  await sweepStale(prisma).catch(() => undefined);
   const suffix = randomBytes(4).toString("hex");
   const admin = await prisma.adminUser.create({
     data: { email: `fixture-${suffix}@example.test`, passwordHash: "not-a-real-hash" },
@@ -53,22 +107,11 @@ export async function createFixture(
     versionId: version.id,
     suffix,
     cleanup: async () => {
-      const ids = (
-        await prisma.certificate.findMany({
-          where: { templateVersion: { templateId: template.id } },
-          select: { id: true },
-        })
-      ).map((c) => c.id);
-      await prisma.certificateAudit.deleteMany({ where: { certificateId: { in: ids } } });
-      await prisma.certificate.deleteMany({ where: { id: { in: ids } } });
-      await prisma.template.update({
-        where: { id: template.id },
-        data: { currentVersionId: null },
-      });
-      await prisma.templateVersion.deleteMany({ where: { templateId: template.id } });
-      await prisma.template.delete({ where: { id: template.id } });
-      await prisma.adminUser.delete({ where: { id: admin.id } });
-      await prisma.$disconnect();
+      try {
+        await purgeScratch(prisma, template.id, admin.id);
+      } finally {
+        await prisma.$disconnect();
+      }
     },
   };
 }

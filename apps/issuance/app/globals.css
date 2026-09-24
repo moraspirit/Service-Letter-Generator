@@ -638,22 +638,22 @@
 
 .ms-choices {
   display: grid;
-  gap: var(--ms-space-3);
-  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  gap: var(--ms-space-5);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 30rem), 1fr));
   list-style: none;
   margin: 0;
   padding: 0;
 }
 .ms-choice {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--ms-space-4);
+  height: 100%;
+  flex-wrap: wrap;
+  gap: var(--ms-space-5);
   border: 1px solid var(--ms-line);
   border-radius: var(--ms-radius-lg);
   background: var(--ms-bg-0);
-  padding: var(--ms-space-4) var(--ms-space-5);
-  color: var(--ms-ink-soft);
+  padding: var(--ms-space-5);
+  color: var(--ms-ink);
   text-decoration: none;
   transition:
     border-color var(--ms-dur) var(--ms-ease),
@@ -662,14 +662,79 @@
 .ms-choice:hover {
   border-color: var(--ms-brand-300);
   background: var(--ms-brand-50);
-  color: var(--ms-brand-700);
 }
-.ms-choice > svg {
-  flex-shrink: 0;
+/* The real letter as a thumbnail: 816 x 1056 px at 0.3 is 245 x 317. */
+.ms-choice-thumb {
+  position: relative;
+  flex: none;
+  width: 245px;
+  height: 317px;
+  overflow: hidden;
+  border: 1px solid var(--ms-line-strong);
+  border-radius: var(--ms-radius);
+  background: #fff;
+  box-shadow: var(--ms-shadow-sm);
+}
+.ms-choice-thumb iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 816px;
+  height: 1056px;
+  border: 0;
+  transform: scale(0.3);
+  transform-origin: top left;
+  pointer-events: none;
+}
+.ms-choice-body {
+  display: flex;
+  min-width: 14rem;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--ms-space-4);
 }
 .ms-choice-title {
+  font-size: var(--ms-text-lg);
+}
+.ms-choice-facts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ms-space-3);
+  margin: 0;
+  font-size: var(--ms-text-sm);
+}
+.ms-choice-facts > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+.ms-choice-facts dt {
+  color: var(--ms-ink-muted); /* 5.18:1 */
+  font-size: var(--ms-text-xs);
+}
+.ms-choice-facts dd {
+  margin: 0;
   color: var(--ms-ink-strong);
-  font-weight: 600;
+  font-weight: 550;
+}
+.ms-choice-cta {
+  margin-top: auto;
+  align-self: flex-start;
+}
+.ms-choice:hover .ms-choice-cta {
+  background: var(--ms-brand-700);
+}
+
+.ms-note-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ms-space-4);
+  border: 1px dashed var(--ms-line-strong);
+  border-radius: var(--ms-radius-lg);
+  background: var(--ms-bg-1);
+  padding: var(--ms-space-4) var(--ms-space-5);
 }
 
 /* ---- Issue / edit layout -----------------------------------------------
