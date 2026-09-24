@@ -123,6 +123,11 @@ Shared (`@moraspirit/ui`, used by both apps): `Button`, `LinkButton`, `Card` /
 - **Step rail** — `.ms-steps`, used **only** on `/imports/new`, where Choose file →
   Review → Import is genuine sequence. It is not applied to the issue form, whose
   live preview depends on everything being on one screen.
+- **Table rows** — a row that opens a detail page is a stretched link: the row's
+  one `.ms-cell-link` covers the whole row (`::after`), so a click anywhere
+  navigates while Ctrl/Cmd-click and keyboard focus keep working. The focus ring
+  goes round the row. Every enabled interactive element gets `cursor: pointer`
+  from one rule in `tokens.css`; disabled ones keep `not-allowed`.
 - **Danger zone** — full border with a tinted header. Never a left stripe.
 - **Empty states** teach the workflow and offer the action, rather than saying
   "nothing here".

@@ -354,6 +354,28 @@
 .ms-cell-link:hover {
   text-decoration: underline;
 }
+/* Stretched link: the row's one real link covers the whole row, so a click
+   anywhere opens it. Ctrl/Cmd-click, middle-click and keyboard still work. */
+.ms-table tbody tr:has(.ms-cell-link) {
+  position: relative;
+  cursor: pointer;
+}
+.ms-cell-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+.ms-table tbody tr:has(.ms-cell-link):hover .ms-cell-link {
+  text-decoration: underline;
+}
+/* The ring goes round the whole row, not the small text link. */
+.ms-cell-link:focus-visible {
+  outline: none;
+}
+.ms-table tbody tr:has(.ms-cell-link:focus-visible) {
+  outline: 2px solid var(--ms-brand-600);
+  outline-offset: -2px;
+}
 .ms-cell-name {
   color: var(--ms-ink-strong);
   font-weight: 550;

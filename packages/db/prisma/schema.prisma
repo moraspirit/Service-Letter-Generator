@@ -1,59 +1,25 @@
-// MoraSpirit Certificate & Verification System — database schema.
-//
-// Transcribed from docs/architecture.md §4. That document is the source of
-// truth: if this schema and §4 disagree, one of them is a bug. Update both in
-// the same change.
-//
-// Two invariants the schema exists to protect (architecture §4):
-//   * template_versions rows are IMMUTABLE — editing a template inserts a new
-//     version; issued certificates keep pointing at the version they were
-//     issued with, so their wording and design never change retroactively.
-//   * certificate_audit is APPEND-ONLY — every create/edit/revoke/restore
-//     writes a row in the same transaction as the change itself.
-// Neither rule can be enforced by the schema alone; application code must
-// uphold them.
-//
-// The verification app connects as `verify_ro`, which holds SELECT on
-// templates, template_versions and certificates only. It must never be able to
-// read admin_users, certificate_audit, import_batches or login_attempts.
-
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
 }
 
-// Prisma 7 no longer accepts `url` here: the connection string lives in
-// prisma7.config.ts (read from DATABASE_URL), and the runtime client is given
-// a driver adapter. See packages/db/prisma7.config.ts.
 datasource db {
   provider = "mysql"
 }
 
-// ---------------------------------------------------------------------------
-// Templates
-// ---------------------------------------------------------------------------
-
 model Template {
-  id   Int    @id @default(autoincrement())
-  name String @db.VarChar(255)
-
-  /// Stable key: the folder name under packages/certificate-templates. How
-  /// templates:publish matches a folder to its row.
-  slug String @unique @db.VarChar(100)
-
+  id               Int               @id @default(autoincrement())
+  name             String            @db.VarChar(255)
   /// Version used for NEW certificates. Null until the first version is
   /// published by the templates:publish script (architecture §6 A).
-  currentVersionId Int? @map("current_version_id")
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  /// Every version ever published for this template.
-  versions TemplateVersion[] @relation("TemplateVersions")
-
-  /// NoAction on both sides: templates and template_versions reference each
-  /// other, and MySQL cannot resolve a referential-action cycle.
-  currentVersion TemplateVersion? @relation("CurrentTemplateVersion", fields: [currentVersionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  currentVersionId Int?              @map("current_version_id")
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+  /// Stable key: the folder name under packages/certificate-templates. How
+  /// templates:publish matches a folder to its row.
+  slug             String            @unique @db.VarChar(100)
+  versions         TemplateVersion[] @relation("TemplateVersions")
+  currentVersion   TemplateVersion?  @relation("CurrentTemplateVersion", fields: [currentVersionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([currentVersionId])
   @@map("templates")
@@ -62,88 +28,59 @@ model Template {
 /// IMMUTABLE. Rows are inserted by templates:publish and never updated or
 /// deleted — issued certificates reference them.
 model TemplateVersion {
-  id         Int @id @default(autoincrement())
-  templateId Int @map("template_id")
-
+  id            Int           @id @default(autoincrement())
+  templateId    Int           @map("template_id")
   /// 1, 2, 3 … per template.
-  versionNumber Int @map("version_number")
-
+  versionNumber Int           @map("version_number")
   /// Handlebars template: HTML + CSS + {{placeholders}}.
-  htmlContent String @map("html_content") @db.LongText
-
+  htmlContent   String        @map("html_content") @db.LongText
   /// Field definitions: name, label, type, required, options, public_summary,
   /// dedupe. Drives the admin form, the import mapping, validation, and which
   /// fields appear in the public summary (architecture §5, §6 D).
-  fieldSchema Json @map("field_schema")
-
+  fieldSchema   Json          @map("field_schema")
   /// SHA-256 of html_content + field_schema; how templates:publish detects a
   /// change and decides whether to insert a new version.
-  contentHash String @map("content_hash") @db.Char(64)
-
-  createdAt DateTime @default(now()) @map("created_at")
-
-  template       Template              @relation("TemplateVersions", fields: [templateId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  certificates   Certificate[]
-  importBatches  ImportBatch[]
-  currentFor     Template[]            @relation("CurrentTemplateVersion")
+  contentHash   String        @map("content_hash") @db.Char(64)
+  createdAt     DateTime      @default(now()) @map("created_at")
+  certificates  Certificate[]
+  importBatches ImportBatch[]
+  template      Template      @relation("TemplateVersions", fields: [templateId], references: [id])
+  currentFor    Template[]    @relation("CurrentTemplateVersion")
 
   @@unique([templateId, versionNumber])
   @@index([templateId])
   @@map("template_versions")
 }
 
-// ---------------------------------------------------------------------------
-// Certificates
-// ---------------------------------------------------------------------------
-
-enum CertificateStatus {
-  active
-  revoked
-}
-
 model Certificate {
   /// UUID v4, generated by the application. Non-sequential so certificates
   /// cannot be enumerated; this is also what the QR code encodes.
-  id String @id @db.Char(36)
-
+  id                String             @id @db.Char(36)
   /// Locked at issuance and never changed, even when the certificate's data is
   /// edited later.
-  templateVersionId Int @map("template_version_id")
-
+  templateVersionId Int                @map("template_version_id")
   /// Filled-in field values for this certificate.
-  data Json
-
+  data              Json
   /// Null for manually issued certificates.
-  importBatchId Int? @map("import_batch_id")
-
+  importBatchId     Int?               @map("import_batch_id")
   /// SHA-256 of template_id + the normalized values of the fields flagged
   /// `dedupe: true`. Indexed but deliberately NOT unique — duplicates are
   /// warned about, not blocked (architecture §6 C).
-  dedupeKey String @map("dedupe_key") @db.Char(64)
-
-  status           CertificateStatus @default(active)
-  revokedAt        DateTime?         @map("revoked_at")
-  revocationReason String?           @map("revocation_reason") @db.VarChar(500)
-
-  issuedAt  DateTime @default(now()) @map("issued_at")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  templateVersion TemplateVersion    @relation(fields: [templateVersionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  importBatch     ImportBatch?       @relation(fields: [importBatchId], references: [id], onDelete: SetNull, onUpdate: Cascade)
-  auditEntries    CertificateAudit[]
+  dedupeKey         String             @map("dedupe_key") @db.Char(64)
+  status            CertificateStatus  @default(active)
+  revokedAt         DateTime?          @map("revoked_at")
+  revocationReason  String?            @map("revocation_reason") @db.VarChar(500)
+  issuedAt          DateTime           @default(now()) @map("issued_at")
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
+  auditEntries      CertificateAudit[]
+  importBatch       ImportBatch?       @relation(fields: [importBatchId], references: [id])
+  templateVersion   TemplateVersion    @relation(fields: [templateVersionId], references: [id])
 
   @@index([templateVersionId])
   @@index([dedupeKey])
   @@index([importBatchId])
   @@map("certificates")
-}
-
-enum CertificateAuditAction {
-  created
-  edited
-  revoked
-  restored
 }
 
 /// APPEND-ONLY. Written in the same transaction as the change it records, so a
@@ -152,31 +89,96 @@ model CertificateAudit {
   id            BigInt                 @id @default(autoincrement())
   certificateId String                 @map("certificate_id") @db.Char(36)
   action        CertificateAuditAction
-
   /// Previous certificates.data — null for 'created'.
-  oldData Json? @map("old_data")
-
+  oldData       Json?                  @map("old_data")
   /// New certificates.data — null for 'revoked' and 'restored'.
-  newData Json? @map("new_data")
-
+  newData       Json?                  @map("new_data")
   /// Required for 'edited', 'revoked' and 'restored'; enforced in application
   /// code, not by the schema.
-  reason String? @db.VarChar(500)
-
-  adminUserId Int      @map("admin_user_id")
-  createdAt   DateTime @default(now()) @map("created_at")
-
-  certificate Certificate @relation(fields: [certificateId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  adminUser   AdminUser   @relation(fields: [adminUserId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  reason        String?                @db.VarChar(500)
+  adminUserId   Int                    @map("admin_user_id")
+  createdAt     DateTime               @default(now()) @map("created_at")
+  adminUser     AdminUser              @relation(fields: [adminUserId], references: [id])
+  certificate   Certificate            @relation(fields: [certificateId], references: [id])
 
   @@index([certificateId, createdAt])
   @@index([adminUserId])
   @@map("certificate_audit")
 }
 
-// ---------------------------------------------------------------------------
-// Bulk import
-// ---------------------------------------------------------------------------
+model ImportBatch {
+  id                Int             @id @default(autoincrement())
+  templateVersionId Int             @map("template_version_id")
+  fileName          String          @map("file_name") @db.VarChar(255)
+  fileType          ImportFileType  @map("file_type")
+  /// Which worksheet was imported (xlsx only).
+  sheetName         String?         @map("sheet_name") @db.VarChar(255)
+  /// SHA-256 of the uploaded file; used to warn that a file was already
+  /// imported.
+  fileHash          String          @map("file_hash") @db.Char(64)
+  rowCount          Int             @map("row_count")
+  insertedCount     Int             @default(0) @map("inserted_count")
+  /// Rows the admin chose to skip as duplicates.
+  skippedCount      Int             @default(0) @map("skipped_count")
+  zipStatus         ZipStatus       @default(none) @map("zip_status")
+  zipRenderedCount  Int             @default(0) @map("zip_rendered_count")
+  /// Temp file on the VPS export volume — the only PDF ever written to disk,
+  /// and deleted 24 h after generation.
+  zipPath           String?         @map("zip_path") @db.VarChar(500)
+  zipExpiresAt      DateTime?       @map("zip_expires_at")
+  adminUserId       Int             @map("admin_user_id")
+  createdAt         DateTime        @default(now()) @map("created_at")
+  /// Invalid rows (bad data or not fitting on one page) the admin chose to leave out.
+  rejectedCount     Int             @default(0) @map("rejected_count")
+  /// What the last ZIP job left out and why: [{ certificateId, memberId, reason }]. Kept after
+  /// the ZIP expires. Never holds recipient names.
+  zipReport         Json?           @map("zip_report")
+  certificates      Certificate[]
+  adminUser         AdminUser       @relation(fields: [adminUserId], references: [id])
+  templateVersion   TemplateVersion @relation(fields: [templateVersionId], references: [id])
+
+  @@index([fileHash])
+  @@index([templateVersionId])
+  @@index([adminUserId])
+  @@map("import_batches")
+}
+
+model AdminUser {
+  id            Int                @id @default(autoincrement())
+  email         String             @unique @db.VarChar(255)
+  /// argon2id hash (architecture §9). Never a plaintext password.
+  passwordHash  String             @map("password_hash") @db.VarChar(255)
+  createdAt     DateTime           @default(now()) @map("created_at")
+  auditEntries  CertificateAudit[]
+  importBatches ImportBatch[]
+
+  @@map("admin_users")
+}
+
+/// Failed admin logins, for rate limiting (architecture §9): 5 failures per
+/// email + IP per 15 minutes. Rows older than 24 h are purged.
+model LoginAttempt {
+  id          BigInt   @id @default(autoincrement())
+  email       String   @db.VarChar(255)
+  /// IPv4 or IPv6.
+  ipAddress   String   @map("ip_address") @db.VarChar(45)
+  attemptedAt DateTime @default(now()) @map("attempted_at")
+
+  @@index([email, ipAddress, attemptedAt])
+  @@map("login_attempts")
+}
+
+enum CertificateStatus {
+  active
+  revoked
+}
+
+enum CertificateAuditAction {
+  created
+  edited
+  revoked
+  restored
+}
 
 enum ImportFileType {
   xlsx
@@ -190,85 +192,4 @@ enum ZipStatus {
   ready
   failed
   expired
-}
-
-model ImportBatch {
-  id                Int    @id @default(autoincrement())
-  templateVersionId Int    @map("template_version_id")
-  fileName          String @map("file_name") @db.VarChar(255)
-  fileType          ImportFileType @map("file_type")
-
-  /// Which worksheet was imported (xlsx only).
-  sheetName String? @map("sheet_name") @db.VarChar(255)
-
-  /// SHA-256 of the uploaded file; used to warn that a file was already
-  /// imported.
-  fileHash String @map("file_hash") @db.Char(64)
-
-  rowCount      Int @map("row_count")
-  insertedCount Int @default(0) @map("inserted_count")
-
-  /// Rows the admin chose to skip as duplicates.
-  skippedCount Int @default(0) @map("skipped_count")
-
-  /// Invalid rows (bad data or not fitting on one page) the admin chose to leave out.
-  rejectedCount Int @default(0) @map("rejected_count")
-
-  zipStatus        ZipStatus @default(none) @map("zip_status")
-  zipRenderedCount Int       @default(0) @map("zip_rendered_count")
-
-  /// Temp file on the VPS export volume — the only PDF ever written to disk,
-  /// and deleted 24 h after generation.
-  zipPath      String?   @map("zip_path") @db.VarChar(500)
-  zipExpiresAt DateTime? @map("zip_expires_at")
-
-  /// What the last ZIP job left out and why: [{ certificateId, memberId, reason }]. Kept after
-  /// the ZIP expires. Never holds recipient names.
-  zipReport Json? @map("zip_report")
-
-  adminUserId Int      @map("admin_user_id")
-  createdAt   DateTime @default(now()) @map("created_at")
-
-  templateVersion TemplateVersion @relation(fields: [templateVersionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  adminUser       AdminUser       @relation(fields: [adminUserId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  certificates    Certificate[]
-
-  @@index([fileHash])
-  @@index([templateVersionId])
-  @@index([adminUserId])
-  @@map("import_batches")
-}
-
-// ---------------------------------------------------------------------------
-// Admin accounts and login rate limiting
-// ---------------------------------------------------------------------------
-
-model AdminUser {
-  id    Int    @id @default(autoincrement())
-  email String @unique @db.VarChar(255)
-
-  /// argon2id hash (architecture §9). Never a plaintext password.
-  passwordHash String @map("password_hash") @db.VarChar(255)
-
-  createdAt DateTime @default(now()) @map("created_at")
-
-  auditEntries  CertificateAudit[]
-  importBatches ImportBatch[]
-
-  @@map("admin_users")
-}
-
-/// Failed admin logins, for rate limiting (architecture §9): 5 failures per
-/// email + IP per 15 minutes. Rows older than 24 h are purged.
-model LoginAttempt {
-  id    BigInt @id @default(autoincrement())
-  email String @db.VarChar(255)
-
-  /// IPv4 or IPv6.
-  ipAddress String @map("ip_address") @db.VarChar(45)
-
-  attemptedAt DateTime @default(now()) @map("attempted_at")
-
-  @@index([email, ipAddress, attemptedAt])
-  @@map("login_attempts")
 }

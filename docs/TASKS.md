@@ -204,6 +204,7 @@ Strategy lives in `PRODUCT.md`; the visual system is documented in `DESIGN.md`.
 - [x] **PU-13** No horizontal overflow at 360 / 390 / 768 / 1280 px on any screen in either app, checked in real Chromium
 - [x] **PU-14** `DESIGN.md` written: tokens, type scale, component rules, motion, accessibility, and what the system deliberately does not do
 - [x] **PU-15** Bug found and fixed during the pass: the Tailwind Prettier plugin strips leading spaces inside template-literal `className`s, fusing class names (`ms-field` + `ms-col-span` → `ms-fieldms-col-span`). All such call sites now use `cx()`; recorded in `DESIGN.md`
+- [~] **PU-18** Whole-row click on list tables (certificates, templates, imports, import batch) via a stretched `.ms-cell-link`, plus a global `cursor: pointer` for enabled interactive elements. Built; owner to confirm in the browser
 - [ ] **PU-16** Owner to click through both apps once and confirm the look, then tick this
 - [ ] **PU-17** Exit criteria: `format:check`, `lint`, `typecheck`, `build` and all test suites pass; both apps render correctly at 360 px; `DESIGN.md` matches the code
 
