@@ -6,11 +6,15 @@
  *
  * Everything here is FABRICATED. Never seed a database with real recipient
  * names, and never run this against production (AGENTS.md §7): it deletes every
- * row in the application tables.
+ * row in the certificate, batch, audit and admin tables.
+ *
+ * It creates no templates: certificates are pinned to the REAL published
+ * "moraspirit-service-letter" template, so run `pnpm templates:publish` first.
+ * Templates and versions are never touched, so the issue picker only lists real
+ * templates. If that template has several versions, one certificate stays on the
+ * oldest, so version pinning is visible in development.
  *
  * The fixtures deliberately exercise the invariants later phases depend on:
- *   - a template with TWO versions, and a certificate pinned to the older one,
- *     so version pinning is visible in development from day one;
  *   - active and revoked certificates, each with the audit rows that
  *     architecture §4 requires for every state change;
  *   - one manually issued certificate and one import batch.
@@ -61,51 +65,10 @@ const dedupeKey = (templateId, values) =>
     .update([templateId, ...values].map((v) => String(v).trim().toLowerCase()).join("|"))
     .digest("hex");
 
-const contentHash = (html, schema) =>
-  createHash("sha256").update(html).update(JSON.stringify(schema)).digest("hex");
-
 // --- fixture content --------------------------------------------------------
-// A stand-in for the real service letter, which arrives in Phase 1. Kept
-// minimal on purpose: this exists to give the tables realistic shapes, not to
-// look like the finished certificate.
+// Invented people and wording only; the template itself is the real published one.
 
-const FIELD_SCHEMA = [
-  { name: "member_id", label: "Member ID", type: "text", required: true, dedupe: true },
-  {
-    name: "recipient_name",
-    label: "Recipient name",
-    type: "text",
-    required: true,
-    public_summary: true,
-  },
-  {
-    name: "honorific",
-    label: "Honorific",
-    type: "select",
-    required: true,
-    options: ["Mr.", "Ms.", "Mx."],
-  },
-  { name: "pillar_name", label: "Pillar", type: "text", required: true, public_summary: true },
-  { name: "start_date", label: "Start date", type: "date", required: true, public_summary: true },
-  { name: "end_date", label: "End date", type: "date", required: true, public_summary: true },
-  { name: "general_points", label: "General points", type: "list", required: true },
-  { name: "special_points", label: "Special points", type: "list", required: false },
-];
-
-const TEMPLATE_V1 = `<article class="letter">
-  <h1>Certificate of Employment</h1>
-  <p>This letter confirms that {{honorific}} {{recipient_name}} served with MoraSpirit
-     Organization as a member of the {{pillar_name}} from {{formatDate start_date}}
-     to {{formatDate end_date}}.</p>
-  <ul>{{#each general_points}}<li>{{this}}</li>{{/each}}</ul>
-</article>`;
-
-const TEMPLATE_V2 = `${TEMPLATE_V1.replace("</article>", "")}
-  {{#if special_points}}
-    <p>{{pronoun_subject}} also contributed to the following:</p>
-    <ul>{{#each special_points}}<li>{{this}}</li>{{/each}}</ul>
-  {{/if}}
-</article>`;
+const TEMPLATE_SLUG = "moraspirit-service-letter";
 
 const GENERAL_POINTS = [
   "Demonstrated commitment and responsibility in carrying out assigned tasks.",
@@ -154,9 +117,6 @@ async function wipe(prisma) {
   await prisma.certificateAudit.deleteMany();
   await prisma.certificate.deleteMany();
   await prisma.importBatch.deleteMany();
-  await prisma.$executeRawUnsafe("UPDATE templates SET current_version_id = NULL");
-  await prisma.templateVersion.deleteMany();
-  await prisma.template.deleteMany();
   await prisma.loginAttempt.deleteMany();
   await prisma.adminUser.deleteMany();
 }
@@ -171,34 +131,19 @@ async function seed(prisma) {
     },
   });
 
-  const template = await prisma.template.create({
-    data: { name: "Service letter (fixture)", slug: "fixture-service-letter" },
+  const template = await prisma.template.findUnique({
+    where: { slug: TEMPLATE_SLUG },
+    include: { versions: { orderBy: { versionNumber: "asc" } } },
   });
-
-  const v1 = await prisma.templateVersion.create({
-    data: {
-      templateId: template.id,
-      versionNumber: 1,
-      htmlContent: TEMPLATE_V1,
-      fieldSchema: FIELD_SCHEMA.filter((f) => f.name !== "special_points"),
-      contentHash: contentHash(TEMPLATE_V1, FIELD_SCHEMA),
-    },
-  });
-
-  const v2 = await prisma.templateVersion.create({
-    data: {
-      templateId: template.id,
-      versionNumber: 2,
-      htmlContent: TEMPLATE_V2,
-      fieldSchema: FIELD_SCHEMA,
-      contentHash: contentHash(TEMPLATE_V2, FIELD_SCHEMA),
-    },
-  });
-
-  await prisma.template.update({
-    where: { id: template.id },
-    data: { currentVersionId: v2.id },
-  });
+  if (!template || !template.currentVersionId) {
+    throw new Error(
+      `Template "${TEMPLATE_SLUG}" is not published. Run pnpm templates:publish first.`,
+    );
+  }
+  const current = template.versions.find((v) => v.id === template.currentVersionId);
+  const oldest = template.versions[0];
+  const v2 = current;
+  const v1 = oldest.id === current.id ? null : oldest;
 
   const batch = await prisma.importBatch.create({
     data: {
@@ -224,6 +169,9 @@ async function seed(prisma) {
       start_date: "2025-04-28",
       end_date: "2026-04-29",
       general_points: GENERAL_POINTS,
+      signatory_name: "Heminda Jayaweera",
+      signatory_title: "Co-Founder, MoraSpirit",
+      signatory_email: "heminda@moraspirit.com",
       ...(person.special ? { special_points: person.special } : {}),
     };
 
@@ -232,7 +180,7 @@ async function seed(prisma) {
         id: person.id,
         // One certificate stays on version 1: proof that issued certificates do
         // not follow the template forward.
-        templateVersionId: person.onOldVersion ? v1.id : v2.id,
+        templateVersionId: person.onOldVersion && v1 ? v1.id : v2.id,
         data,
         importBatchId: fromImport ? batch.id : null,
         dedupeKey: dedupeKey(template.id, [person.member_id]),
@@ -257,7 +205,7 @@ async function seed(prisma) {
     });
   }
 
-  return { admin, template, versions: [v1, v2], batch };
+  return { admin, template, versions: template.versions, batch };
 }
 
 async function main() {

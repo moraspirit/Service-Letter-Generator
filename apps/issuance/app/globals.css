@@ -664,6 +664,9 @@
   background: var(--ms-brand-50);
   color: var(--ms-brand-700);
 }
+.ms-choice > svg {
+  flex-shrink: 0;
+}
 .ms-choice-title {
   color: var(--ms-ink-strong);
   font-weight: 600;

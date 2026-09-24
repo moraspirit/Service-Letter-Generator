@@ -61,7 +61,7 @@ Progress tracker for [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Architect
 - [x] **P0-08** Created the `app_rw` user via `scripts/create-db-users.js` — SELECT/INSERT/UPDATE/DELETE plus CREATE/ALTER/DROP/INDEX/REFERENCES on `mora-spirit`.*; password written to `apps/issuance/.env.local`
 - [x] **P0-09** Created the `verify_ro` user (`SELECT` on those three tables only) via the same script; proved by its `--verify-only` checks that it cannot write, cannot DROP, and cannot read `admin_users`, `certificate_audit`, `import_batches` or `login_attempts`
 - [x] **P0-10** `.env.example` for both apps and `packages/db`; confirmed real `.env` files are git-ignored and the examples are not
-- [x] **P0-11** Seed script (`pnpm db:seed`, also run by `prisma migrate reset`): one admin user, a template with two versions, an import batch, and four fabricated certificates (one pinned to the older version, one revoked) with their audit rows
+- [x] **P0-11** Seed script (`pnpm db:seed`, also run by `prisma migrate reset`): one admin user, an import batch, and four fabricated certificates (one revoked, and one pinned to the oldest version when the template has several) with their audit rows. It creates no templates of its own: it pins to the published `moraspirit-service-letter`, so run `pnpm templates:publish` first (changed after Phase U, so the issue picker lists only real templates)
 - [x] **P0-12** ✅ Exit criteria verified — `pnpm build`/`lint`/`typecheck`/`format:check` pass, migration applies to Aiven over verified TLS, `verify_ro` restricted (11/11 privilege checks), `pnpm db:seed` rebuilds the dataset repeatably
 
 ## Phase 1 — Shared rendering core
