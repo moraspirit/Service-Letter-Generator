@@ -84,28 +84,44 @@ export default async function DashboardPage() {
             No certificates yet. Issuing one, or importing a spreadsheet, will fill this list.
           </p>
         ) : (
-          <ul className="ms-recent">
-            {recent.map((c) => {
-              const data = c.data as Record<string, unknown>;
-              return (
-                <li key={c.id}>
-                  <Link href={`/certificates/${c.id}`} className="ms-recent-row">
-                    <span className="ms-recent-name">
-                      {String(data.recipient_name ?? "Unnamed recipient")}
-                    </span>
-                    <span className="ms-mono ms-recent-id">
-                      {String(data.member_id ?? c.id.slice(0, 8))}
-                    </span>
-                    <span className="ms-recent-meta">{c.templateVersion.template.name}</span>
-                    <span className="ms-recent-meta ms-tnum">
-                      {c.issuedAt.toISOString().slice(0, 10)}
-                    </span>
-                    <CertificateStatusPill status={c.status as "active" | "revoked"} />
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+          <div className="ms-table-wrap">
+            <table className="ms-table ms-table-hover">
+              <caption className="sr-only">Most recently issued certificates</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Recipient</th>
+                  <th scope="col">Member ID</th>
+                  <th scope="col">Template</th>
+                  <th scope="col">Issued</th>
+                  <th scope="col">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recent.map((c) => {
+                  const data = c.data as Record<string, unknown>;
+                  return (
+                    <tr key={c.id}>
+                      <td className="ms-cell-name">
+                        {String(data.recipient_name ?? "Unnamed recipient")}
+                      </td>
+                      <td>
+                        <Link href={`/certificates/${c.id}`} className="ms-mono ms-cell-link">
+                          {String(data.member_id ?? c.id.slice(0, 8))}
+                        </Link>
+                      </td>
+                      <td>{c.templateVersion.template.name}</td>
+                      <td className="ms-tnum ms-cell-dim">
+                        {c.issuedAt.toISOString().slice(0, 10)}
+                      </td>
+                      <td>
+                        <CertificateStatusPill status={c.status as "active" | "revoked"} />
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </section>
     </div>

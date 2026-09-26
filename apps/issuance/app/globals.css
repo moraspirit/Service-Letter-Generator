@@ -271,57 +271,6 @@
   line-height: var(--ms-leading-snug);
 }
 
-/* ---- Recent list -------------------------------------------------------
-   A list, not a table: five rows do not need column headers, and this keeps
-   the dashboard from looking like a second certificates screen. */
-
-.ms-recent {
-  display: flex;
-  flex-direction: column;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  border: 1px solid var(--ms-line);
-  border-radius: var(--ms-radius-lg);
-  overflow: hidden;
-}
-.ms-recent li + li {
-  border-top: 1px solid var(--ms-line-soft);
-}
-.ms-recent-row {
-  display: grid;
-  align-items: center;
-  gap: var(--ms-space-1) var(--ms-space-4);
-  grid-template-columns: 1fr auto;
-  padding: var(--ms-space-3) var(--ms-space-4);
-  text-decoration: none;
-  transition: background-color var(--ms-dur-fast) var(--ms-ease);
-}
-.ms-recent-row:hover {
-  background: var(--ms-bg-1);
-}
-.ms-recent-name {
-  color: var(--ms-ink-strong);
-  font-weight: 600;
-  overflow-wrap: anywhere;
-}
-.ms-recent-id {
-  color: var(--ms-ink-soft);
-  justify-self: start;
-}
-.ms-recent-meta {
-  color: var(--ms-ink-muted); /* 5.18:1 */
-  font-size: var(--ms-text-sm);
-}
-@media (min-width: 52rem) {
-  .ms-recent-row {
-    grid-template-columns: minmax(0, 1fr) 7rem minmax(0, 12rem) 6rem auto;
-  }
-  .ms-recent-id {
-    justify-self: auto;
-  }
-}
-
 /* ---- Toolbar (filters above a table) ----------------------------------- */
 
 .ms-toolbar {
@@ -375,6 +324,10 @@
 .ms-table tbody tr:has(.ms-cell-link:focus-visible) {
   outline: 2px solid var(--ms-brand-600);
   outline-offset: -2px;
+}
+.ms-table .ms-mono,
+.ms-table .ms-tnum {
+  white-space: nowrap;
 }
 .ms-cell-name {
   color: var(--ms-ink-strong);
