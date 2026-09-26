@@ -88,6 +88,18 @@
 .ms-verdict-text {
   min-width: 0;
 }
+/* The valid-certificate page's title: the portal's name, in place of a verdict badge. */
+.ms-portal-title {
+  font-size: var(--ms-text-xl);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: var(--ms-leading-tight);
+}
+@media (min-width: 30rem) {
+  .ms-portal-title {
+    font-size: var(--ms-text-2xl);
+  }
+}
 .ms-verdict-title {
   color: inherit; /* takes the verdict's tone, not the base heading ink */
   font-size: var(--ms-text-xl);

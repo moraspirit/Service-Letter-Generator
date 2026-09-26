@@ -67,7 +67,8 @@ describe("revoked", () => {
 describe("active", () => {
   it("opens on the verdict, the public summary and the full letter", async () => {
     const html = await render(fixture.activeId);
-    expect(html).toContain("Verified — Authentic");
+    expect(html).toContain("MoraSpirit Online Verification Portal");
+    expect(html).not.toContain("Verified — Authentic"); // no verdict badge for a valid certificate
     expect(html).toContain(RECIPIENT);
     expect(html).toContain("28th of April 2025");
     expect(html).toContain("Active");

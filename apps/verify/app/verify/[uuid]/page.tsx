@@ -63,16 +63,12 @@ export default async function VerifyPage({ params }: PageProps) {
   ];
 
   // The letter is what the person holding the printout is checking, so it opens on the
-  // page itself, with the verdict first and the summary in a rail beside it. The rail also
-  // lets the fixed-width page fit its column.
+  // page itself, under the portal's name, with the summary in a rail beside it. The rail also
+  // lets the fixed-width page fit its column. There is no verdict badge for a valid
+  // certificate (owner's decision, 2026-09-26); revoked and not-found keep theirs.
   return (
     <div className="flex flex-col gap-5">
-      <Verdict
-        tone="ok"
-        icon="check"
-        title="Verified — Authentic"
-        note="This certificate is in MoraSpirit's records and is currently valid."
-      />
+      <h1 className="ms-portal-title">MoraSpirit Online Verification Portal</h1>
       <div className="ms-full">
         <div className="ms-full-side">
           <Card>
