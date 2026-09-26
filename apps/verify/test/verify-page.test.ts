@@ -65,25 +65,34 @@ describe("revoked", () => {
 });
 
 describe("active", () => {
-  it("shows the verified summary, only the public fields, and no narrative", async () => {
+  it("opens on the verdict, the public summary and the full letter", async () => {
     const html = await render(fixture.activeId);
     expect(html).toContain("Verified — Authentic");
     expect(html).toContain(RECIPIENT);
     expect(html).toContain("28th of April 2025");
     expect(html).toContain("Active");
-    expect(html).not.toContain(MEMBER_ID);
-    expect(html).not.toContain(NARRATIVE);
-    expect(html).not.toContain("<iframe");
-    expect(html).toContain(`href="/verify/${fixture.activeId}?full=1"`);
+    expect(html).toContain(NARRATIVE); // the letter is inside srcdoc
+    expect(html).toContain("/certificate-assets/mora-letterhead-v1.jpg");
+    // The summary rail lists only public_summary fields; the member id is not one of them.
+    expect(html.split("<iframe")[0]).not.toContain(MEMBER_ID);
   });
 
-  it("reveals the full certificate only with ?full=1, in a sandbox that allows no scripts", async () => {
-    const html = await render(fixture.activeId, { full: "1" });
+  it("puts the letter in a sandbox that allows no scripts", async () => {
+    const html = await render(fixture.activeId);
     expect(html).toContain("<iframe");
     expect(html).toMatch(/sandbox=""/);
     expect(html).not.toContain("allow-scripts");
-    expect(html).toContain(NARRATIVE); // inside srcdoc
-    expect(html).toContain("/certificate-assets/mora-letterhead-v1.jpg");
+  });
+
+  it("shows the same page for ?full=1, so old links keep working", async () => {
+    expect(await render(fixture.activeId, { full: "1" })).toBe(await render(fixture.activeId));
+  });
+
+  it("no longer offers a separate full-certificate view", async () => {
+    const html = await render(fixture.activeId);
+    expect(html).not.toContain("View full certificate");
+    expect(html).not.toContain("Hide the full certificate");
+    expect(html).not.toContain("?full=1");
   });
 });
 

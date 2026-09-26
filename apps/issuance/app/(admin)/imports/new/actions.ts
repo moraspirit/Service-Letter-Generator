@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { analyzeImport, type AnalysisResult } from "@/lib/import/analyze-import";
+import { isQueueKey } from "@/lib/fix-queue";
 import { commitImport } from "@/lib/import/commit-import";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/require-admin";
@@ -50,7 +51,16 @@ export async function importAction(
       skipInvalid: formData.get("skipInvalid") === "1",
       confirmDuplicateFile: formData.get("confirmDuplicateFile") === "1",
     });
-    if (result.status === "committed") redirect(`/imports/${result.batchId}`);
+    if (result.status === "committed") {
+      // The fix queue key (a random id, not personal data) lets the batch page offer the rows
+      // that were left out, from the browser that holds them.
+      const fixKey = formData.get("fixKey");
+      redirect(
+        isQueueKey(fixKey) && result.rejected > 0
+          ? `/imports/${result.batchId}?fix=${fixKey}`
+          : `/imports/${result.batchId}`,
+      );
+    }
     if (result.status === "blocked") return { status: "blocked", message: result.reason };
     return { status: "failed", message: result.message };
   } catch (error) {

@@ -11,14 +11,12 @@ export type LoadedCertificate =
       issuedAt: Date;
       data: CertificateData;
       fieldSchema: FieldSchema;
-      /** Only loaded for the full-certificate view. */
-      htmlContent: string | null;
+      htmlContent: string;
     };
 
 export async function loadCertificate(
   prisma: PrismaClient,
   id: string,
-  options: { withHtml: boolean },
 ): Promise<LoadedCertificate> {
   // Twice at most: if the certificate is revoked between the two reads, the second pass sees it.
   for (let attempt = 0; attempt < 2; attempt++) {
@@ -35,18 +33,18 @@ export async function loadCertificate(
         issuedAt: true,
         data: true,
         templateVersion: {
-          select: { fieldSchema: true, ...(options.withHtml ? { htmlContent: true } : {}) },
+          select: { fieldSchema: true, htmlContent: true },
         },
       },
     });
     if (!row) continue;
-    const version = row.templateVersion as { fieldSchema: unknown; htmlContent?: string };
+    const version = row.templateVersion;
     return {
       kind: "active",
       issuedAt: row.issuedAt,
       data: row.data as unknown as CertificateData,
       fieldSchema: version.fieldSchema as unknown as FieldSchema,
-      htmlContent: options.withHtml ? (version.htmlContent ?? null) : null,
+      htmlContent: version.htmlContent,
     };
   }
   return { kind: "not_found" };

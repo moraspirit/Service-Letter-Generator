@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { formatDate } from "@moraspirit/certificate-render";
-import { Card, CardBody, DescriptionList, Icon, LinkButton } from "@moraspirit/ui";
+import { Card, CardBody, DescriptionList, Icon } from "@moraspirit/ui";
 import { getDb } from "@/lib/db";
 import { loadCertificate } from "@/lib/load-certificate";
 import { renderFullCertificate } from "@/lib/render-full";
@@ -13,16 +13,16 @@ export const dynamic = "force-dynamic";
 
 interface PageProps {
   params: Promise<{ uuid: string }>;
-  searchParams: Promise<{ full?: string | string[] }>;
+  /** Ignored. `?full=1` used to open the letter; it is kept working so old links still resolve. */
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }
 
-export default async function VerifyPage({ params, searchParams }: PageProps) {
+export default async function VerifyPage({ params }: PageProps) {
   const { uuid } = await params;
   // A malformed id costs nothing: it never reaches the database.
   if (!isCertificateId(uuid)) notFound();
 
-  const wantsFull = (await searchParams).full === "1";
-  const result = await loadCertificate(getDb(), uuid, { withHtml: wantsFull });
+  const result = await loadCertificate(getDb(), uuid);
   if (result.kind === "not_found") notFound();
 
   // Status and date only. The data, template and revocation reason were never
@@ -49,15 +49,12 @@ export default async function VerifyPage({ params, searchParams }: PageProps) {
   }
 
   const summary = buildSummary(result.fieldSchema, result.data);
-  const fullHtml =
-    wantsFull && result.htmlContent
-      ? await renderFullCertificate({
-          id: uuid,
-          htmlContent: result.htmlContent,
-          fieldSchema: result.fieldSchema,
-          data: result.data,
-        })
-      : null;
+  const fullHtml = await renderFullCertificate({
+    id: uuid,
+    htmlContent: result.htmlContent,
+    fieldSchema: result.fieldSchema,
+    data: result.data,
+  });
 
   const facts = [
     ...summary,
@@ -65,84 +62,46 @@ export default async function VerifyPage({ params, searchParams }: PageProps) {
     { label: "Status", value: "Active" },
   ];
 
-  const verdict = (
-    <Verdict
-      tone="ok"
-      icon="check"
-      title="Verified — Authentic"
-      note="This certificate is in MoraSpirit's records and is currently valid."
-    />
-  );
-
-  const summaryCard = (
-    <Card>
-      <CardBody>
-        <h2 className="sr-only">Certificate summary</h2>
-        <DescriptionList items={facts} />
-      </CardBody>
-    </Card>
-  );
-
-  const checkedNote = (
-    <p className="ms-verify-note flex items-start gap-2">
-      <Icon name="info" size={16} />
-      <span>
-        Checked against MoraSpirit&apos;s records just now. Reload this page at any time to check
-        again.
-      </span>
-    </p>
-  );
-
-  // With the letter on screen the summary moves into a rail beside it, so the two
-  // can be read together and the fixed-width page still fits its column.
-  if (fullHtml) {
-    return (
-      <div className="flex flex-col gap-5">
-        {verdict}
-        <div className="ms-full">
-          <div className="ms-full-side">
-            {summaryCard}
-            <div>
-              <LinkButton href={`/verify/${uuid}`} icon="eyeOff" variant="secondary">
-                Hide the full certificate
-              </LinkButton>
-            </div>
-            {checkedNote}
-          </div>
-          <section className="ms-letter-col" aria-label="Full certificate">
-            <div className="ms-letter-wrap">
-              <iframe
-                className="ms-letter"
-                title="Full certificate"
-                sandbox=""
-                srcDoc={fullHtml}
-                width={816}
-                height={1056}
-              />
-            </div>
-          </section>
-        </div>
-      </div>
-    );
-  }
-
+  // The letter is what the person holding the printout is checking, so it opens on the
+  // page itself, with the verdict first and the summary in a rail beside it. The rail also
+  // lets the fixed-width page fit its column.
   return (
-    <div className="ms-verify-col flex flex-col gap-5">
-      {verdict}
-      {summaryCard}
-      <div className="flex flex-col gap-2">
-        <LinkButton
-          href={`/verify/${uuid}?full=1`}
-          variant="primary"
-          size="lg"
-          icon="eye"
-          className="self-start"
-        >
-          View full certificate
-        </LinkButton>
-        <p className="ms-verify-note">Opens the letter itself, exactly as MoraSpirit issued it.</p>
+    <div className="flex flex-col gap-5">
+      <Verdict
+        tone="ok"
+        icon="check"
+        title="Verified — Authentic"
+        note="This certificate is in MoraSpirit's records and is currently valid."
+      />
+      <div className="ms-full">
+        <div className="ms-full-side">
+          <Card>
+            <CardBody>
+              <h2 className="sr-only">Certificate summary</h2>
+              <DescriptionList items={facts} />
+            </CardBody>
+          </Card>
+          <p className="ms-verify-note flex items-start gap-2">
+            <Icon name="info" size={16} />
+            <span>
+              Checked against MoraSpirit&apos;s records just now. Reload this page at any time to
+              check again.
+            </span>
+          </p>
+        </div>
+        <section className="ms-letter-col" aria-label="Full certificate">
+          <div className="ms-letter-wrap">
+            <iframe
+              className="ms-letter"
+              title="Full certificate"
+              sandbox=""
+              srcDoc={fullHtml}
+              width={816}
+              height={1056}
+            />
+          </div>
+        </section>
       </div>
-      {checkedNote}
     </div>
   );
 }

@@ -85,7 +85,7 @@ Each of these exists for a reason spelled out in `docs/architecture.md` §9. Cha
 | Templates | Immutable versions; editing creates a new version; issued certificates stay on theirs |
 | Template authoring | Developer-only, in the repo. No editor in the admin panel |
 | Audit | Full `certificate_audit` table, written transactionally |
-| Public page | Summary first (`public_summary` fields), full certificate behind "View full certificate", rendered in a sandboxed iframe |
+| Public page | The full letter opens on `/verify/{uuid}` (`?full=1` is the same page), in a sandboxed iframe, beside a summary of the `public_summary` fields. Changed 2026-09-26 from "summary first" by the owner, who accepted that the whole letter is visible to anyone opening the QR link |
 | Revoked page | Status and date only — never the content or the revocation reason |
 | Pronouns | Derived from `honorific` (Mr./Ms./Mx.); templates never hardcode a pronoun or a pronoun-dependent verb |
 | Language | English, **US spelling**, Latin script only |

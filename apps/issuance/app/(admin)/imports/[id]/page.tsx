@@ -11,16 +11,25 @@ import {
   StatusPill,
 } from "@moraspirit/ui";
 import { prisma } from "@/lib/db";
+import { isQueueKey } from "@/lib/fix-queue";
 import { requireAdmin } from "@/lib/require-admin";
 import { PageHeader } from "../../../_components/page-header";
+import { BatchRejectedRows } from "./batch-rejected-rows";
 import { ZipPanel } from "./zip-panel";
 
 export const dynamic = "force-dynamic";
 
-export default async function ImportBatchPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ImportBatchPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ fix?: string }>;
+}) {
   await requireAdmin();
 
   const id = Number((await params).id);
+  const { fix } = await searchParams;
   if (!Number.isInteger(id) || id <= 0) notFound();
   const batch = await prisma.importBatch.findUnique({
     where: { id },
@@ -119,6 +128,13 @@ export default async function ImportBatchPage({ params }: { params: Promise<{ id
               </table>
             )}
           </Card>
+
+          {batch.rejectedCount > 0 ? (
+            <BatchRejectedRows
+              queueKey={isQueueKey(fix) ? fix : null}
+              rejectedCount={batch.rejectedCount}
+            />
+          ) : null}
         </div>
 
         <aside>
