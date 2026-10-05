@@ -28,7 +28,11 @@
   justify-content: center;
   margin: 0 auto;
   max-width: 46rem;
-  padding: var(--ms-space-5) var(--ms-space-4) var(--ms-space-2);
+  padding: var(--ms-space-4) var(--ms-space-4) 0;
+}
+/* A larger mark than the admin navbar's: it is the only branding on this page. */
+.ms-verify-head .ms-logo {
+  height: 6rem;
 }
 
 .ms-verify-main {
@@ -36,7 +40,7 @@
   margin: 0 auto;
   width: 100%;
   max-width: 46rem;
-  padding: var(--ms-space-6) var(--ms-space-4) var(--ms-space-7);
+  padding: var(--ms-space-4) var(--ms-space-4) var(--ms-space-6);
 }
 .ms-verify-col {
   margin: 0 auto;
@@ -152,13 +156,6 @@
   flex-direction: column;
   gap: var(--ms-space-2);
 }
-.ms-portal-eyebrow {
-  color: var(--ms-brand-700); /* 6.60:1 */
-  font-size: var(--ms-text-xs);
-  font-weight: 650;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
 .ms-portal-title {
   font-size: var(--ms-text-xl);
   font-weight: 700;
@@ -248,4 +245,13 @@
   background: var(--ms-bg-1);
   color: var(--ms-ink-soft); /* 7.66:1 */
   font-size: var(--ms-text-sm);
+}
+
+/* The page is one short card; no scrollbar track beside it. It still scrolls by wheel,
+   touch and keyboard when a small screen needs it. */
+html {
+  scrollbar-width: none;
+}
+html::-webkit-scrollbar {
+  display: none;
 }

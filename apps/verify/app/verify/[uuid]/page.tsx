@@ -75,7 +75,6 @@ export default async function VerifyPage({ params }: PageProps) {
   return (
     <div className="ms-verify-col flex flex-col gap-6">
       <header className="ms-portal-head">
-        <p className="ms-portal-eyebrow">MoraSpirit</p>
         <h1 className="ms-portal-title">Online Verification Portal</h1>
         <p className="ms-portal-lede">
           This record was read from MoraSpirit&apos;s database when you opened this page.
