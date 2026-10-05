@@ -15,7 +15,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const assetsDir = path.resolve(root, "../certificate-assets");
 
 const slugs = readdirSync(root, { withFileTypes: true })
-  .filter((e) => e.isDirectory() && e.name.startsWith("moraspirit-"))
+  .filter((e) => e.isDirectory() && e.name.endsWith("-letter"))
   .map((e) => e.name);
 
 function load(slug: string) {
@@ -39,7 +39,10 @@ const person: CertificateData = {
 
 describe.each(slugs)("template %s", (slug) => {
   const tv = load(slug);
-  const data = applyDefaults(tv.field_schema, person);
+  const data = applyDefaults(
+    tv.field_schema,
+    slug === "special-letter" ? { ...person, special_points: ["Led project X."] } : person,
+  );
 
   it("has a valid schema and the sample data passes its zod validation", () => {
     expect(buildZodSchema(tv.field_schema).safeParse(data).success).toBe(true);
@@ -80,7 +83,7 @@ describe.each(slugs)("template %s", (slug) => {
   });
 
   it("uses the plural verb form only for Mx.", () => {
-    if (slug === "moraspirit-service-letter") {
+    if (slug === "general-letter") {
       expect(renderCertificateHtml(tv, { ...data, honorific: "Mx." })).toContain("they pursue.");
       expect(renderCertificateHtml(tv, { ...data, honorific: "Ms." })).toContain("she pursues.");
     } else {
@@ -89,18 +92,29 @@ describe.each(slugs)("template %s", (slug) => {
     }
   });
 
-  it("omits the special section when special_points is empty, includes it when present", () => {
-    const without = renderCertificateHtml(tv, data);
-    expect(without).not.toContain("notable contributions");
-    const withSpecial = renderCertificateHtml(tv, { ...data, special_points: ["Led project X."] });
-    expect(withSpecial).toContain("notable contributions");
-    expect(withSpecial).toContain("<li>Led project X.</li>");
+  it("has the special section only in the Special Letter, and requires its points there", () => {
+    const html = renderCertificateHtml(tv, data);
+    const field = tv.field_schema.find((f) => f.name === "special_points");
+    if (slug === "special-letter") {
+      expect(field?.required).toBe(true);
+      expect(html).toContain("notable contributions");
+      expect(html).toContain("<li>Led project X.</li>");
+    } else {
+      expect(field).toBeUndefined();
+      expect(html).not.toContain("notable contributions");
+      expect(html).not.toContain("Led project X.");
+    }
+  });
+
+  it("is published under exactly the names General Letter and Special Letter", () => {
+    const name = JSON.parse(readFileSync(path.join(root, slug, "schema.json"), "utf8")).name;
+    expect(name).toBe(slug === "general-letter" ? "General Letter" : "Special Letter");
   });
 
   it("renders every general point as a list item, in order", () => {
     const html = renderCertificateHtml(tv, data);
     expect(html.indexOf("First general task.")).toBeLessThan(html.indexOf("Second general task."));
-    expect(html.match(/<li>/g)).toHaveLength(2);
+    expect(html.match(/<li>/g)).toHaveLength(slug === "special-letter" ? 3 : 2);
   });
 
   it("escapes values", () => {

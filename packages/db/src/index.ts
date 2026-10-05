@@ -37,6 +37,11 @@ export function createPrismaClient(options: CreateClientOptions = {}): PrismaCli
     user: decodeURIComponent(url.username),
     password: decodeURIComponent(url.password),
     database: url.pathname.slice(1),
+    // The driver's default connect timeout is 1 s, too short for a TLS handshake to a managed
+    // database in another region (about 0.6 s per round trip to Aiven in development). A
+    // timed-out connect left the pool empty and every request failed with "pool timeout".
+    connectTimeout: 10_000,
+    acquireTimeout: 15_000,
     ...(options.connectionLimit ? { connectionLimit: options.connectionLimit } : {}),
     ...(ca ? { ssl: { ca } } : {}),
   });

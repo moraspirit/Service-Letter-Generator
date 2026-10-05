@@ -20,7 +20,7 @@ import { buildVerifyUrl, newCertificateId } from "../lib/verify-url";
 
 afterAll(() => closeBrowser());
 
-const SLUGS = ["moraspirit-service-letter", "moraspirit-service-letter-outstanding"];
+const SLUGS = ["general-letter", "special-letter"];
 
 function versionFor(slug: string) {
   const t = loadTemplate(slug);
@@ -108,14 +108,14 @@ describe.each(SLUGS)("renderCertificatePdf — %s", (slug) => {
       (_, i) =>
         `Bullet ${i} with quite a lot of text so that the list cannot possibly fit on the page.`,
     );
-    const overflowing: CertificateData = { ...data, special_points: long };
+    const overflowing: CertificateData = { ...data, general_points: long };
     const attempt = renderCertificatePdf({
       certificateId: newCertificateId(),
       templateVersion: version,
       data: overflowing,
     });
     await expect(attempt).rejects.toBeInstanceOf(PageOverflowError);
-    await expect(attempt).rejects.toThrow(/does not fit on one page\. Shorten 'Special Points'/);
+    await expect(attempt).rejects.toThrow(/does not fit on one page\. Shorten 'General Points'/);
   });
 });
 

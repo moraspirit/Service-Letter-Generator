@@ -1,5 +1,5 @@
 {
-  "name": "Service letter (outstanding contributions wording)",
+  "name": "General Letter",
   "fields": [
     {
       "name": "member_id",
@@ -48,12 +48,6 @@
       "label": "General Points",
       "type": "list",
       "required": true
-    },
-    {
-      "name": "special_points",
-      "label": "Special Points",
-      "type": "list",
-      "required": false
     },
     {
       "name": "signatory_name",

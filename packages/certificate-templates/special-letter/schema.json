@@ -1,5 +1,5 @@
 {
-  "name": "Service letter (standard wording)",
+  "name": "Special Letter",
   "fields": [
     {
       "name": "member_id",
@@ -53,7 +53,7 @@
       "name": "special_points",
       "label": "Special Points",
       "type": "list",
-      "required": false
+      "required": true
     },
     {
       "name": "signatory_name",

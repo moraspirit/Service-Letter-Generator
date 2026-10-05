@@ -9,7 +9,7 @@
  * row in the certificate, batch, audit and admin tables.
  *
  * It creates no templates: certificates are pinned to the REAL published
- * "moraspirit-service-letter" template, so run `pnpm templates:publish` first.
+ * "general-letter" template, so run `pnpm templates:publish` first.
  * Templates and versions are never touched, so the issue picker only lists real
  * templates. If that template has several versions, one certificate stays on the
  * oldest, so version pinning is visible in development.
@@ -68,7 +68,7 @@ const dedupeKey = (templateId, values) =>
 // --- fixture content --------------------------------------------------------
 // Invented people and wording only; the template itself is the real published one.
 
-const TEMPLATE_SLUG = "moraspirit-service-letter";
+const TEMPLATE_SLUG = "general-letter";
 
 const GENERAL_POINTS = [
   "Demonstrated commitment and responsibility in carrying out assigned tasks.",
@@ -172,7 +172,6 @@ async function seed(prisma) {
       signatory_name: "Heminda Jayaweera",
       signatory_title: "Co-Founder, MoraSpirit",
       signatory_email: "heminda@moraspirit.com",
-      ...(person.special ? { special_points: person.special } : {}),
     };
 
     await prisma.certificate.create({
