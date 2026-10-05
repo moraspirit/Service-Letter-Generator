@@ -1,9 +1,15 @@
 import { notFound } from "next/navigation";
 import { formatDate } from "@moraspirit/certificate-render";
-import { Card, CardBody, DescriptionList, Icon } from "@moraspirit/ui";
+import {
+  Card,
+  CardBody,
+  CardHead,
+  CertificateStatusPill,
+  DescriptionList,
+  Icon,
+} from "@moraspirit/ui";
 import { getDb } from "@/lib/db";
 import { loadCertificate } from "@/lib/load-certificate";
-import { renderFullCertificate } from "@/lib/render-full";
 import { buildSummary } from "@/lib/summary";
 import { isCertificateId } from "@/lib/uuid";
 import { Verdict } from "./verdict";
@@ -13,7 +19,7 @@ export const dynamic = "force-dynamic";
 
 interface PageProps {
   params: Promise<{ uuid: string }>;
-  /** Ignored. `?full=1` used to open the letter; it is kept working so old links still resolve. */
+  /** Ignored. `?full=1` used to open the letter; old links still resolve to this page. */
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }
 
@@ -48,56 +54,33 @@ export default async function VerifyPage({ params }: PageProps) {
     );
   }
 
-  const summary = buildSummary(result.fieldSchema, result.data);
-  const fullHtml = await renderFullCertificate({
-    id: uuid,
-    htmlContent: result.htmlContent,
-    fieldSchema: result.fieldSchema,
-    data: result.data,
-  });
-
+  // Only the public details, read from the database: the template's `public_summary` fields,
+  // the issue date and the status. The letter itself, its bullet points and its signatory are
+  // never rendered here (owner's decision, 2026-10-06; the page showed the whole letter from
+  // 2026-09-26). There is no verdict badge for a valid certificate either, so the status is
+  // stated as a pill with an icon and a word.
   const facts = [
-    ...summary,
+    ...buildSummary(result.fieldSchema, result.data),
     { label: "Issued", value: formatDate(result.issuedAt) },
-    { label: "Status", value: "Active" },
+    { label: "Status", value: <CertificateStatusPill status="active" /> },
   ];
 
-  // The letter is what the person holding the printout is checking, so it opens on the
-  // page itself, under the portal's name, with the summary in a rail beside it. The rail also
-  // lets the fixed-width page fit its column. There is no verdict badge for a valid
-  // certificate (owner's decision, 2026-09-26); revoked and not-found keep theirs.
   return (
-    <div className="flex flex-col gap-5">
+    <div className="ms-verify-col flex flex-col gap-5">
       <h1 className="ms-portal-title">MoraSpirit Online Verification Portal</h1>
-      <div className="ms-full">
-        <div className="ms-full-side">
-          <Card>
-            <CardBody>
-              <h2 className="sr-only">Certificate summary</h2>
-              <DescriptionList items={facts} />
-            </CardBody>
-          </Card>
-          <p className="ms-verify-note flex items-start gap-2">
-            <Icon name="info" size={16} />
-            <span>
-              Checked against MoraSpirit&apos;s records just now. Reload this page at any time to
-              check again.
-            </span>
-          </p>
-        </div>
-        <section className="ms-letter-col" aria-label="Full certificate">
-          <div className="ms-letter-wrap">
-            <iframe
-              className="ms-letter"
-              title="Full certificate"
-              sandbox=""
-              srcDoc={fullHtml}
-              width={816}
-              height={1056}
-            />
-          </div>
-        </section>
-      </div>
+      <Card>
+        <CardHead title="Certificate record" />
+        <CardBody>
+          <DescriptionList items={facts} />
+        </CardBody>
+      </Card>
+      <p className="ms-verify-note flex items-start gap-2">
+        <Icon name="info" size={16} />
+        <span>
+          Checked against MoraSpirit&apos;s records just now. Reload this page at any time to check
+          again.
+        </span>
+      </p>
     </div>
   );
 }

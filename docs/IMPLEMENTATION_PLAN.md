@@ -251,14 +251,14 @@ If code and the architecture doc ever disagree, the doc wins — or the doc gets
 2. A Node.js serverless function (not Edge), `force-dynamic`, `Cache-Control: no-store` — no caching, per architecture §6 D.
 3. An invalid UUID format returns 404 before any database query.
 4. Three states: not found; revoked (status and `revoked_at` only — never the content or the reason); and active.
-5. The active page: a verified badge, a summary rail of the `public_summary` fields, and the full letter rendered from the compiled HTML inside a sandboxed `<iframe srcdoc>` with no `allow-scripts` (changed on 2026-09-26 from "summary first, letter behind a button").
+5. The active page: the portal title and a card of only the `public_summary` fields, issue date and status. No letter is shown (changed on 2026-10-06; the full letter was on the page from 2026-09-26).
 6. Upstash rate limiting in middleware: 60 requests per minute per IP, **failing open** on Upstash errors or timeouts.
 7. A Prisma singleton with `connection_limit=1` and a low pool timeout.
 
 **Exit criteria:**
 - Scanning a real PDF's QR code with a phone opens the correct verification page.
 - A revoked certificate shows the revoked state, and its content is absent from the HTML source.
-- The full letter, narrative fields included, is on the page for an active certificate (changed on 2026-09-26; before, it needed a click).
+- No letter, narrative or bullet points appear on the public page (changed on 2026-10-06).
 - With the VPS stopped, verification still works — the actual point of the split.
 - Blocking Upstash leaves the page working.
 - `verify_ro` cannot write, and cannot read `admin_users` or `certificate_audit`.

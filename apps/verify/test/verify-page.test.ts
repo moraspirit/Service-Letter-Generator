@@ -65,35 +65,27 @@ describe("revoked", () => {
 });
 
 describe("active", () => {
-  it("opens on the verdict, the public summary and the full letter", async () => {
+  it("shows the portal title and only the public details", async () => {
     const html = await render(fixture.activeId);
     expect(html).toContain("MoraSpirit Online Verification Portal");
     expect(html).not.toContain("Verified — Authentic"); // no verdict badge for a valid certificate
     expect(html).toContain(RECIPIENT);
     expect(html).toContain("28th of April 2025");
     expect(html).toContain("Active");
-    expect(html).toContain(NARRATIVE); // the letter is inside srcdoc
-    expect(html).toContain("/certificate-assets/mora-letterhead-v1.jpg");
-    // The summary rail lists only public_summary fields; the member id is not one of them.
-    expect(html.split("<iframe")[0]).not.toContain(MEMBER_ID);
+    expect(html).not.toContain(MEMBER_ID); // not a public_summary field
   });
 
-  it("puts the letter in a sandbox that allows no scripts", async () => {
+  it("shows no letter: no frame, no narrative, no bullet points", async () => {
     const html = await render(fixture.activeId);
-    expect(html).toContain("<iframe");
-    expect(html).toMatch(/sandbox=""/);
-    expect(html).not.toContain("allow-scripts");
+    expect(html).not.toContain("<iframe");
+    expect(html).not.toContain("srcdoc");
+    expect(html).not.toContain(NARRATIVE);
+    expect(html).not.toContain("BULLET-MARKER"); // the seeded bullet point
+    expect(html).not.toContain("mora-letterhead");
   });
 
   it("shows the same page for ?full=1, so old links keep working", async () => {
     expect(await render(fixture.activeId, { full: "1" })).toBe(await render(fixture.activeId));
-  });
-
-  it("no longer offers a separate full-certificate view", async () => {
-    const html = await render(fixture.activeId);
-    expect(html).not.toContain("View full certificate");
-    expect(html).not.toContain("Hide the full certificate");
-    expect(html).not.toContain("?full=1");
   });
 });
 

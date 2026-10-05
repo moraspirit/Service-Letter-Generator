@@ -11,7 +11,6 @@ export type LoadedCertificate =
       issuedAt: Date;
       data: CertificateData;
       fieldSchema: FieldSchema;
-      htmlContent: string;
     };
 
 export async function loadCertificate(
@@ -33,7 +32,7 @@ export async function loadCertificate(
         issuedAt: true,
         data: true,
         templateVersion: {
-          select: { fieldSchema: true, htmlContent: true },
+          select: { fieldSchema: true },
         },
       },
     });
@@ -44,7 +43,6 @@ export async function loadCertificate(
       issuedAt: row.issuedAt,
       data: row.data as unknown as CertificateData,
       fieldSchema: version.fieldSchema as unknown as FieldSchema,
-      htmlContent: version.htmlContent,
     };
   }
   return { kind: "not_found" };

@@ -15,7 +15,7 @@ try {
   // Already provided by the environment (e.g. CI).
 }
 
-export const NARRATIVE = "NARRATIVE-MARKER-should-only-appear-in-the-full-certificate";
+export const NARRATIVE = "NARRATIVE-MARKER-must-never-appear-on-the-public-page";
 export const MEMBER_ID = "SECRETMEMBER42";
 export const RECIPIENT = "Fake Recipient";
 export const REVOKE_REASON = "REASON-MARKER-never-public";
@@ -72,7 +72,7 @@ export async function seed(): Promise<Seed> {
     recipient_name: RECIPIENT,
     start_date: "2025-04-28",
     story: `<p>${NARRATIVE}</p>`,
-    points: ["one"],
+    points: ["BULLET-MARKER-must-never-appear"],
   };
   const activeId = randomUUID();
   const revokedId = randomUUID();

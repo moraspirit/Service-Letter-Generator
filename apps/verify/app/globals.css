@@ -39,27 +39,17 @@
   font-size: var(--ms-text-sm);
 }
 
-/* The shell is as wide as the widest thing it ever holds (the letter beside the
-   summary). Ordinary content is capped by .ms-verify-col instead, so reading
-   measure stays short and the header lines up with it. */
 .ms-verify-main {
   flex: 1;
   margin: 0 auto;
   width: 100%;
-  max-width: 78rem;
+  max-width: 46rem;
   padding: var(--ms-space-6) var(--ms-space-4) var(--ms-space-7);
 }
 .ms-verify-col {
   margin: 0 auto;
   width: 100%;
   max-width: 46rem;
-}
-
-/* Only the full-certificate view needs the whole width, and only that view puts
-   the header and footer out to match it. */
-.ms-verify-page:has(.ms-full) .ms-verify-head-inner,
-.ms-verify-page:has(.ms-full) .ms-verify-foot {
-  max-width: 78rem;
 }
 
 /* ---- The verdict -------------------------------------------------------
@@ -162,79 +152,6 @@
   color: var(--ms-ink-soft); /* 7.66:1 */
   font-size: var(--ms-text-sm);
   line-height: var(--ms-leading-snug);
-}
-
-/* ---- Full certificate view ---------------------------------------------
-   Summary in a rail, the letter beside it. The letter is a fixed 816px page,
-   so each breakpoint zooms it to whatever its column can hold — that is what
-   keeps the page from scrolling sideways.
-
-   Column maths (shell 78rem, 1rem padding each side, rail 20rem, gap 1.5rem):
-     1024px -> 648px of room -> 0.78  (636px)
-     1120px -> 744px         -> 0.88  (718px)
-     1248px -> 872px         -> 1     (816px) */
-
-.ms-full {
-  display: grid;
-  gap: var(--ms-space-5);
-  grid-template-columns: 1fr;
-  align-items: start;
-}
-@media (min-width: 64rem) {
-  .ms-full {
-    grid-template-columns: 20rem minmax(0, 1fr);
-  }
-}
-
-.ms-full-side {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  gap: var(--ms-space-4);
-}
-/* The rail is 20rem, far too narrow for the term/value grid — it would break
-   "September" across lines. Terms sit above their values here instead. */
-.ms-full-side .ms-dl {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ms-space-4);
-}
-.ms-full-side .ms-dl-row {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ms-space-1);
-}
-@media (min-width: 64rem) {
-  .ms-full-side {
-    position: sticky;
-    top: var(--ms-space-5);
-  }
-}
-
-.ms-letter-col {
-  min-width: 0;
-}
-/* Centre the fixed-width page when its column is wider than the letter. */
-.ms-letter-col .ms-letter-wrap {
-  display: flex;
-  justify-content: center;
-}
-/* Stacked below 64rem, so the letter has the full width and the shared ladder
-   in tokens.css already fits it. */
-@media (min-width: 64rem) {
-  .ms-letter-col .ms-letter {
-    zoom: 0.78;
-  }
-}
-@media (min-width: 70rem) {
-  .ms-letter-col .ms-letter {
-    zoom: 0.88;
-  }
-}
-@media (min-width: 78rem) {
-  .ms-letter-col .ms-letter {
-    zoom: 1;
-  }
 }
 
 .ms-verify-foot {

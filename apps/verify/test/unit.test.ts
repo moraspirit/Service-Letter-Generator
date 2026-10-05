@@ -3,7 +3,6 @@ import type { FieldSchema } from "@moraspirit/shared";
 import { checkRateLimit, clientIp, getLimiter, type Limiter } from "../lib/rate-limit";
 import { buildSummary } from "../lib/summary";
 import { isCertificateId } from "../lib/uuid";
-import { verifyUrlFor } from "../lib/render-full";
 
 describe("isCertificateId", () => {
   it("accepts a v4 UUID and nothing else", () => {
@@ -44,16 +43,6 @@ describe("buildSummary", () => {
       { label: "Name", value: "Fake Person" },
       { label: "Start date", value: "28th of April 2025" },
     ]);
-  });
-});
-
-describe("verifyUrlFor", () => {
-  it("builds the printed URL, or null without a base", () => {
-    expect(verifyUrlFor("abc", "https://verify.example.com/")).toBe(
-      "https://verify.example.com/verify/abc",
-    );
-    expect(verifyUrlFor("abc", "")).toBeNull();
-    expect(verifyUrlFor("abc", undefined)).toBeNull();
   });
 });
 
