@@ -1,13 +1,6 @@
 import { notFound } from "next/navigation";
 import { formatDate } from "@moraspirit/certificate-render";
-import {
-  Card,
-  CardBody,
-  CardHead,
-  CertificateStatusPill,
-  DescriptionList,
-  Icon,
-} from "@moraspirit/ui";
+import { CertificateStatusPill, Icon } from "@moraspirit/ui";
 import { getDb } from "@/lib/db";
 import { loadCertificate } from "@/lib/load-certificate";
 import { buildSummary } from "@/lib/summary";
@@ -56,30 +49,70 @@ export default async function VerifyPage({ params }: PageProps) {
 
   // Only the public details, read from the database: the template's `public_summary` fields,
   // the issue date and the status. The letter itself, its bullet points and its signatory are
-  // never rendered here (owner's decision, 2026-10-06; the page showed the whole letter from
-  // 2026-09-26). There is no verdict badge for a valid certificate either, so the status is
-  // stated as a pill with an icon and a word.
+  // never rendered here (owner's decision, 2026-10-06). There is no verdict badge for a valid
+  // certificate either, so validity is stated by the Active pill, which carries an icon and a
+  // word as well as colour.
+  const rows = buildSummary(result.fieldSchema, result.data);
+  // Whose record it is leads the card; everything else is a labelled fact beneath it.
+  const subject = rows.find((r) => r.label.toLowerCase() === "name") ?? null;
   const facts = [
-    ...buildSummary(result.fieldSchema, result.data),
+    ...rows.filter((r) => r !== subject),
     { label: "Issued", value: formatDate(result.issuedAt) },
-    { label: "Status", value: <CertificateStatusPill status="active" /> },
   ];
+  // Sri Lanka time, like every other date on the letter and this page.
+  const checkedAt = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Colombo",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  })
+    .format(new Date())
+    .replace(" at ", ", ");
 
   return (
-    <div className="ms-verify-col flex flex-col gap-5">
-      <h1 className="ms-portal-title">MoraSpirit Online Verification Portal</h1>
-      <Card>
-        <CardHead title="Certificate record" />
-        <CardBody>
-          <DescriptionList items={facts} />
-        </CardBody>
-      </Card>
-      <p className="ms-verify-note flex items-start gap-2">
-        <Icon name="info" size={16} />
-        <span>
-          Checked against MoraSpirit&apos;s records just now. Reload this page at any time to check
-          again.
-        </span>
+    <div className="ms-verify-col flex flex-col gap-6">
+      <header className="ms-portal-head">
+        <p className="ms-portal-eyebrow">MoraSpirit</p>
+        <h1 className="ms-portal-title">Online Verification Portal</h1>
+        <p className="ms-portal-lede">
+          This record was read from MoraSpirit&apos;s database when you opened this page.
+        </p>
+      </header>
+
+      <article className="ms-record" aria-labelledby="record-subject">
+        <div className="ms-record-head">
+          <div className="ms-record-id">
+            <p className="ms-record-kind">Certificate of Employment</p>
+            <h2 id="record-subject" className="ms-record-subject">
+              {subject?.value ?? "Certificate record"}
+            </h2>
+          </div>
+          <CertificateStatusPill status="active" />
+        </div>
+        <dl className="ms-record-facts">
+          {facts.map((f) => (
+            <div key={f.label} className="ms-record-fact">
+              <dt>{f.label}</dt>
+              <dd>{f.value}</dd>
+            </div>
+          ))}
+        </dl>
+        <p className="ms-record-foot">
+          <Icon name="clock" size={14} />
+          <span>Checked {checkedAt} (Sri Lanka time). Reload this page to check again.</span>
+        </p>
+      </article>
+
+      <p className="ms-verify-note">
+        Compare these details with the printed letter. If anything differs, or you have a question,
+        contact MoraSpirit at{" "}
+        <a href="mailto:info@moraspirit.com" className="ms-link">
+          info@moraspirit.com
+        </a>
+        .
       </p>
     </div>
   );

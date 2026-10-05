@@ -24,6 +24,10 @@
   background: var(--ms-bg-0);
 }
 .ms-verify-head-inner {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--ms-space-3);
   margin: 0 auto;
   max-width: 46rem;
   padding: var(--ms-space-4);
@@ -77,18 +81,6 @@
 }
 .ms-verdict-text {
   min-width: 0;
-}
-/* The valid-certificate page's title: the portal's name, in place of a verdict badge. */
-.ms-portal-title {
-  font-size: var(--ms-text-xl);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: var(--ms-leading-tight);
-}
-@media (min-width: 30rem) {
-  .ms-portal-title {
-    font-size: var(--ms-text-2xl);
-  }
 }
 .ms-verdict-title {
   color: inherit; /* takes the verdict's tone, not the base heading ink */
@@ -163,4 +155,109 @@
   color: var(--ms-ink-muted); /* 5.18:1 */
   font-size: var(--ms-text-sm);
   line-height: var(--ms-leading-snug);
+}
+
+/* ---- Valid certificate: the portal head and the record card ------------- */
+
+.ms-portal-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ms-space-2);
+}
+.ms-portal-eyebrow {
+  color: var(--ms-brand-700); /* 6.60:1 */
+  font-size: var(--ms-text-xs);
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.ms-portal-title {
+  font-size: var(--ms-text-xl);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: var(--ms-leading-tight);
+}
+@media (min-width: 30rem) {
+  .ms-portal-title {
+    font-size: var(--ms-text-2xl);
+  }
+}
+.ms-portal-lede {
+  color: var(--ms-ink-soft); /* 7.66:1 */
+  font-size: var(--ms-text-base);
+  line-height: var(--ms-leading-snug);
+  max-width: 52ch;
+}
+
+.ms-record {
+  border: 1px solid var(--ms-line);
+  border-radius: var(--ms-radius-lg);
+  background: var(--ms-bg-0);
+  box-shadow: var(--ms-shadow);
+  overflow: hidden;
+}
+.ms-record-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--ms-space-3);
+  padding: var(--ms-space-5);
+  border-bottom: 1px solid var(--ms-line-soft);
+}
+.ms-record-id {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--ms-space-1);
+}
+.ms-record-kind {
+  color: var(--ms-ink-muted); /* 5.18:1 */
+  font-size: var(--ms-text-sm);
+}
+.ms-record-subject {
+  font-size: var(--ms-text-xl);
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+.ms-record-facts {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  grid-template-columns: 1fr;
+}
+.ms-record-fact {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: var(--ms-space-4) var(--ms-space-5);
+  border-bottom: 1px solid var(--ms-line-soft);
+}
+.ms-record-fact dt {
+  color: var(--ms-ink-muted); /* 5.18:1 */
+  font-size: var(--ms-text-sm);
+}
+.ms-record-fact dd {
+  margin: 0;
+  color: var(--ms-ink-strong);
+  font-size: var(--ms-text-md);
+  font-weight: 600;
+}
+@media (min-width: 30rem) {
+  .ms-record-facts {
+    grid-template-columns: 1fr 1fr;
+  }
+  .ms-record-fact:nth-child(odd) {
+    border-right: 1px solid var(--ms-line-soft);
+  }
+}
+.ms-record-foot {
+  display: flex;
+  align-items: center;
+  gap: var(--ms-space-2);
+  margin: 0;
+  padding: var(--ms-space-3) var(--ms-space-5);
+  background: var(--ms-bg-1);
+  color: var(--ms-ink-soft); /* 7.66:1 */
+  font-size: var(--ms-text-sm);
 }

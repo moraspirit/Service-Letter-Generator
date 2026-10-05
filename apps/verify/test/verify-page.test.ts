@@ -67,11 +67,12 @@ describe("revoked", () => {
 describe("active", () => {
   it("shows the portal title and only the public details", async () => {
     const html = await render(fixture.activeId);
-    expect(html).toContain("MoraSpirit Online Verification Portal");
+    expect(html).toContain("Online Verification Portal");
     expect(html).not.toContain("Verified — Authentic"); // no verdict badge for a valid certificate
     expect(html).toContain(RECIPIENT);
     expect(html).toContain("28th of April 2025");
     expect(html).toContain("Active");
+    expect(html).toContain("Certificate of Employment");
     expect(html).not.toContain(MEMBER_ID); // not a public_summary field
   });
 
