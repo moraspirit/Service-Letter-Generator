@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -24,7 +25,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="ms-verify-rule" />
           <header className="ms-verify-head">
             <div className="ms-verify-head-inner">
-              <p className="ms-verify-org">MoraSpirit</p>
+              <p className="ms-verify-org">
+                <Image
+                  src="/certificate-assets/mora-logo-v1.png"
+                  alt="MoraSpirit"
+                  width={262}
+                  height={260}
+                  className="ms-logo"
+                  unoptimized
+                  priority
+                />
+              </p>
               <p className="ms-verify-kicker">Certificate verification</p>
             </div>
           </header>

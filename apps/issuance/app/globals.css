@@ -56,7 +56,7 @@
 
 .ms-wordmark {
   display: inline-flex;
-  align-items: baseline;
+  align-items: center;
   gap: 0.4rem;
   color: var(--ms-ink-strong);
   font-size: var(--ms-text-base);

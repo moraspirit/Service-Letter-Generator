@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { signOut } from "@/lib/auth";
 import { requireAdmin } from "@/lib/require-admin";
@@ -19,7 +20,16 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <header className="ms-topbar">
         <div className="ms-topbar-inner">
           <Link href="/" className="ms-wordmark">
-            MoraSpirit <span>Certificates</span>
+            <Image
+              src="/certificate-assets/mora-logo-v1.png"
+              alt="MoraSpirit"
+              width={262}
+              height={260}
+              className="ms-logo"
+              unoptimized
+              priority
+            />
+            <span>Certificates</span>
           </Link>
           <nav className="ms-nav" aria-label="Main">
             <NavLink href="/certificates" exclude={["/certificates/new"]}>

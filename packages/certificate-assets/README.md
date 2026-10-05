@@ -8,6 +8,7 @@ overwrite or delete one. A changed design gets a new file (`...-v2.jpg`).
 
 | File | Size | Use |
 |---|---|---|
+| `mora-logo-v1.png` | 262 x 260 | The MoraSpirit logo (shark and wordmark), cropped from the letterhead. Used in both apps' navbars, never in a letter |
 | `mora-letterhead-v1.jpg` | 1865 x 2415 | Full-page MoraSpirit letterhead: wave and logo at the top, globe watermark, contact block and red bar at the bottom |
 
 Extracted from the current service-letter PDF (the one with the 2026 contact

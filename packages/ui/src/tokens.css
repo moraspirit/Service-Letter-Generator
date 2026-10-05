@@ -202,6 +202,13 @@ p {
 
 /* ---- Skip link --------------------------------------------------------- */
 
+/* The MoraSpirit logo in a navbar. Its artwork is square, so it is sized by height. */
+.ms-logo {
+  display: block;
+  width: auto;
+  height: 3.5rem;
+}
+
 .ms-skip {
   position: absolute;
   left: var(--ms-space-3);
