@@ -29,7 +29,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               unoptimized
               priority
             />
-            <span>Certificates</span>
           </Link>
           <nav className="ms-nav" aria-label="Main">
             <NavLink href="/certificates" exclude={["/certificates/new"]}>

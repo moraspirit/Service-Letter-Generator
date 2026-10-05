@@ -20,27 +20,15 @@
 }
 
 .ms-verify-head {
-  border-bottom: 1px solid var(--ms-line);
   background: var(--ms-bg-0);
 }
+/* No navigation on the public page: the logo, centred, is the whole header. */
 .ms-verify-head-inner {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--ms-space-3);
+  justify-content: center;
   margin: 0 auto;
   max-width: 46rem;
-  padding: var(--ms-space-4);
-}
-.ms-verify-org {
-  color: var(--ms-ink-strong);
-  font-size: var(--ms-text-base);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
-.ms-verify-kicker {
-  color: var(--ms-ink-muted); /* 5.18:1 */
-  font-size: var(--ms-text-sm);
+  padding: var(--ms-space-5) var(--ms-space-4) var(--ms-space-2);
 }
 
 .ms-verify-main {

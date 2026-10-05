@@ -25,7 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="ms-verify-rule" />
           <header className="ms-verify-head">
             <div className="ms-verify-head-inner">
-              <p className="ms-verify-org">
+              <div className="ms-verify-org">
                 <Image
                   src="/certificate-assets/mora-logo-v1.png"
                   alt="MoraSpirit"
@@ -35,8 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   unoptimized
                   priority
                 />
-              </p>
-              <p className="ms-verify-kicker">Certificate verification</p>
+              </div>
             </div>
           </header>
           <main className="ms-verify-main">{children}</main>
