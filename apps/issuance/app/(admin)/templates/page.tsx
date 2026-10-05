@@ -1,4 +1,4 @@
-import { Banner, EmptyState } from "@moraspirit/ui";
+import { EmptyState } from "@moraspirit/ui";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/require-admin";
 import { templateFacts } from "@/lib/template-facts";
@@ -67,13 +67,6 @@ export default async function TemplatesPage() {
           ))}
         </ul>
       )}
-
-      <Banner tone="info" title="This screen is read-only">
-        Templates are written in the repository by a developer and published with{" "}
-        <code className="ms-code">pnpm templates:publish</code>. There is no editor here on purpose:
-        a template is reviewed code, and every issued certificate is pinned to the exact version it
-        was created with.
-      </Banner>
     </div>
   );
 }
