@@ -7,8 +7,13 @@ import { ImportForm } from "./import-form";
 
 export const dynamic = "force-dynamic";
 
-export default async function NewImportPage() {
+export default async function NewImportPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ template?: string }>;
+}) {
   await requireAdmin();
+  const requested = Number((await searchParams).template);
   const rows = await prisma.template.findMany({
     where: { currentVersionId: { not: null } },
     orderBy: { name: "asc" },
@@ -19,6 +24,8 @@ export default async function NewImportPage() {
     name: t.name,
     guide: buildImportGuide((t.currentVersion?.fieldSchema ?? []) as unknown as FieldSchema),
   }));
+
+  const initialTemplateId = templates.some((t) => t.id === requested) ? requested : null;
 
   return (
     <div className="flex flex-col gap-5">
@@ -33,7 +40,7 @@ export default async function NewImportPage() {
           <code className="ms-code">pnpm templates:publish</code> before importing.
         </EmptyState>
       ) : (
-        <ImportForm templates={templates} />
+        <ImportForm templates={templates} initialTemplateId={initialTemplateId} />
       )}
     </div>
   );

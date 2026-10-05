@@ -46,15 +46,18 @@ function Steps({ current }: { current: 1 | 2 | 3 }) {
 
 export function ImportForm({
   templates,
+  initialTemplateId = null,
 }: {
   templates: { id: number; name: string; guide: GuideColumn[] }[];
+  /** A template chosen on the way in (for example from the home page). */
+  initialTemplateId?: number | null;
 }) {
   const [state, dispatch] = useActionState(importAction, initial);
   const [pending, startTransition] = useTransition();
   // Changing the file, template or sheet makes the last report out of date.
   const [stale, setStale] = useState(false);
   const [skipInvalid, setSkipInvalid] = useState(false);
-  const [templateId, setTemplateId] = useState<number | null>(null);
+  const [templateId, setTemplateId] = useState<number | null>(initialTemplateId);
   const [fileName, setFileName] = useState("");
   const chosen = templates.find((t) => t.id === templateId) ?? null;
 
@@ -122,7 +125,7 @@ export function ImportForm({
                   name="templateId"
                   required
                   className="ms-select"
-                  defaultValue=""
+                  defaultValue={initialTemplateId ?? ""}
                   onChange={(e) => setTemplateId(Number(e.target.value) || null)}
                 >
                   <option value="" disabled>

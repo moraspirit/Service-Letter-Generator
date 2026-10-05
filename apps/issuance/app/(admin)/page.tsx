@@ -1,58 +1,88 @@
-import Link from "next/link";
-import { Icon, type IconName } from "@moraspirit/ui";
+import { LinkButton } from "@moraspirit/ui";
+import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/require-admin";
+import { renderVersionPreview } from "@/lib/template-preview";
 import { PageHeader } from "../_components/page-header";
 
 export const dynamic = "force-dynamic";
 
-/**
- * The starting point for someone who last used this tool months ago. It offers
- * the three things they came to do, rather than a wall of counts nobody acts on.
- */
-const TASKS: { href: string; icon: IconName; title: string; body: string }[] = [
-  {
-    href: "/certificates/new",
-    icon: "plus",
-    title: "Issue one certificate",
-    body: "Fill in the form for a single recipient and watch the letter build beside it.",
-  },
-  {
-    href: "/imports/new",
-    icon: "upload",
-    title: "Import a spreadsheet",
-    body: "Check an .xlsx or .csv row by row, then issue the whole batch at once.",
-  },
-  {
-    href: "/certificates",
-    icon: "search",
-    title: "Find a certificate",
-    body: "Search by member ID or name to download, correct or revoke a letter.",
-  },
-];
+/** When to use each letter, keyed by template folder. */
+const WHEN: Record<string, string> = {
+  "general-letter": "For a member who served with the pillar and completed its general tasks.",
+  "special-letter":
+    "For a member with notable contributions: adds a section listing what they did beyond their core role.",
+};
 
 export default async function DashboardPage() {
   const admin = await requireAdmin();
 
+  const rows = await prisma.template.findMany({
+    where: { currentVersionId: { not: null } },
+    orderBy: { name: "asc" },
+    include: { currentVersion: true },
+  });
+  const letters = rows.flatMap((t) =>
+    t.currentVersion
+      ? [
+          {
+            id: t.id,
+            name: t.name,
+            slug: t.slug,
+            preview: renderVersionPreview(t.slug, t.currentVersion),
+          },
+        ]
+      : [],
+  );
+
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader
         title={`Welcome, ${admin.email.split("@")[0]}`}
         subtitle="Service letters are issued here and verified on the public site. Nothing is ever deleted — certificates are revoked instead, and every change is recorded."
       />
 
-      <section aria-label="Tasks" className="ms-tasks">
-        {TASKS.map((task) => (
-          <Link key={task.href} href={task.href} className="ms-task">
-            <span className="ms-task-icon">
-              <Icon name={task.icon} size={18} />
-            </span>
-            <span className="ms-task-title">
-              {task.title}
-              <Icon name="arrowRight" size={14} />
-            </span>
-            <span className="ms-task-body">{task.body}</span>
-          </Link>
-        ))}
+      <section aria-labelledby="letters-heading" className="flex flex-col gap-3">
+        <h2 id="letters-heading" className="ms-section-title">
+          Which letter?
+        </h2>
+        <ul className="ms-choices">
+          {letters.map((l) => (
+            <li key={l.id}>
+              <article className="ms-choice ms-home-letter">
+                <div className="ms-choice-thumb" aria-hidden="true">
+                  <iframe
+                    title={`${l.name} preview`}
+                    sandbox=""
+                    srcDoc={l.preview}
+                    width={816}
+                    height={1056}
+                    tabIndex={-1}
+                  />
+                </div>
+                <div className="ms-choice-body">
+                  <h3 className="ms-choice-title">{l.name}</h3>
+                  <p className="ms-help">{WHEN[l.slug] ?? ""}</p>
+                  <div className="ms-actions ms-choice-cta">
+                    <LinkButton
+                      href={`/certificates/new?template=${l.id}`}
+                      variant="primary"
+                      icon="plus"
+                    >
+                      Issue one
+                    </LinkButton>
+                    <LinkButton
+                      href={`/imports/new?template=${l.id}`}
+                      variant="secondary"
+                      icon="upload"
+                    >
+                      Import spreadsheet
+                    </LinkButton>
+                  </div>
+                </div>
+              </article>
+            </li>
+          ))}
+        </ul>
       </section>
     </div>
   );

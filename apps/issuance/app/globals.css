@@ -674,7 +674,7 @@
   margin-top: auto;
   align-self: flex-start;
 }
-.ms-choice:hover .ms-choice-cta {
+.ms-choice:hover .ms-btn-primary.ms-choice-cta {
   background: var(--ms-brand-700);
 }
 
@@ -875,4 +875,17 @@
   margin-top: var(--ms-space-1);
   position: relative; /* above the row's stretched link */
   font-size: var(--ms-text-sm);
+}
+
+/* ---- Home: a letter card whose actions are two buttons, not one link ---- */
+
+.ms-home-letter {
+  cursor: default;
+}
+.ms-home-letter:hover {
+  border-color: var(--ms-line-strong);
+  background: var(--ms-bg-0);
+}
+.ms-home-letter .ms-choice-cta {
+  margin-top: auto;
 }
