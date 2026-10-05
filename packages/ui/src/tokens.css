@@ -645,12 +645,14 @@ p {
   letter-spacing: 0.02em;
   white-space: nowrap;
 }
-.ms-table tbody td {
+.ms-table tbody td,
+.ms-table tbody th[scope="row"] {
   border-bottom: 1px solid var(--ms-line-soft);
   padding: var(--ms-space-3) var(--ms-space-4);
   vertical-align: middle;
 }
-.ms-table tbody tr:last-child td {
+.ms-table tbody tr:last-child td,
+.ms-table tbody tr:last-child th[scope="row"] {
   border-bottom: 0;
 }
 .ms-table tbody tr {
@@ -659,7 +661,8 @@ p {
 .ms-table-hover tbody tr:hover {
   background: var(--ms-bg-1);
 }
-.ms-table-top tbody td {
+.ms-table-top tbody td,
+.ms-table-top tbody th[scope="row"] {
   vertical-align: top;
 }
 
