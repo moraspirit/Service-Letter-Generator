@@ -61,7 +61,10 @@ function buildContext(
 ): Record<string, unknown> {
   const context: Record<string, unknown> = {};
   for (const field of schema) {
-    context[field.name] = data[field.name] ?? (field.type === "list" ? [] : "");
+    const value = data[field.name] ?? (field.type === "list" ? [] : "");
+    // Every bullet starts with a capital letter, whatever was typed or imported. Done here, in
+    // the one render path, so the preview, the PDF and the verify page agree.
+    context[field.name] = Array.isArray(value) ? value.map(capitalize) : value;
   }
   const honorific = context.honorific;
   if (typeof honorific === "string" && honorific !== "") {

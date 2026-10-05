@@ -76,6 +76,17 @@ describe("renderCertificateHtml content", () => {
     expect(withSpecial).toContain("<h2>Special</h2><li>One</li><li>Two</li>");
   });
 
+  it("starts every list bullet with a capital letter, leaving the rest as typed", () => {
+    const html = renderCertificateHtml(tv, {
+      ...base,
+      honorific: "Mr.",
+      special_points: ["led the iOS team", "éclat in design", "Already fine"],
+    });
+    expect(html).toContain(
+      "<li>Led the iOS team</li><li>Éclat in design</li><li>Already fine</li>",
+    );
+  });
+
   it("escapes plain values but not triple-stash rich text", () => {
     const html = renderCertificateHtml(tv, {
       ...base,
