@@ -1,6 +1,13 @@
 # Dev/test deployment for the issuance app on the VPS (architecture §1, §10).
 # The verification app is not here — it deploys to Vercel separately.
 #
+# This VPS is shared with other projects, each routed by the host's own nginx
+# (see /etc/nginx/sites-available/app.conf — Sawani, Yenuli, Pragathi, Kisha on
+# 127.0.0.1:4002-4005). This container follows the same pattern: nginx owns
+# ports 80/443 for everyone, and only proxies to 127.0.0.1:4006 here. There is
+# no bundled reverse proxy in this compose file — TLS and routing are the
+# host nginx's job, set up once via certbot (see RUNBOOK.md / TASKS.md).
+#
 # Usage on the VPS:
 #   cp apps/issuance/.env.example apps/issuance/.env.production   # fill in real values
 #   docker compose up -d --build
@@ -15,23 +22,8 @@ services:
       - apps/issuance/.env.production
     volumes:
       - tmp-exports:/data/tmp-exports
-    expose:
-      - "3000"
-
-  caddy:
-    image: caddy:2-alpine
-    restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy-data:/data
-      - caddy-config:/config
-    depends_on:
-      - issuance
+      - "127.0.0.1:4006:3000"
 
 volumes:
   tmp-exports:
-  caddy-data:
-  caddy-config:
