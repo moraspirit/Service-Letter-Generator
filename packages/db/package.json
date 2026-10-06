@@ -4,6 +4,7 @@
   "private": true,
   "description": "Prisma schema, migrations and generated client \u2014 the only place database access is defined",
   "scripts": {
+    "postinstall": "prisma generate",
     "generate": "prisma generate",
     "migrate:dev": "prisma migrate dev",
     "migrate:deploy": "prisma migrate deploy",
