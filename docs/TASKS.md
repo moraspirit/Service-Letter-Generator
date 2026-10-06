@@ -21,7 +21,7 @@ Progress tracker for [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Architect
 | 6 | Bulk ZIP export | 🔄 Built, awaiting owner | Verified with the real Inngest Dev Server and Chromium; owner to click through once (P6-11) |
 | 7 | Verification app | 🔄 Built, awaiting deployment | Works against the Aiven dev database; a phone scan of a real PDF needs the deployed domain (Phase 8) |
 | U | Interface & design system | 🔄 Built, awaiting owner | Both apps on one light-only design system; owner to click through and confirm the look |
-| 8 | Hardening & deploy | ⬜ Not started | Gated on the production DB decision |
+| 8 | Hardening & deploy | 🔄 Started (dev-test round) | Deploying issuance (VPS, Docker) + verify (Vercel) against the existing Aiven **dev** database for HR pillar members to try, before the production DB decision (D1) |
 | 9 | Post-launch | ⬜ Optional | Only if real use asks |
 
 **Milestones**
@@ -216,9 +216,18 @@ Strategy lives in `PRODUCT.md`; the visual system is documented in `DESIGN.md`.
 
 ## Phase 8 — Hardening, deployment and handover
 
-- [ ] **P8-01** Dockerfile + compose with Chromium and fonts in the image
-- [ ] **P8-02** Export volume and reverse proxy with HTTPS
-- [ ] **P8-03** VPS provisioned and the issuance app deployed (D4)
+**Dev-test round (2026-10-06):** deploying both apps against the existing Aiven
+**dev** database (not production) so HR pillar members can click through the
+real thing. No domain is available yet, so the issuance app gets HTTPS via
+Caddy + sslip.io on the VPS's bare IP, and the verify app uses its Vercel-
+generated URL. This defers D1/D4/backups/restore-rehearsal/load-testing, which
+are production-only concerns — see architecture.md §3. Real recipient data
+must not go into this database (architecture.md §3 testing rules); HR testing
+must use fake/test entries only.
+
+- [~] **P8-01** Dockerfile (`apps/issuance/Dockerfile`, standalone Next.js output, Chromium + `fonts-liberation` in the image) and `docker-compose.yml` (issuance + Caddy) written; not yet built/run on the actual VPS
+- [~] **P8-02** Export volume (`tmp-exports`, compose) and a Caddy reverse proxy with automatic HTTPS (`docker/Caddyfile`, via sslip.io since no domain exists for this round) written; not yet verified on the VPS
+- [ ] **P8-03** VPS provisioned and the issuance app deployed (D4) — this dev round only needs the existing test VPS, not a production decision
 - [ ] **P8-04** Vercel project, environment variables, function region, `verify.<domain>` domain
 - [ ] **P8-05** Run the architecture §3 gate on PeekHosting (TLS, remote access, MySQL 8, `max_connections`, backups, privilege scoping, region)
 - [ ] **P8-06** Decide the production database (D1) and record it in architecture §3
@@ -251,4 +260,6 @@ Record anything stalled here, with the date and what unblocks it.
 
 | Date | Item | Blocked on | Owner |
 |---|---|---|---|
-| — | — | — | — |
+| 2026-10-06 | Dev-test deploy to VPS | VPS IP address and SSH access to actually run `docker compose up` | Owner |
+| 2026-10-06 | Bulk import/export testing in the dev-test deploy | A free Inngest Cloud account (`INNGEST_EVENT_KEY`, `INNGEST_SIGNING_KEY`) — P8-15 pulled forward for this round since HR will test bulk import | Owner |
+| 2026-10-06 | Admin login for the dev-test deploy | Owner's decision: keep the seeded dev password (`admin@moraspirit.test` / `development-only-password`, documented in `packages/db/prisma/seed.ts`) rather than running `pnpm admin:create` — acceptable since this stays a non-production test round, but that password is in the repo, so treat this deployment as disposable | — |

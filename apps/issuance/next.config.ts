@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
+  // Docker runtime image (Phase 8) copies only this self-contained bundle.
+  output: "standalone",
   reactCompiler: true,
   // Workspace packages ship TypeScript source and are compiled by the app.
   transpilePackages: [

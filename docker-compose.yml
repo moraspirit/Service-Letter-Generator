@@ -1,0 +1,37 @@
+# Dev/test deployment for the issuance app on the VPS (architecture §1, §10).
+# The verification app is not here — it deploys to Vercel separately.
+#
+# Usage on the VPS:
+#   cp apps/issuance/.env.example apps/issuance/.env.production   # fill in real values
+#   docker compose up -d --build
+
+services:
+  issuance:
+    build:
+      context: .
+      dockerfile: apps/issuance/Dockerfile
+    restart: unless-stopped
+    env_file:
+      - apps/issuance/.env.production
+    volumes:
+      - tmp-exports:/data/tmp-exports
+    expose:
+      - "3000"
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - issuance
+
+volumes:
+  tmp-exports:
+  caddy-data:
+  caddy-config:

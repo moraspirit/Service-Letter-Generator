@@ -1,58 +1,56 @@
-# Memory — MoraSpirit Certificate System: Phase U (design system across both apps)
+# Memory — MoraSpirit Certificate System: templates, import fix queue, verify page, logo
 
-Last updated: 2026-09-24
+Last updated: 2026-10-06
+
+Phases 0–7 and Phase U (design system) are built. Nothing from this or the previous session is committed (the owner does all git work). Phase 8 (deployment) has not started.
 
 ## What was built
 
-Phases 0–7 were already complete and are committed (see `docs/TASKS.md` and `docs/architecture.md` for that detail). This session added **Phase U — interface and design system**, which is **uncommitted**.
+**Admin tables and chrome**
+- Whole-row click on list tables via a stretched `.ms-cell-link` (in `apps/issuance/app/globals.css`); one global `cursor: pointer` rule for enabled interactive elements and row-header cell padding in `packages/ui/src/tokens.css`.
+- Home page (`app/(admin)/page.tsx`) is now two letter cards (General Letter, Special Letter) with real thumbnails and **Issue one** / **Import spreadsheet** buttons. No recent-certificates list. `/imports/new?template=<id>` preselects the template.
+- Templates and Issue pages use a shared `TemplateCard` (letter thumbnail, facts, action) in `app/_components/template-card.tsx`; facts come from `lib/template-facts.ts`. Templates page has no read-only banner.
+- Bulk import overview page (`/imports`), template column guide on `/imports/new` (`column-guide.tsx`, `buildImportGuide` in `packages/shared/src/import-guide.ts`) and a blank-spreadsheet download `GET /imports/template/{id}` (`lib/import/template-workbook.ts`).
+- **Fix queue** for failed import rows: `lib/fix-queue.ts`, `lib/use-fix-queue.ts`, failed-rows tables on the import report and batch page (below the certificates card), banner on the manual form, notice on the certificate page. Failed rows keep typed values in `AnalyzedRow.raw`.
+- Friendly error pages: `app/error.tsx`, `app/(admin)/error.tsx`, `apps/verify/app/error.tsx`; login says "unavailable" instead of blaming the password when the DB is down.
+- MoraSpirit logo in both navbars (`packages/certificate-assets/mora-logo-v1.png`, cropped from the letterhead; `.ms-logo` in tokens.css). Admin navbar: logo only, no "Certificates" word. Verify header: centred logo (6 rem), no nav, scrollbar hidden.
+- List bullets are capitalized in `packages/certificate-render/src/render.ts` (`buildContext`).
 
-- **`packages/ui`** (new workspace package): `src/tokens.css` (all tokens + `ms-*` component classes), `src/icon.tsx` (one inline SVG set), `src/primitives.tsx` (`Button`, `LinkButton`, `Card`/`CardHead`/`CardBody`, `StatusPill`, `CertificateStatusPill`, `Banner`, `DescriptionList`, `EmptyState`, `cx`), `src/index.ts`. Wired into both apps via `workspace:*` + `transpilePackages`.
-- **All 14 screens rebuilt.** Issuance: login, dashboard, certificate list / new / detail / edit, imports list / new / batch, templates list / detail / version preview, plus `app/(admin)/layout.tsx` and new `app/_components/` (`page-header.tsx`, `nav-link.tsx`). Verify: `/verify/[uuid]` three states, `not-found.tsx`, new `verdict.tsx`; old `verify/[uuid]/icons.tsx` deleted.
-- **Both `globals.css` rewritten**; dark mode removed from both apps; Inter via `next/font/google` in both root layouts.
-- **`PRODUCT.md`** and **`DESIGN.md`** written at the repo root. `docs/TASKS.md` gained **Phase U** (`PU-01`…`PU-17`). `AGENTS.md` gained design-system rules and a pointer to the two new docs.
-- **Verify full-certificate view (`?full=1`) rebuilt as two columns** — summary rail left, letter right — fixing a horizontal scrollbar.
+**Templates (owner decision 2026-10-06):** exactly two, **General Letter** (`general-letter`, no `special_points` field) and **Special Letter** (`special-letter`, `special_points` required), one version each. Old folders, DB rows, 88 fake certificates and 7 batches were deleted from the dev DB. Seed pins its fake certificates to `general-letter`.
+
+**Verify page (public):** went summary-first → full letter on the page (2026-09-26) → **details only (2026-10-06)**: heading "Online Verification Portal", a record card (name as heading, "Certificate of Employment" caption, Active pill, public_summary fields, issue date, check time in Sri Lanka time), contact line. No letter, iframe, bullets or signatory; `html_content` is no longer loaded; `render-full.ts` and `qrcode` dep removed. `?full=1` is the same page. Revoked / not-found pages unchanged. No "Verified — Authentic" badge any more.
+
+**Other:** `packages/db/src/index.ts` now sets `connectTimeout: 10_000`, `acquireTimeout: 15_000`.
 
 ## Decisions made
 
-- **Brand colour is sampled, not chosen**: `#e73529` = `oklch(60.7% 0.215 29)`, taken from `packages/certificate-assets/mora-letterhead-v1.jpg` (charcoal `#414141` alongside it). Neutrals are tinted to hue 29. OKLCH throughout.
-- **Red does two jobs, separated by shape**: primary actions are a solid red fill; destructive actions are a red **outline** inside a bordered danger zone. Never a red fill for destructive.
-- **Light theme only.** Do not reintroduce `prefers-color-scheme`.
-- **`packages/ui` uses plain CSS component classes, not Tailwind utilities** — neither app's Tailwind scans that package, so utilities there silently do nothing. Tailwind utilities are for page-level layout inside an app only.
-- **Top bar, not a sidebar** for the admin (four destinations; tables want the width), plus a per-page action bar (`PageHeader`).
-- **Step rail only on `/imports/new`**, where the sequence is real. The issue form stays one screen because the live preview depends on it.
-- **Verify shell widens to 78rem only on the full view**, via `:has(.ms-full)`; everything else keeps the 46rem reading column (`.ms-verify-col`). Consistent with the codebase already requiring OKLCH.
-- Verify page **wording is pinned by `docs/architecture.md`** and was kept verbatim: "Verified — Authentic", "This certificate has been revoked", "Not a valid certificate".
-- Accessibility target **WCAG 2.2 AA**, verified with computed ratios (recorded beside the tokens), including 3:1 control boundaries (SC 1.4.11).
+- Verify page shows only public details; the owner accepted the privacy change and reversed it twice — `AGENTS.md` §6, `docs/architecture.md`, `docs/IMPLEMENTATION_PLAN.md`, `docs/TASKS.md` (P7-14/15/16) record it with dates.
+- Fix queue lives only in the admin's browser (localStorage, 1 h expiry); nothing about rejected rows is stored on the server. A fixed row becomes an ordinary manual certificate (no batch link, not in the batch ZIP).
+- One spreadsheet format per template; the old combined sheet's "Letter type" column is ignored.
+- Wording of both letters unchanged from the earlier standard / outstanding templates; templates and assets remain immutable and developer-authored.
 
 ## Problems solved
 
-- **The Tailwind Prettier plugin strips leading spaces inside template-literal `className`s**, silently fusing names (`ms-field` + `" ms-col-span"` → `ms-fieldms-col-span`). Two real bugs came from this. Always use `cx()`. Recorded in `DESIGN.md` and `AGENTS.md`.
-- **Tailwind's CSS resolver does not consult a package's `exports` map** — `@import "@moraspirit/ui/tokens.css"` fails under Turbopack. Both apps import it workspace-relative: `@import "../../../packages/ui/src/tokens.css"`.
-- **Tailwind preflight removes list markers**, so `.ms-bullets` / `.ms-dup-list` set `list-style: disc` explicitly.
-- **The verify full view scrolled sideways**: the letter is a fixed 816px page but the column was 46rem (736px), and the `zoom` ladder only started at 860px. Fixed by widening the shell on that view and adding desktop zoom steps (0.78 / 0.88 / 1 at 64 / 70 / 78rem).
-- **A `DescriptionList` in a narrow rail breaks words** ("26th of Septem/ber") because `.ms-dl`'s two-column grid keys off viewport, not container. Rails stack terms above values (`.ms-dl-stack` in issuance, `.ms-full-side .ms-dl` in verify).
-- **The in-app browser pane renders unreliably here** and cannot load subresources inside `sandbox=""` iframes. Use `puppeteer-core` + Edge for all visual checks; a screenshot/overflow harness pattern is in the scratchpad.
-- **Git Bash (MSYS) rewrites leading-slash script arguments** into Windows paths — pass route paths without the leading slash and add it in the script.
-- `@moraspirit/db` exports **`getPrisma()`**, not a `prisma` const.
-- Running the whole issuance suite while both dev servers are up exhausts the Aiven free-tier connection pool (`pool timeout`); the same files pass in isolation.
+- **"pool timeout … active=0 idle=0"**: the `mariadb` driver's default `connectTimeout` is 1 s; the Aiven dev DB is ~0.6 s per round trip. Fixed with longer timeouts. Restart dev servers after changing it.
+- Shell heredocs with mixed quotes broke (`unexpected EOF`); write Python patch scripts to the scratchpad instead. `python3` does not exist here, use `python`.
+- Several files use CRLF; patch scripts normalise line endings. Prisma transactions over the remote DB need `{ timeout: 60000 }`.
+- Running `pnpm build` while dev servers run can make the dev pages render half-loaded; reload.
+- The in-app browser screenshot often times out; use `javascript_tool` measurements instead.
 
 ## Current state
 
-- `format:check`, `lint`, `typecheck` and `build` all pass. Verify 17/17, shared 39, templates 44, render 23 — all pass.
-- **Not verified:** the issuance suite has never been seen green end-to-end in a single run this session. Two files failed on `pool timeout` (connection contention, not a code fault) and passed when run alone (13/13). Re-run with the dev servers stopped.
-- Visual checks done in real Chromium: both apps at 360 / 390 / 768 / 1280 px with **no horizontal overflow anywhere**, and the verify full view at 14 widths from 360 to 1600 px with no scrollbar.
-- Nothing is committed. `git status` shows the Phase U changes plus untracked `PRODUCT.md`, `DESIGN.md`, `packages/ui/`, `apps/issuance/app/_components/`, `apps/verify/app/verify/[uuid]/verdict.tsx`.
-- Dev servers were running on **3000 (issuance)** and **3001 (verify)** — both started by the owner, not by the agent.
+- `format:check`, `lint`, `typecheck`, `build` pass. Verify 17 tests, shared 46, templates 46, render 24, issuance import/fix-queue/workbook/render-pdf tests pass in isolation. The full issuance suite has still never been seen green in one run (stop dev servers first).
+- Dev DB: two templates (v1 each), one admin (`admin@moraspirit.test`), no certificates. `pnpm db:seed` would add fake ones.
+- Not seen by a person / unverified: the issue-app navbar with the logo, home page cards, import fix queue click-through, verify page at the latest size (logo 6 rem, no scrollbar).
+- Unticked tasks: P2-05, P3-14, P4-09, P5-16, P6-11, PU-16, PU-17 (owner click-throughs) and all of Phase 8.
 
 ## Next session starts with
 
-Stop both dev servers, run `pnpm --filter issuance test` and confirm it passes end to end. Then either commit Phase U (a suggested message was given: "Phase U: one light design system across both apps, anchored on the letterhead red") or continue to **Phase 8 — hardening, deployment and handover**, which still needs the owner's input on D1 and D4 first.
-
-`PU-16` (owner clicks through both apps) and `PU-17` (exit criteria) are the only unticked Phase U tasks.
+Stop both dev servers and run `pnpm --filter issuance test` end to end. Then the owner reviews the verify page, home page and navbars in a browser; commit (suggested message in the last turn: "Verify page: larger logo, tighter spacing, no scrollbar track" plus the earlier unreleased changes) or start Phase 8.
 
 ## Open questions
 
-- **Fixture templates — unresolved.** The owner asked about removing "Service letter (fixture)" and "Fixture e783bd1a" from the issue picker, then dismissed the options, so nothing was changed. Findings: `Fixture e783bd1a` (id 60, slug `test-fixture-e783bd1a`) is **test litter** from `apps/issuance/test/fixtures.ts` whose `cleanup()` did not run after a failed run — it leaked 11 certificates and an orphan admin user, and will recur. `Service letter (fixture)` (id 3, slug `template-3`) is **seed data**, recreated by every `pnpm db:seed`, so deleting rows will not stick. Neither reaches production, since Phase 8 migrates to a fresh database. Note the seed script writes slug `fixture-service-letter` but the row has `template-3`, so that row predates the current seed.
-- Admin certificate detail shows raw ISO dates (`2025-04-28`) rather than the letter's "28th of April 2025" — deliberate for a record view, but the owner may want them to match.
-- A newer Impeccable skill is available (`npx impeccable update`, applies to the next session).
-- Carried forward and still open: **D1** production database (PeekHosting must pass the architecture §3 gate), **D4** VPS provider/region, **D6** Prisma pinned at 7.10.0. The final public verify domain must be decided before real issuance, because printed QR codes cannot change. MoraSpirit should still confirm the two template wordings invented in Phase 1. The long-wording letter has only ~0.15 in of headroom — recheck the fit in Docker/Chromium. A ZIP batch can stay `generating` forever if the app server dies (no watchdog).
+- Logo is a soft JPEG crop; a transparent SVG/PNG from MoraSpirit would replace it as `mora-logo-v2`.
+- "Certificate of Employment" caption on the verify card is hardcoded; it should come from the template if non-employment templates are added.
+- Inngest local dev server is needed for ZIP export (`INNGEST_DEV=1` plus `npx inngest-cli dev -u http://localhost:3000/api/inngest`).
+- Still open from before: D1 production database (PeekHosting gate), D4 VPS region, D6 Prisma 7.10.0 pin, final public verify domain (printed QR codes cannot change), MoraSpirit confirming the two template wordings, the long letter's ~0.15 in page headroom, no watchdog for a stuck ZIP batch, certificate detail page shows raw ISO dates.

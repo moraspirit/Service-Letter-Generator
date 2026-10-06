@@ -1,0 +1,32 @@
+name: Deploy issuance app
+
+# Vercel deploys apps/verify on its own via Git integration (architecture.md §1,
+# "Build hygiene"). This workflow only handles the VPS half.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/issuance/**"
+      - "packages/**"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "docker-compose.yml"
+      - "docker/**"
+      - ".github/workflows/deploy-issuance.yml"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH in and redeploy
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            set -e
+            cd ${{ secrets.VPS_APP_DIR }}
+            git pull origin main
+            docker compose up -d --build issuance
+            docker image prune -f
