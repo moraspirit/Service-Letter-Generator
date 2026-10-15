@@ -15,6 +15,12 @@ RUN pnpm --filter @moraspirit/db exec prisma generate
 # apps/issuance/package.json's "test" script) rather than relying on pnpm to
 # run custom pre-script hooks, so do the same here.
 RUN node packages/certificate-assets/sync.mjs apps/issuance/public/certificate-assets
+# `apps/issuance/lib/db.ts` builds a Prisma client at module scope, and Next's
+# build-time page-data collection imports every route to statically analyze
+# it, including DB-backed ones — so a DATABASE_URL has to exist even though
+# nothing actually connects during the build. Placeholder only; the real one
+# comes from the running container's env (docker-compose / .env.production).
+ENV DATABASE_URL="mysql://build:build@localhost:3306/build"
 RUN pnpm --filter issuance build
 
 FROM node:22-slim AS runtime
