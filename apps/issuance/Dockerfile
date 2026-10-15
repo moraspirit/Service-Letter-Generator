@@ -32,6 +32,9 @@ WORKDIR /app
 COPY --from=build /repo/apps/issuance/.next/standalone ./
 COPY --from=build /repo/apps/issuance/.next/static ./apps/issuance/.next/static
 COPY --from=build /repo/apps/issuance/public ./apps/issuance/public
+# Read directly off disk at request time (template.hbs/schema.json/sample.json
+# are data files, not JS imports, so Next's standalone tracer can't find them).
+COPY --from=build /repo/packages/certificate-templates ./packages/certificate-templates
 
 EXPOSE 3000
 CMD ["node", "apps/issuance/server.js"]

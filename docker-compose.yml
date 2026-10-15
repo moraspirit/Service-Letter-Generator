@@ -8,15 +8,19 @@
 # no bundled reverse proxy in this compose file — TLS and routing are the
 # host nginx's job, set up once via certbot (see RUNBOOK.md / TASKS.md).
 #
-# Usage on the VPS:
+# The image is built by GitHub Actions and pushed to GHCR (see
+# .github/workflows/deploy-issuance.yml) — this VPS only pulls and runs it.
+# It is far too memory/disk-constrained to run `pnpm install` + `next build`
+# itself reliably (see TASKS.md, Phase 8 notes).
+#
+# First-time setup on the VPS:
 #   cp apps/issuance/.env.example apps/issuance/.env.production   # fill in real values
-#   docker compose up -d --build
+#   echo $GHCR_TOKEN | docker login ghcr.io -u <github-username> --password-stdin
+#   docker compose pull && docker compose up -d
 
 services:
   issuance:
-    build:
-      context: .
-      dockerfile: apps/issuance/Dockerfile
+    image: ghcr.io/moraspirit/service-letter-generator-issuance:latest
     restart: unless-stopped
     env_file:
       - apps/issuance/.env.production
