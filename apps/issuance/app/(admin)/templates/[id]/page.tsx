@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { effectiveLayout, type FieldSchema } from "@moraspirit/shared";
 import { Card, CardBody, CardHead, DescriptionList, LinkButton, StatusPill } from "@moraspirit/ui";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/require-admin";
 import { templateFacts } from "@/lib/template-facts";
-import { renderVersionPreview } from "@/lib/template-preview";
+import { renderVersionPreview, sampleFor } from "@/lib/template-preview";
 import { PageHeader } from "../../../_components/page-header";
+import { LayoutDefaultsForm } from "./layout-defaults-form";
 
 export const dynamic = "force-dynamic";
 
@@ -35,7 +37,9 @@ export default async function TemplateDetailPage({ params }: { params: Promise<{
 
   const current = template.currentVersion;
   const issued = template.versions.reduce((sum, v) => sum + v._count.certificates, 0);
-  const preview = current ? renderVersionPreview(template.slug, current) : null;
+  const spacing = effectiveLayout(template.layoutDefaults);
+  const currentSchema = current ? (current.fieldSchema as unknown as FieldSchema) : null;
+  const preview = current ? renderVersionPreview(template.slug, current, spacing) : null;
   const facts = current ? templateFacts(current, issued) : [];
 
   return (
@@ -51,6 +55,16 @@ export default async function TemplateDetailPage({ params }: { params: Promise<{
           </>
         }
       />
+
+      {current && currentSchema ? (
+        <LayoutDefaultsForm
+          templateId={template.id}
+          initial={spacing}
+          htmlContent={current.htmlContent}
+          fieldSchema={currentSchema}
+          sample={sampleFor(template.slug, currentSchema)}
+        />
+      ) : null}
 
       <div className="ms-detail">
         <Card>

@@ -4,9 +4,12 @@
 import type { Prisma, PrismaClient } from "@moraspirit/db";
 import {
   dataFromRawValues,
+  effectiveLayout,
+  letterLayoutFromRaw,
   validateCertificateData,
   type CertificateData,
   type FieldSchema,
+  type LetterLayout,
   type RawValues,
 } from "@moraspirit/shared";
 import { computeDedupeKey } from "./dedupe";
@@ -54,13 +57,23 @@ export async function issueCertificate(input: IssueInput): Promise<IssueResult> 
 
   const fieldSchema = version.fieldSchema as unknown as FieldSchema;
 
-  // 1. Validate and sanitize.
+  // 1. Validate and sanitize. Spacing falls back to the template's current default.
   const validation = validateCertificateData(
     fieldSchema,
     dataFromRawValues(fieldSchema, rawValues),
   );
-  if (!validation.ok) return { status: "invalid", errors: validation.errors };
+  const spacing = letterLayoutFromRaw(rawValues);
+  if (!validation.ok || !spacing.ok) {
+    return {
+      status: "invalid",
+      errors: {
+        ...(validation.ok ? {} : validation.errors),
+        ...(spacing.ok ? {} : spacing.errors),
+      },
+    };
+  }
   const data: CertificateData = sanitizeRichTextFields(fieldSchema, validation.data);
+  const layout: LetterLayout = spacing.layout ?? effectiveLayout(template.layoutDefaults);
 
   // 2. Duplicate warning (never a block).
   const dedupeKey = computeDedupeKey(template.id, fieldSchema, data);
@@ -81,6 +94,7 @@ export async function issueCertificate(input: IssueInput): Promise<IssueResult> 
       certificateId: id,
       templateVersion: { htmlContent: version.htmlContent, fieldSchema },
       data,
+      layout,
     });
   } catch (error) {
     if (error instanceof PageOverflowError) {
@@ -94,12 +108,26 @@ export async function issueCertificate(input: IssueInput): Promise<IssueResult> 
 
   // 4. One transaction: certificate + audit row.
   const json = data as unknown as Prisma.InputJsonValue;
+  const layoutJson = layout as unknown as Prisma.InputJsonValue;
   await prisma.$transaction(async (tx) => {
     await tx.certificate.create({
-      data: { id, templateVersionId: version.id, data: json, dedupeKey, status: "active" },
+      data: {
+        id,
+        templateVersionId: version.id,
+        data: json,
+        layout: layoutJson,
+        dedupeKey,
+        status: "active",
+      },
     });
     await tx.certificateAudit.create({
-      data: { certificateId: id, action: "created", newData: json, adminUserId: adminId },
+      data: {
+        certificateId: id,
+        action: "created",
+        newData: json,
+        newLayout: layoutJson,
+        adminUserId: adminId,
+      },
     });
   });
   return { status: "issued", id };

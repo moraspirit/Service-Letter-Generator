@@ -10,7 +10,7 @@ import path from "node:path";
 import { pipeline } from "node:stream/promises";
 import yazl from "yazl";
 import { Prisma, type PrismaClient } from "@moraspirit/db";
-import type { CertificateData, FieldSchema } from "@moraspirit/shared";
+import { parseStoredLayout, type CertificateData, type FieldSchema } from "@moraspirit/shared";
 import { PageOverflowError, renderCertificatePdf, type RenderInput } from "../pdf/render-pdf";
 import { batchDir, exportRoot, zipFile, ZIP_TTL_MS } from "./paths";
 
@@ -148,6 +148,7 @@ export async function renderCertificateToFile(input: RenderOneInput): Promise<Re
         fieldSchema: schema,
       },
       data: certificate.data as unknown as CertificateData,
+      layout: parseStoredLayout(certificate.layout),
     });
     const dir = batchDir(batchId);
     await mkdir(dir, { recursive: true });

@@ -1,4 +1,4 @@
-import type { CertificateData, FieldSchema } from "@moraspirit/shared";
+import { parseStoredLayout, type CertificateData, type FieldSchema } from "@moraspirit/shared";
 import { prisma } from "@/lib/db";
 import { PageOverflowError, renderCertificatePdf } from "@/lib/pdf/render-pdf";
 import { requireAdminApi } from "@/lib/require-admin";
@@ -33,6 +33,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
         fieldSchema: certificate.templateVersion.fieldSchema as unknown as FieldSchema,
       },
       data,
+      layout: parseStoredLayout(certificate.layout),
     });
 
     // The member id is the only thing in the file name; never a recipient's name.

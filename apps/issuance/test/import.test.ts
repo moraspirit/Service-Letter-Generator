@@ -2,7 +2,7 @@
 // the same shape as the real pillar sheet (bullet cells, Gender column, blank trailing headers).
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import * as XLSX from "xlsx";
-import type { FieldSchema } from "@moraspirit/shared";
+import { LETTER_LAYOUT_DEFAULTS, type FieldSchema } from "@moraspirit/shared";
 import { analyzeImport } from "../lib/import/analyze-import";
 import { commitImport } from "../lib/import/commit-import";
 import { PageOverflowError } from "../lib/pdf/render-pdf";
@@ -287,6 +287,8 @@ describe("commitImport", () => {
         where: { certificateId: cert.id },
       });
       expect(audit.map((a) => a.action)).toEqual(["created"]);
+      expect(audit[0]!.newLayout).toEqual(LETTER_LAYOUT_DEFAULTS);
+      expect(cert.layout).toEqual(LETTER_LAYOUT_DEFAULTS);
       expect(cert.templateVersionId).toBe(fx.versionId);
     }
   });

@@ -3,8 +3,17 @@
 import Link from "next/link";
 import { useActionState, useMemo, useState } from "react";
 import { renderCertificateHtml } from "@moraspirit/certificate-render";
-import { dataFromRawValues, type FieldDefinition, type FieldSchema } from "@moraspirit/shared";
+import {
+  dataFromRawValues,
+  letterLayoutFromRaw,
+  spacingInputName,
+  type FieldDefinition,
+  type FieldSchema,
+  type LetterLayout,
+  type LetterLayoutKey,
+} from "@moraspirit/shared";
 import { Banner, Button, Card, CardBody, CardHead, cx, Icon } from "@moraspirit/ui";
+import { SpacingFields, spacingInputs } from "../../_components/spacing-fields";
 import { useFixQueue } from "@/lib/use-fix-queue";
 import { FixQueueBanner } from "./fix-queue-banner";
 import { stateMessage, type FormState } from "./form-state";
@@ -148,6 +157,8 @@ interface FormProps {
   htmlContent: string;
   fieldSchema: FieldSchema;
   defaults: Record<string, string>;
+  /** Spacing the form opens with: the template default, or this letter's own. */
+  spacing: LetterLayout;
   cancelHref: string;
 }
 
@@ -158,6 +169,7 @@ function CertificateFormBody({
   htmlContent,
   fieldSchema,
   defaults,
+  spacing,
   cancelHref,
   imported,
 }: FormProps & {
@@ -168,6 +180,7 @@ function CertificateFormBody({
     ...defaults,
     ...imported?.values,
   });
+  const [spacingValues, setSpacingValues] = useState(() => spacingInputs(spacing));
   // What the import said was wrong; each message goes away once its field is edited.
   const [importedErrors, setImportedErrors] = useState<Record<string, string>>(
     imported?.errors ?? {},
@@ -177,16 +190,28 @@ function CertificateFormBody({
 
   // Live preview: the same render function as the PDF, running in the browser. The QR
   // code is a placeholder in the preview.
+  const previewLayout = useMemo(() => {
+    const raw = Object.fromEntries(
+      Object.entries(spacingValues).map(([key, value]) => [
+        spacingInputName(key as LetterLayoutKey),
+        value,
+      ]),
+    );
+    const parsed = letterLayoutFromRaw(raw);
+    return parsed.ok && parsed.layout ? parsed.layout : spacing;
+  }, [spacing, spacingValues]);
+
   const preview = useMemo(() => {
     try {
       return renderCertificateHtml(
         { html_content: htmlContent, field_schema: fieldSchema },
         dataFromRawValues(fieldSchema, values),
+        { layout: previewLayout },
       );
     } catch {
       return null;
     }
-  }, [htmlContent, fieldSchema, values]);
+  }, [htmlContent, fieldSchema, previewLayout, values]);
 
   const errors = { ...importedErrors, ...(state.status === "invalid" ? state.errors : {}) };
   const message = stateMessage(state);
@@ -217,6 +242,34 @@ function CertificateFormBody({
                 />
               ))}
             </div>
+          </CardBody>
+        </Card>
+
+        <Card>
+          <CardHead
+            title="Spacing"
+            actions={
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setSpacingValues(spacingInputs(spacing))}
+              >
+                Reset
+              </Button>
+            }
+          />
+          <CardBody>
+            <p className="ms-help pb-4">
+              {mode === "issue"
+                ? "Starts from the spacing saved on this template. A change here applies to this letter only."
+                : "This letter keeps its own spacing. A later change to the template default leaves it as it is."}
+            </p>
+            <SpacingFields
+              values={spacingValues}
+              errors={errors}
+              onChange={(key, value) => setSpacingValues((prev) => ({ ...prev, [key]: value }))}
+            />
           </CardBody>
         </Card>
 

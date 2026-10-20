@@ -1,5 +1,10 @@
 import Handlebars from "handlebars";
-import type { CertificateData, FieldSchema } from "@moraspirit/shared";
+import {
+  letterLayoutCss,
+  type CertificateData,
+  type FieldSchema,
+  type LetterLayout,
+} from "@moraspirit/shared";
 import { resolveAssets, type AssetResolver } from "./assets";
 import { formatDate } from "./format-date";
 import { capitalize, derivePronouns } from "./pronouns";
@@ -18,6 +23,11 @@ export interface RenderOptions {
    * and `{{verify_url}}`. Omitted in previews, where the template shows a placeholder.
    */
   qr?: { dataUri: string; url: string };
+  /**
+   * Spacing for this letter. Omitted means the template's own CSS stands, which is
+   * how certificates issued before spacing was stored keep their original look.
+   */
+  layout?: LetterLayout;
 }
 
 // The one Handlebars instance. Helpers are registered here and nowhere else.
@@ -77,6 +87,16 @@ function buildContext(
   return context;
 }
 
+/** Places the layout stylesheet after the template's own styles so equal selectors win. */
+function applyLayout(html: string, layout: LetterLayout | undefined): string {
+  if (!layout) return html;
+  const style = `<style id="letter-layout">\n${letterLayoutCss(layout)}\n</style>`;
+  const marker = "</head>";
+  const at = html.lastIndexOf(marker);
+  if (at === -1) return `${style}${html}`;
+  return html.slice(0, at) + style + html.slice(at);
+}
+
 /**
  * The only way certificate HTML is produced. The admin preview, the Puppeteer PDF
  * and the verify page all call this, so they cannot diverge.
@@ -86,8 +106,11 @@ export function renderCertificateHtml(
   data: CertificateData,
   options: RenderOptions = {},
 ): string {
-  const html = compile(templateVersion.html_content)(
-    buildContext(templateVersion.field_schema, data, options.qr),
+  const html = applyLayout(
+    compile(templateVersion.html_content)(
+      buildContext(templateVersion.field_schema, data, options.qr),
+    ),
+    options.layout,
   );
   return resolveAssets(html, options.resolveAsset);
 }

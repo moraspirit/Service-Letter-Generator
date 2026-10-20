@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { LETTER_LAYOUT_DEFAULTS, spacingInputName } from "@moraspirit/shared";
 import { editCertificate, restoreCertificate, revokeCertificate } from "../lib/certificate-changes";
 import { issueCertificate } from "../lib/issue-certificate";
 import { PageOverflowError } from "../lib/pdf/render-pdf";
@@ -134,6 +135,29 @@ describe("editCertificate refusals write nothing", () => {
       await edit(id, raw(`T2-${f.suffix}`, { recipient_name: "X" }), { reason: "r".repeat(501) }),
     ).toMatchObject({ status: "invalid" });
     await untouched(id, 1, before);
+  });
+
+  it("records a spacing-only edit and ignores spacing that matches the letter", async () => {
+    const member = `TS-${f.suffix}`;
+    const id = await issue(member);
+    const before = await load(id);
+    const same = Object.fromEntries(
+      Object.entries(LETTER_LAYOUT_DEFAULTS).map(([key, value]) => [
+        spacingInputName(key as keyof typeof LETTER_LAYOUT_DEFAULTS),
+        String(value),
+      ]),
+    );
+    expect((await edit(id, { ...raw(member), ...same })).status).toBe("no_changes");
+
+    const changed = { ...same, [spacingInputName("paragraphEm")]: "0.4" };
+    expect((await edit(id, { ...raw(member), ...changed })).status).toBe("changed");
+    const after = await load(id);
+    expect(after.data).toEqual(before.data);
+    expect(after.layout).toMatchObject({ paragraphEm: 0.4 });
+    const rows = await trail(id);
+    expect(rows.map((r) => r.action)).toEqual(["created", "edited"]);
+    expect(rows[1]!.oldLayout).toEqual(LETTER_LAYOUT_DEFAULTS);
+    expect(rows[1]!.newLayout).toMatchObject({ paragraphEm: 0.4, topIn: 1.7 });
   });
 
   it("refuses an edit that changes nothing", async () => {

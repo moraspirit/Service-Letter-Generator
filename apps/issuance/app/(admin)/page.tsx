@@ -1,3 +1,4 @@
+import { effectiveLayout } from "@moraspirit/shared";
 import { LinkButton } from "@moraspirit/ui";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/require-admin";
@@ -28,7 +29,11 @@ export default async function DashboardPage() {
             id: t.id,
             name: t.name,
             slug: t.slug,
-            preview: renderVersionPreview(t.slug, t.currentVersion),
+            preview: renderVersionPreview(
+              t.slug,
+              t.currentVersion,
+              effectiveLayout(t.layoutDefaults),
+            ),
           },
         ]
       : [],

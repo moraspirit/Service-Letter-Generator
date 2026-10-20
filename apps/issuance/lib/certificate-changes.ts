@@ -1,12 +1,17 @@
 // Everything that changes an existing certificate: edit, revoke, restore. Each one
 // writes its audit row in the SAME transaction as the change (AGENTS.md §5), never
 // deletes anything, and leaves `template_version_id` untouched.
-import type { Prisma, PrismaClient } from "@moraspirit/db";
+import { Prisma, type PrismaClient } from "@moraspirit/db";
 import {
   dataFromRawValues,
+  effectiveLayout,
+  layoutEquals,
+  letterLayoutFromRaw,
+  parseStoredLayout,
   validateCertificateData,
   type CertificateData,
   type FieldSchema,
+  type LetterLayout,
   type RawValues,
 } from "@moraspirit/shared";
 import { computeDedupeKey } from "./dedupe";
@@ -96,14 +101,20 @@ export async function editCertificate(input: EditInput): Promise<ChangeResult> {
     fieldSchema,
     dataFromRawValues(fieldSchema, rawValues),
   );
+  const spacing = letterLayoutFromRaw(rawValues);
   if (!validation.ok) Object.assign(errors, validation.errors);
-  if (Object.keys(errors).length > 0 || !validation.ok || "error" in reason) {
+  if (!spacing.ok) Object.assign(errors, spacing.errors);
+  if (Object.keys(errors).length > 0 || !validation.ok || !spacing.ok || "error" in reason) {
     return { status: "invalid", errors };
   }
 
   const data: CertificateData = sanitizeRichTextFields(fieldSchema, validation.data);
   const oldData = certificate.data as unknown as CertificateData;
-  if (sameData(data, oldData)) return { status: "no_changes" };
+  const previousLayout = parseStoredLayout(certificate.layout);
+  // Inputs that omit spacing keep whatever this letter already renders with.
+  const nextLayout: LetterLayout = spacing.layout ?? effectiveLayout(previousLayout);
+  const layoutChanged = !layoutEquals(nextLayout, effectiveLayout(previousLayout));
+  if (sameData(data, oldData) && !layoutChanged) return { status: "no_changes" };
 
   // Duplicate warning only when the edit actually moves the certificate onto another's key.
   const dedupeKey = computeDedupeKey(version.templateId, fieldSchema, data);
@@ -123,6 +134,7 @@ export async function editCertificate(input: EditInput): Promise<ChangeResult> {
       certificateId: certificate.id,
       templateVersion: { htmlContent: version.htmlContent, fieldSchema },
       data,
+      layout: nextLayout,
     });
   } catch (error) {
     if (error instanceof PageOverflowError) {
@@ -143,7 +155,11 @@ export async function editCertificate(input: EditInput): Promise<ChangeResult> {
           status: "active",
           updatedAt: new Date(input.loadedUpdatedAt),
         },
-        data: { data: data as unknown as Prisma.InputJsonValue, dedupeKey },
+        data: {
+          data: data as unknown as Prisma.InputJsonValue,
+          dedupeKey,
+          ...(layoutChanged ? { layout: nextLayout as unknown as Prisma.InputJsonValue } : {}),
+        },
       });
       if (updated.count !== 1) throw new ConflictError();
       await tx.certificateAudit.create({
@@ -152,6 +168,10 @@ export async function editCertificate(input: EditInput): Promise<ChangeResult> {
           action: "edited",
           oldData: oldData as unknown as Prisma.InputJsonValue,
           newData: data as unknown as Prisma.InputJsonValue,
+          oldLayout: layoutChanged
+            ? ((previousLayout as unknown as Prisma.InputJsonValue | null) ?? Prisma.DbNull)
+            : undefined,
+          newLayout: layoutChanged ? (nextLayout as unknown as Prisma.InputJsonValue) : undefined,
           reason: reason.reason,
           adminUserId: adminId,
         },

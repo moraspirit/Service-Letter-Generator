@@ -1,4 +1,9 @@
 import {
+  LETTER_LAYOUT_FIELDS,
+  effectiveLayout,
+  layoutEquals,
+  layoutFieldText,
+  parseStoredLayout,
   richTextToPlainText,
   type CertificateData,
   type FieldSchema,
@@ -37,4 +42,23 @@ export function describeChanges(
     if (before !== after) changes.push({ label: field.label, before, after });
   }
   return changes;
+}
+
+/** Spacing changes recorded on an edit. A null snapshot means the built-in spacing. */
+export function describeLayoutChanges(oldLayout: unknown, newLayout: unknown): FieldChange[] {
+  const after = parseStoredLayout(newLayout);
+  if (!after) return [];
+  const before = effectiveLayout(oldLayout);
+  if (layoutEquals(before, after)) return [];
+  return LETTER_LAYOUT_FIELDS.flatMap((field) =>
+    before[field.key] === after[field.key]
+      ? []
+      : [
+          {
+            label: field.label,
+            before: layoutFieldText(field.key, before[field.key]),
+            after: layoutFieldText(field.key, after[field.key]),
+          },
+        ],
+  );
 }

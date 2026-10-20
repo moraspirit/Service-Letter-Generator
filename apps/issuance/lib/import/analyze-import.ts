@@ -5,11 +5,13 @@ import type { PrismaClient } from "@moraspirit/db";
 import {
   convertRow,
   dataFromRawValues,
+  effectiveLayout,
   mapColumns,
   validateCertificateData,
   type CertificateData,
   type ColumnMapping,
   type FieldSchema,
+  type LetterLayout,
   type RawValues,
 } from "@moraspirit/shared";
 import { computeDedupeKey } from "../dedupe";
@@ -60,6 +62,8 @@ export type AnalysisResult =
       sheetName: string | null;
       templateVersionId: number;
       templateVersionNumber: number;
+      /** Spacing copied onto every letter in the batch. Not a spreadsheet column. */
+      layout: LetterLayout;
       unknownColumns: string[];
       rows: AnalyzedRow[];
       fileDuplicate: FileDuplicate | null;
@@ -123,6 +127,7 @@ export async function analyzeImport(input: AnalyzeInput): Promise<AnalysisResult
     return { status: "template_error", message: "That template has no published version." };
   }
   const schema = version.fieldSchema as unknown as FieldSchema;
+  const layout = effectiveLayout(template.layoutDefaults);
 
   const mapping = mapColumns(schema, table.headers);
   if (mapping.missingRequired.length > 0 || mapping.duplicated.length > 0) {
@@ -191,6 +196,7 @@ export async function analyzeImport(input: AnalyzeInput): Promise<AnalysisResult
           certificateId: newCertificateId(),
           templateVersion: { htmlContent: version.htmlContent, fieldSchema: schema },
           data: row.data!,
+          layout,
         });
       } catch (error) {
         const field = error instanceof PageOverflowError ? error.field : null;
@@ -221,6 +227,7 @@ export async function analyzeImport(input: AnalyzeInput): Promise<AnalysisResult
     sheetName: table.sheetName,
     templateVersionId: version.id,
     templateVersionNumber: version.versionNumber,
+    layout,
     unknownColumns: mapping.unknown,
     rows,
     fileDuplicate: previous

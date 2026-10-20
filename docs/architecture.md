@@ -126,6 +126,7 @@ templates
   name                 VARCHAR(255)
   slug                 VARCHAR(100) UNIQUE  -- folder name under packages/certificate-templates; how templates:publish matches a folder to its row
   current_version_id   INT FK -> template_versions.id NULL  -- version used for NEW certificates
+  layout_defaults      JSON NULL       -- spacing new letters start from; NULL means the built-in spacing. Mutable, and not part of a template version
   created_at           DATETIME
   updated_at           DATETIME
 
@@ -142,6 +143,7 @@ certificates
   id                   CHAR(36) PK     -- UUID v4
   template_version_id  INT FK -> template_versions.id   -- locked at issuance, never changes; INDEX
   data                 JSON            -- filled-in variable values for this certificate
+  layout               JSON NULL       -- spacing snapshot for this letter; NULL means the built-in spacing in the pinned template's CSS
   import_batch_id         INT FK -> import_batches.id NULL    -- NULL for manually issued certificates
   dedupe_key           CHAR(64)        -- SHA-256 of template_id + normalized values of the fields flagged `dedupe: true`; INDEX (not unique)
   status               ENUM('active','revoked')
@@ -157,6 +159,8 @@ certificate_audit                -- append-only: rows are inserted, never update
   action           ENUM('created','edited','revoked','restored')
   old_data         JSON NULL     -- previous certificates.data (NULL for 'created')
   new_data         JSON NULL     -- new certificates.data (NULL for 'revoked'/'restored')
+  old_layout       JSON NULL     -- previous certificates.layout, set only when an edit changes the spacing
+  new_layout       JSON NULL     -- new certificates.layout, set on create and on an edit that changes the spacing
   reason           VARCHAR(500) NULL   -- required for 'edited', 'revoked', 'restored'
   admin_user_id    INT FK -> admin_users.id
   created_at       DATETIME
@@ -351,7 +355,7 @@ The certificate header (the diagonal wave graphic) is treated as a **static imag
 ### Page setup & the one-page rule
 
 - **Page size is part of the template, not a global default.** Each template declares it in its own CSS (`@page { size: 8.5in 11in; margin: 0 }`); the PDF service prints with `preferCSSPageSize`, zero margin and `printBackground`, then checks with `pdf-lib` that the result is exactly one 612 × 792 pt (US Letter) page. (Earlier drafts put a `page` object in `schema.json`; the template's CSS is the single declaration because it is already part of the immutable version, so a schema copy could only drift.) The sample letters are US Letter.
-- The letterhead is a **full-bleed background image** covering the whole page, so margins are zero at the PDF level and all whitespace comes from the template's own CSS padding.
+- The letterhead is a **full-bleed background image** covering the whole page, so margins are zero at the PDF level. The template CSS is the built-in spacing (gap under the letterhead `1.7in`, gap above the footer `1.25in`, side inset `1in`, line spacing `1.15`, paragraph gap `0.8em`, bullet gap `0.5em`, bullet indent `0.45in`). An admin can change those seven numbers, and only those: each template stores a default (`templates.layout_defaults`, null means the built-in numbers) that new letters and spreadsheet imports start from, and each certificate stores its own copy (`certificates.layout`). The renderer appends a stylesheet built only from those validated numbers, after the template's own CSS, so the live preview and the PDF use the same spacing. A certificate with no stored layout keeps the template CSS exactly, which is how letters issued before this stay unchanged. Changing a template's default does not move letters already issued. The numbers have fixed ranges so the text cannot be pushed into the letterhead, and a looser setting that spills past one page still fails the one-page rule. Spacing is not a spreadsheet column and is not shown on the verify page.
 - **One-page rule — a render that would spill onto a second page fails.** The letterhead artwork exists for page 1 only, so a second page would come out blank-backed and look broken. Content length genuinely varies (the "Special" letters in the sample data carry an extra bullet section), so the render function enforces this:
   1. after layout, it measures the layout **without running any script** (JavaScript stays disabled): every template ends its text area (`#letter-body`) with an empty `#letter-end` marker, and if the marker sits below the box the text overflowed. As a second guard it counts the pages and checks the page size of the produced PDF;
   2. if it exceeds one page, **no PDF is returned**. The admin gets a clear error naming the certificate and telling them to shorten the bullet points, e.g. *"Certificate for Dilni Muthukuda does not fit on one page. Shorten 'Special Points'. The field named is the list or rich-text field holding the most text."*
@@ -366,12 +370,13 @@ All editing happens on the **issuance app (VPS)** only — the verification app 
 
 | Method | How it works |
 |---|---|
-| **Manual edit (new certificate)** | Auto-generated form from the template's field schema → live client-side HTML preview → submit → backend saves + renders PDF. |
-| **Manual edit (existing certificate)** | Since each certificate's values are stored as JSON, an admin can reopen and correct a previously issued record (e.g. fix a typo). Because verification always re-reads current data, the fix is reflected immediately on the verification app too. The admin must enter a reason; the old and new `data` are recorded in `certificate_audit` in the same transaction. |
+| **Manual edit (new certificate)** | Auto-generated form from the template's field schema, plus the template's spacing defaults → live client-side HTML preview → submit → backend saves the field values, the spacing snapshot and renders the PDF. |
+| **Manual edit (existing certificate)** | Since each certificate's values are stored as JSON, an admin can reopen and correct a previously issued record (e.g. fix a typo) and can change that letter's spacing. Because verification always re-reads current data, a field fix is reflected immediately on the verification app too. The admin must enter a reason; the old and new `data`, and the old and new spacing when it changed, are recorded in `certificate_audit` in the same transaction. |
+| **Spacing defaults** | On the template screen the admin sets the seven spacing measurements new letters start from, or restores the built-in numbers. This does not edit the template HTML and does not change letters already issued. |
 | **Revoke / restore** | Admin revokes a certificate with a required reason — sets `status = revoked`, `revoked_at`, `revocation_reason`, and writes a `revoked` audit row. Restoring sets it back to `active` and writes a `restored` audit row. Certificates are never deleted. |
 | **Audit history** | Each certificate's detail page in the admin panel shows its full audit trail (who changed what, when, and why). |
 | **Bulk upload (`.xlsx` / `.csv`)** | Spreadsheet columns map to the template's field schema. Rows are validated before insert; optional fields (like `notable_achievements`) can be left blank and the template's conditional logic handles the rest. Re-uploaded files and rows matching existing certificates are flagged, and the admin chooses to skip or issue anyway (§6 C). Each upload is recorded in `import_batches`. |
-| **Template editing** | Developer-only: a developer changes `template.hbs` / `schema.json` in the repo, and the publish script runs on deploy (§6 A). The admin can view templates and version history but cannot edit them. Every published change creates a new immutable row in `template_versions` and becomes the version used for *new* certificates. Already-issued certificates stay on the version they were issued with, so their wording, design, and required fields never change. |
+| **Template editing** | Developer-only: a developer changes `template.hbs` / `schema.json` in the repo, and the publish script runs on deploy (§6 A). The admin can view templates and version history but cannot edit the wording or the HTML. The one exception is the spacing numbers above. Every published change creates a new immutable row in `template_versions` and becomes the version used for *new* certificates. Already-issued certificates stay on the version they were issued with, so their wording and required fields never change. |
 
 ---
 

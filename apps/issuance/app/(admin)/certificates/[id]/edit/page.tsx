@@ -1,5 +1,10 @@
 import { notFound } from "next/navigation";
-import { richTextToPlainText, type CertificateData, type FieldSchema } from "@moraspirit/shared";
+import {
+  effectiveLayout,
+  richTextToPlainText,
+  type CertificateData,
+  type FieldSchema,
+} from "@moraspirit/shared";
 import { Banner, LinkButton } from "@moraspirit/ui";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/require-admin";
@@ -66,7 +71,7 @@ export default async function EditCertificatePage({ params }: { params: Promise<
       <PageHeader
         crumbs={crumbs}
         title="Edit certificate"
-        subtitle={`${version.template.name} · v${version.versionNumber}. Editing keeps the template version this certificate was issued with, so its wording and layout do not shift.`}
+        subtitle={`${version.template.name} · v${version.versionNumber}. Editing keeps the template version this certificate was issued with, so its wording stays as issued.`}
       />
       <CertificateForm
         mode="edit"
@@ -78,6 +83,7 @@ export default async function EditCertificatePage({ params }: { params: Promise<
         htmlContent={version.htmlContent}
         fieldSchema={fieldSchema}
         defaults={defaults}
+        spacing={effectiveLayout(certificate.layout)}
         cancelHref={`/certificates/${id}`}
       />
     </div>

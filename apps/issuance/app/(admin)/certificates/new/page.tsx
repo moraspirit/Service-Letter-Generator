@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import type { FieldSchema } from "@moraspirit/shared";
+import { effectiveLayout, type FieldSchema } from "@moraspirit/shared";
 import { EmptyState, LinkButton } from "@moraspirit/ui";
 import { prisma } from "@/lib/db";
 import { isQueueKey } from "@/lib/fix-queue";
@@ -47,7 +47,7 @@ export default async function NewCertificatePage({
               id: t.id,
               name: t.name,
               facts: templateFacts(version, issued),
-              preview: renderVersionPreview(t.slug, version),
+              preview: renderVersionPreview(t.slug, version, effectiveLayout(t.layoutDefaults)),
             })),
         ];
       }),
@@ -127,6 +127,7 @@ export default async function NewCertificatePage({
         htmlContent={template.currentVersion.htmlContent}
         fieldSchema={fieldSchema}
         defaults={defaults}
+        spacing={effectiveLayout(template.layoutDefaults)}
         cancelHref="/certificates"
         fix={fix}
       />

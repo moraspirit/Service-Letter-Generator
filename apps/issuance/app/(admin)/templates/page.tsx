@@ -1,3 +1,4 @@
+import { effectiveLayout } from "@moraspirit/shared";
 import { EmptyState } from "@moraspirit/ui";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/require-admin";
@@ -27,7 +28,9 @@ export default async function TemplatesPage() {
       return {
         id: t.id,
         name: t.name,
-        preview: version ? renderVersionPreview(t.slug, version) : null,
+        preview: version
+          ? renderVersionPreview(t.slug, version, effectiveLayout(t.layoutDefaults))
+          : null,
         facts: [
           ...(version
             ? templateFacts(version, issued)

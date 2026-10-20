@@ -11,7 +11,7 @@ import {
   LinkButton,
 } from "@moraspirit/ui";
 import { prisma } from "@/lib/db";
-import { describeChanges } from "@/lib/audit-diff";
+import { describeChanges, describeLayoutChanges } from "@/lib/audit-diff";
 import { isQueueKey } from "@/lib/fix-queue";
 import { requireAdmin } from "@/lib/require-admin";
 import { sanitizeRichText } from "@/lib/sanitize";
@@ -171,11 +171,14 @@ export default async function CertificatePage({
                 {certificate.auditEntries.map((entry) => {
                   const changes =
                     entry.action === "edited"
-                      ? describeChanges(
-                          schema,
-                          entry.oldData as unknown as CertificateData | null,
-                          entry.newData as unknown as CertificateData | null,
-                        )
+                      ? [
+                          ...describeChanges(
+                            schema,
+                            entry.oldData as unknown as CertificateData | null,
+                            entry.newData as unknown as CertificateData | null,
+                          ),
+                          ...describeLayoutChanges(entry.oldLayout, entry.newLayout),
+                        ]
                       : [];
                   return (
                     <li key={String(entry.id)}>

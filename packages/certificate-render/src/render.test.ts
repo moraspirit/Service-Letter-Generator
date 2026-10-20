@@ -2,7 +2,7 @@ import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import type { FieldSchema } from "@moraspirit/shared";
+import { LETTER_LAYOUT_DEFAULTS, type FieldSchema } from "@moraspirit/shared";
 import { formatDate } from "./format-date";
 import { createDataUriResolver } from "./node";
 import { derivePronouns } from "./pronouns";
@@ -33,6 +33,25 @@ const body = [
 
 const tv = { html_content: body, field_schema: schema };
 const base = { recipient_name: "Test Person", start_date: "2025-04-28", general_points: ["a"] };
+
+describe("renderCertificateHtml layout", () => {
+  const page = "<html><head><style>.page{line-height:1.15}</style></head><body></body></html>";
+
+  it("leaves the template CSS alone when no spacing is stored", () => {
+    const html = renderCertificateHtml({ html_content: page, field_schema: [] }, {});
+    expect(html).not.toContain("letter-layout");
+  });
+
+  it("appends the saved spacing after the template styles", () => {
+    const html = renderCertificateHtml(
+      { html_content: page, field_schema: [] },
+      {},
+      { layout: { ...LETTER_LAYOUT_DEFAULTS, topIn: 1.5 } },
+    );
+    expect(html.indexOf("letter-layout")).toBeGreaterThan(html.indexOf("line-height:1.15"));
+    expect(html).toContain("top: 1.5in;");
+  });
+});
 
 describe("renderCertificateHtml pronouns", () => {
   it("Mr. gets he/him/his with singular verbs", () => {

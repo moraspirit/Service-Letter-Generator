@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { FieldSchema } from "@moraspirit/shared";
-import { describeChanges } from "../lib/audit-diff";
+import { LETTER_LAYOUT_DEFAULTS } from "@moraspirit/shared";
+import { describeChanges, describeLayoutChanges } from "../lib/audit-diff";
 
 const schema: FieldSchema = [
   { name: "name", label: "Name", type: "text", required: true },
@@ -34,5 +35,17 @@ describe("describeChanges", () => {
 
   it("returns nothing for actions without data", () => {
     expect(describeChanges(schema, null, null)).toEqual([]);
+  });
+});
+
+describe("describeLayoutChanges", () => {
+  it("lists only the measurements that moved, treating a missing snapshot as the original spacing", () => {
+    expect(describeLayoutChanges(null, null)).toEqual([]);
+    expect(
+      describeLayoutChanges(null, { ...LETTER_LAYOUT_DEFAULTS, topIn: 1.5, bulletEm: 0.2 }),
+    ).toEqual([
+      { label: "Gap under the letterhead", before: "1.7 in", after: "1.5 in" },
+      { label: "Space between bullets", before: "0.5 em", after: "0.2 em" },
+    ]);
   });
 });

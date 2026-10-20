@@ -57,6 +57,7 @@ export async function commitImport(input: CommitInput): Promise<CommitResult> {
   }
 
   const json = (data: CertificateData) => data as unknown as Prisma.InputJsonValue;
+  const layoutJson = analysis.layout as unknown as Prisma.InputJsonValue;
   const batchId = await input.prisma.$transaction(async (tx) => {
     const batch = await tx.importBatch.create({
       data: {
@@ -78,6 +79,7 @@ export async function commitImport(input: CommitInput): Promise<CommitResult> {
         id,
         templateVersionId: analysis.templateVersionId,
         data: json(row.data),
+        layout: layoutJson,
         importBatchId: batch.id,
         dedupeKey: row.dedupeKey,
         status: "active" as const,
@@ -88,6 +90,7 @@ export async function commitImport(input: CommitInput): Promise<CommitResult> {
         certificateId: id,
         action: "created" as const,
         newData: json(row.data),
+        newLayout: layoutJson,
         adminUserId: input.adminId,
       })),
     });

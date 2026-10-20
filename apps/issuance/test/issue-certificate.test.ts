@@ -1,7 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
-import { createPrismaClient, type PrismaClient } from "@moraspirit/db";
-import type { FieldSchema } from "@moraspirit/shared";
+import { Prisma, createPrismaClient, type PrismaClient } from "@moraspirit/db";
+import { LETTER_LAYOUT_DEFAULTS, spacingInputName, type FieldSchema } from "@moraspirit/shared";
 import "./env";
 import { computeDedupeKey } from "../lib/dedupe";
 import { issueCertificate } from "../lib/issue-certificate";
@@ -54,6 +54,10 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  await prisma.template.update({
+    where: { id: templateId },
+    data: { layoutDefaults: Prisma.DbNull },
+  });
   const certificates = await prisma.certificate.findMany({
     where: { templateVersionId: versionId },
     select: { id: true },
@@ -95,6 +99,56 @@ describe("issueCertificate", () => {
     expect(audit).toHaveLength(1);
     expect(audit[0]).toMatchObject({ action: "created", adminUserId: adminId, oldData: null });
     expect(audit[0]!.newData).toEqual(certificate.data);
+    expect(certificate.layout).toEqual(LETTER_LAYOUT_DEFAULTS);
+    expect(audit[0]!.newLayout).toEqual(LETTER_LAYOUT_DEFAULTS);
+  });
+
+  it("stores spacing from the form, and the template default when the form omits it", async () => {
+    await prisma.template.update({
+      where: { id: templateId },
+      data: { layoutDefaults: { ...LETTER_LAYOUT_DEFAULTS, sideIn: 0.8 } },
+    });
+    try {
+      const fromDefault = await issue(`S-${suffix}`);
+      if (fromDefault.status !== "issued") throw new Error("expected issued");
+      expect(
+        (await prisma.certificate.findUniqueOrThrow({ where: { id: fromDefault.id } })).layout,
+      ).toMatchObject({ sideIn: 0.8 });
+
+      const custom = await issueCertificate({
+        prisma,
+        adminId,
+        templateId,
+        rawValues: { ...raw(`S2-${suffix}`), [spacingInputName("topIn")]: "1.4" },
+        confirmDuplicate: false,
+        renderPdf: okRender,
+      });
+      expect(custom).toMatchObject({ status: "invalid" });
+
+      const full = Object.fromEntries(
+        Object.entries(LETTER_LAYOUT_DEFAULTS).map(([key, value]) => [
+          spacingInputName(key as keyof typeof LETTER_LAYOUT_DEFAULTS),
+          key === "topIn" ? "1.4" : String(value),
+        ]),
+      );
+      const issued = await issueCertificate({
+        prisma,
+        adminId,
+        templateId,
+        rawValues: { ...raw(`S3-${suffix}`), ...full },
+        confirmDuplicate: false,
+        renderPdf: okRender,
+      });
+      if (issued.status !== "issued") throw new Error("expected issued");
+      expect(
+        (await prisma.certificate.findUniqueOrThrow({ where: { id: issued.id } })).layout,
+      ).toMatchObject({ topIn: 1.4, sideIn: 1 });
+    } finally {
+      await prisma.template.update({
+        where: { id: templateId },
+        data: { layoutDefaults: Prisma.DbNull },
+      });
+    }
   });
 
   it("stores sanitized rich text and parsed list items", async () => {

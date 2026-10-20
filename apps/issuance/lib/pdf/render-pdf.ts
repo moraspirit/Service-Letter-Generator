@@ -4,7 +4,7 @@ import path from "node:path";
 import { PDFDocument } from "pdf-lib";
 import { renderCertificateHtml } from "@moraspirit/certificate-render";
 import { createDataUriResolver } from "@moraspirit/certificate-render/node";
-import type { CertificateData, FieldSchema } from "@moraspirit/shared";
+import type { CertificateData, FieldSchema, LetterLayout } from "@moraspirit/shared";
 import { qrDataUri } from "../qr";
 import { buildVerifyUrl } from "../verify-url";
 import { withPage } from "./browser";
@@ -29,6 +29,8 @@ export interface RenderInput {
   certificateId: string;
   templateVersion: { htmlContent: string; fieldSchema: FieldSchema };
   data: CertificateData;
+  /** Saved spacing. Omitted for a letter that still uses the template's own CSS. */
+  layout?: LetterLayout | null;
 }
 
 const assetsDir = () => path.join(process.cwd(), "public", "certificate-assets");
@@ -78,6 +80,7 @@ export async function renderCertificatePdf(input: RenderInput): Promise<Uint8Arr
     {
       resolveAsset: createDataUriResolver(assetsDir()),
       qr: { dataUri: await qrDataUri(url), url },
+      layout: input.layout ?? undefined,
     },
   );
 

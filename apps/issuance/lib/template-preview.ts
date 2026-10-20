@@ -10,6 +10,7 @@ import {
   sampleDataFromSchema,
   type CertificateData,
   type FieldSchema,
+  type LetterLayout,
 } from "@moraspirit/shared";
 
 const ASSETS_DIR = path.join(process.cwd(), "public", "certificate-assets");
@@ -25,11 +26,12 @@ export function sampleFor(slug: string, fieldSchema: FieldSchema): CertificateDa
 export function renderVersionPreview(
   slug: string,
   version: { htmlContent: string; fieldSchema: unknown },
+  layout?: LetterLayout | null,
 ): string {
   const fieldSchema = version.fieldSchema as FieldSchema;
   return renderCertificateHtml(
     { html_content: version.htmlContent, field_schema: fieldSchema },
     sampleFor(slug, fieldSchema),
-    { resolveAsset: createDataUriResolver(ASSETS_DIR) },
+    { resolveAsset: createDataUriResolver(ASSETS_DIR), layout: layout ?? undefined },
   );
 }

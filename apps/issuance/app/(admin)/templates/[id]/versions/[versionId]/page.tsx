@@ -1,3 +1,4 @@
+import { effectiveLayout } from "@moraspirit/shared";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/require-admin";
@@ -20,11 +21,15 @@ export default async function VersionPreviewPage({
 
   const version = await prisma.templateVersion.findFirst({
     where: { id: versionId, templateId: id },
-    include: { template: { select: { name: true, slug: true } } },
+    include: { template: { select: { name: true, slug: true, layoutDefaults: true } } },
   });
   if (!version) notFound();
 
-  const html = renderVersionPreview(version.template.slug, version);
+  const html = renderVersionPreview(
+    version.template.slug,
+    version,
+    effectiveLayout(version.template.layoutDefaults),
+  );
 
   return (
     <div className="flex flex-col gap-5">
