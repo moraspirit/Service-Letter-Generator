@@ -20,6 +20,9 @@ describe("letter layout", () => {
   it("treats a missing snapshot as the built-in spacing", () => {
     expect(effectiveLayout(null)).toEqual(LETTER_LAYOUT_DEFAULTS);
     expect(parseStoredLayout({ topIn: 1.5 })).toBeNull();
+    const savedBeforeFontSize = { ...LETTER_LAYOUT_DEFAULTS };
+    delete (savedBeforeFontSize as Partial<typeof savedBeforeFontSize>).fontSizePt;
+    expect(parseStoredLayout(savedBeforeFontSize)).toEqual(LETTER_LAYOUT_DEFAULTS);
   });
 
   it("accepts a complete in-range submission and rejects a value outside its range", () => {
@@ -33,6 +36,7 @@ describe("letter layout", () => {
 
   it("writes only numbers and fixed units into the stylesheet", () => {
     const css = letterLayoutCss({ ...LETTER_LAYOUT_DEFAULTS, topIn: 1.5, paragraphEm: 0.4 });
+    expect(css).toContain("font-size: 12pt;");
     expect(css).toContain("top: 1.5in;");
     expect(css).toContain("margin: 0 0 0.4em;");
     expect(css).not.toContain("red");

@@ -5,6 +5,15 @@
 
 export const LETTER_LAYOUT_FIELDS = [
   {
+    key: "fontSizePt",
+    label: "Font size",
+    unit: "pt",
+    min: 9,
+    max: 14,
+    step: 0.5,
+    fallback: 12,
+  },
+  {
     key: "topIn",
     label: "Gap under the letterhead",
     unit: "in",
@@ -74,6 +83,7 @@ export type LetterLayoutKey = (typeof LETTER_LAYOUT_FIELDS)[number]["key"];
 export type LetterLayout = Record<LetterLayoutKey, number>;
 
 export const LETTER_LAYOUT_DEFAULTS: LetterLayout = {
+  fontSizePt: 12,
   topIn: 1.7,
   bottomIn: 1.25,
   sideIn: 1,
@@ -118,7 +128,7 @@ export function letterLayoutCss(layout: LetterLayout): string {
   const side = formatLayoutNumber(layout.sideIn);
   const paragraph = formatLayoutNumber(layout.paragraphEm);
   return [
-    `.page { line-height: ${formatLayoutNumber(layout.lineHeight)}; }`,
+    `.page { font-size: ${formatLayoutNumber(layout.fontSizePt)}pt; line-height: ${formatLayoutNumber(layout.lineHeight)}; }`,
     `#letter-body { left: ${side}in; right: ${side}in; top: ${formatLayoutNumber(layout.topIn)}in; bottom: ${formatLayoutNumber(layout.bottomIn)}in; }`,
     `#letter-body p { margin: 0 0 ${paragraph}em; }`,
     `#letter-body ul { margin: 0 0 ${paragraph}em; padding-left: ${formatLayoutNumber(layout.bulletIndentIn)}in; }`,
@@ -133,6 +143,12 @@ export function parseStoredLayout(value: unknown): LetterLayout | null {
   const layout = {} as LetterLayout;
   for (const field of LETTER_LAYOUT_FIELDS) {
     const raw = record[field.key];
+    // Letters saved before font size was editable omit it. Keep their spacing
+    // and use the built-in 12pt rather than throwing the snapshot away.
+    if (raw === undefined && field.key === "fontSizePt") {
+      layout.fontSizePt = LETTER_LAYOUT_DEFAULTS.fontSizePt;
+      continue;
+    }
     const number = typeof raw === "number" ? raw : typeof raw === "string" ? Number(raw) : NaN;
     if (!inRange(field.key, number)) return null;
     layout[field.key] = round3(number);

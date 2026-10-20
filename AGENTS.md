@@ -83,7 +83,7 @@ Each of these exists for a reason spelled out in `docs/architecture.md` §9. Cha
 | Header images & fonts | Developer-committed files in `packages/certificate-assets`, copied into both apps; no admin upload |
 | Fonts | Self-hosted, OFL/Apache-licensed. **Times New Roman must not be bundled** — use **Liberation Serif** (D2) |
 | Templates | Immutable versions; editing creates a new version; issued certificates stay on theirs |
-| Template authoring | Developer-only, in the repo. No editor for wording or HTML in the admin panel. Spacing is the exception: seven validated numbers, a template default plus a per-letter copy (architecture §7) |
+| Template authoring | Developer-only, in the repo. No editor for wording or HTML in the admin panel. Spacing and font size are the exception: eight validated numbers, a template default plus a per-letter copy (architecture §7) |
 | Audit | Full `certificate_audit` table, written transactionally |
 | Public page | Only the basic details of an active certificate (the `public_summary` fields, issue date, status) on `/verify/{uuid}`; `?full=1` is the same page. No letter, bullets or signatory are shown. Changed 2026-10-06 by the owner (it had shown the full letter since 2026-09-26) |
 | Revoked page | Status and date only — never the content or the revocation reason |

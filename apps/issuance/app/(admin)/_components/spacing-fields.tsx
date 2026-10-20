@@ -9,20 +9,14 @@ import {
 import { Icon } from "@moraspirit/ui";
 
 export function spacingInputs(layout: LetterLayout): Record<LetterLayoutKey, string> {
-  return {
-    topIn: String(layout.topIn),
-    bottomIn: String(layout.bottomIn),
-    sideIn: String(layout.sideIn),
-    lineHeight: String(layout.lineHeight),
-    paragraphEm: String(layout.paragraphEm),
-    bulletEm: String(layout.bulletEm),
-    bulletIndentIn: String(layout.bulletIndentIn),
-  };
+  return Object.fromEntries(
+    LETTER_LAYOUT_FIELDS.map((field) => [field.key, String(layout[field.key])]),
+  ) as Record<LetterLayoutKey, string>;
 }
 
 /**
- * The seven spacing measurements. Values are numbers inside a fixed range; the
- * server is what actually accepts them.
+ * Font size and the spacing measurements. Values are numbers inside a fixed
+ * range; the server is what actually accepts them.
  */
 export function SpacingFields({
   values,
